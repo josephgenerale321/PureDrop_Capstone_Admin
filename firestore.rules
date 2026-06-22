@@ -1,0 +1,146 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasAdminClaim() {
+      return isSignedIn()
+             && (
+               request.auth.token.admin == true
+               || request.auth.token.role == 'admin'
+             );
+    }
+
+    function hasAdminProfile() {
+      return isSignedIn()
+             && exists(/databases/$(database)/documents/admin_user/$(request.auth.uid))
+             && (
+               get(/databases/$(database)/documents/admin_user/$(request.auth.uid)).data.role == 'admin'
+               || get(/databases/$(database)/documents/admin_user/$(request.auth.uid)).data.isAdmin == true
+             );
+    }
+
+    function isAdmin() {
+      return hasAdminClaim() || hasAdminProfile();
+    }
+
+    function isValidUserUpdate() {
+      // Prevent privilege escalation.
+      return !('role' in request.resource.data) || request.resource.data.role == resource.data.role;
+    }
+
+    function isSafeRegularUserUpdate() {
+      return isValidUserUpdate()
+             && (
+               !('uid' in request.resource.data)
+               || request.resource.data.uid == resource.data.uid
+             )
+             && (
+               !('createdAt' in request.resource.data)
+               || request.resource.data.createdAt == resource.data.createdAt
+             );
+    }
+
+    function isValidAdminUserWrite() {
+      return !('role' in request.resource.data) || request.resource.data.role == 'admin';
+    }
+
+    function isValidAdminReportUpdate() {
+      let changed = request.resource.data.diff(resource.data).changedKeys();
+
+      return changed.hasOnly([
+               'status',
+               'statusUpdatedAt',
+               'statusUpdatedBy',
+               'statusUpdatedByUid',
+               'updatedAt',
+               'issue',
+               'category',
+               'address',
+               'location',
+               'locationDetails',
+               'gpsLocation',
+               'waterMeter'
+             ])
+             && (
+               !changed.hasAny(['status'])
+               || request.resource.data.status in [
+                    'Pending',
+                    'Approved',
+                    'Rejected',
+                    'Resolved',
+                    'pending',
+                    'approved',
+                    'rejected',
+                    'resolved'
+                  ]
+             );
+    }
+
+    match /regular_user/{userId} {
+      // Signed-in users can read profile docs.
+      allow get, list: if isSignedIn();
+
+      // Profile document is created by the authenticated owner.
+      allow create: if isOwner(userId);
+
+      // Owners and admins can update while preserving role and identity fields.
+      allow update: if (
+                      (isOwner(userId) || isAdmin())
+                      && isSafeRegularUserUpdate()
+                    );
+
+      // Keep delete scoped to owner/admin workflows.
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // Dedicated collection for admin profile records.
+    match /admin_user/{userId} {
+      // Only the signed-in admin owner can read their own profile.
+      allow get: if isOwner(userId);
+
+      // Create/update only by owner, and role must remain admin.
+      allow create, update: if isOwner(userId) && isValidAdminUserWrite();
+    }
+
+    // Required for collectionGroup(db, "reports") queries.
+    match /{documentPath=**}/reports/{reportId} {
+      allow get, list: if isSignedIn();
+
+      // Create allowed only for signed-in owner documents.
+      allow create: if isSignedIn()
+                    && request.resource.data.userId is string
+                    && request.resource.data.userId == request.auth.uid;
+
+      // Owners can edit their own reports. Admins can edit allowed report fields.
+      allow update: if isSignedIn()
+                    && (
+                      (
+                        resource.data.userId is string
+                        && resource.data.userId == request.auth.uid
+                      )
+                      || (
+                        isAdmin()
+                        && isValidAdminReportUpdate()
+                      )
+                    );
+
+      // Keep delete scoped to the owner, with admin override for account-management workflows.
+      allow delete: if isSignedIn()
+                    && (
+                      (
+                        resource.data.userId is string
+                        && resource.data.userId == request.auth.uid
+                      )
+                      || isAdmin()
+                    );
+    }
+  }
+}
