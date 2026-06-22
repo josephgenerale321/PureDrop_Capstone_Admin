@@ -1,0 +1,48 @@
+.admin-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(153, 218, 255, 0.45) 0%, rgba(153, 218, 255, 0) 42%),
+    radial-gradient(circle at 90% 100%, rgba(112, 179, 243, 0.35) 0%, rgba(112, 179, 243, 0) 38%),
+    linear-gradient(180deg, #e7f2ff 0%, #d3e7fd 100%);
+}
+
+.admin-auth-card {
+  border-radius: 1.25rem;
+}
+
+.admin-brand-pane {
+  min-height: 32rem;
+  padding: 2.25rem 2rem;
+  background: linear-gradient(180deg, #2f77c5 0%, #1f5c9f 100%);
+}
+
+.brand-logo {
+  width: 100%;
+  max-width: 290px;
+  height: auto;
+  align-self: center;
+  filter: drop-shadow(0 14px 24px rgba(5, 23, 52, 0.35));
+}
+
+.mobile-brand-logo {
+  width: min(220px, 68%);
+  height: auto;
+}
+
+.form-control {
+  border-radius: 0.75rem;
+  border-color: #d8e0eb;
+}
+
+.form-control:focus {
+  border-color: #5d9ce0;
+  box-shadow: 0 0 0 0.2rem rgba(47, 119, 197, 0.18);
+}
+
+@media (max-width: 991.98px) {
+  .admin-auth-card {
+    border-radius: 1rem;
+  }
+}
