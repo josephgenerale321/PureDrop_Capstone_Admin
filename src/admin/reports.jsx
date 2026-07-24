@@ -1,11 +1,9 @@
 import './reports.css'
 import ReportDeleteModal from './reports/ReportDeleteModal.jsx'
-import ReportDetailsPanel from './reports/ReportDetailsPanel.jsx'
+import ReportDetailsModal from './reports/ReportDetailsModal.jsx'
 import ReportEditModal from './reports/ReportEditModal.jsx'
 import ReportsHeader from './reports/ReportsHeader.jsx'
 import ReportsManagementTable from './reports/ReportsManagementTable.jsx'
-import ReportsQuickActionsCard from './reports/ReportsQuickActionsCard.jsx'
-import ReportsRecentActivityCard from './reports/ReportsRecentActivityCard.jsx'
 import ReportsSummary from './reports/ReportsSummary.jsx'
 import useReportsData from './reports/useReportsData.jsx'
 import useReportsPageState from './reports/useReportsPageState.jsx'
@@ -22,7 +20,6 @@ function AdminReports({ onLogout }) {
     selectedReport,
     selectedReportKey,
     setSelectedReportKey,
-    recentActivity,
     summary,
     refreshReports,
     updateReportStatus,
@@ -38,10 +35,13 @@ function AdminReports({ onLogout }) {
     setIsMobileNavOpen,
     selectedStatusDraft,
     statusUpdateResult,
+    isDetailsModalOpen,
     isEditModalOpen,
     isDeleteModalOpen,
     editForm,
     reportActionResult,
+    handleOpenDetailsModal,
+    handleCloseDetailsModal,
     handleStatusDraftChange,
     handleApplyStatusChange,
     handleOpenEditModal,
@@ -57,6 +57,20 @@ function AdminReports({ onLogout }) {
     editReport,
     deleteReport,
   })
+
+  const selectedReportStatusError =
+    statusUpdateResult.key === selectedReport?.key && statusUpdateResult.type === 'error' ? statusUpdateResult.message : ''
+  const selectedReportStatusSuccess =
+    statusUpdateResult.key === selectedReport?.key && statusUpdateResult.type === 'success' ? statusUpdateResult.message : ''
+  const selectedReportActionError =
+    reportActionResult.key === selectedReport?.key && reportActionResult.type === 'error' ? reportActionResult.message : ''
+  const selectedReportActionSuccess =
+    reportActionResult.key === selectedReport?.key && reportActionResult.type === 'success' ? reportActionResult.message : ''
+
+  const handleViewReportDetails = (reportKey) => {
+    setSelectedReportKey(reportKey)
+    handleOpenDetailsModal()
+  }
 
   return (
     <main className="admin-reports-page">
@@ -88,44 +102,8 @@ function AdminReports({ onLogout }) {
               isLoading={isLoading}
               loadError={loadError}
               selectedReportKey={selectedReportKey}
-              onViewDetails={setSelectedReportKey}
+              onViewDetails={handleViewReportDetails}
             />
-
-            <aside className="admin-reports-side-panels">
-              <ReportDetailsPanel
-                report={selectedReport}
-                statusDraft={selectedStatusDraft}
-                onStatusDraftChange={handleStatusDraftChange}
-                onApplyStatusChange={handleApplyStatusChange}
-                onOpenEditModal={handleOpenEditModal}
-                onOpenDeleteModal={handleOpenDeleteModal}
-                isStatusUpdating={updatingReportKey === selectedReport?.key}
-                isEditSubmitting={savingReportKey === selectedReport?.key}
-                isDeleteSubmitting={deletingReportKey === selectedReport?.key}
-                statusUpdateError={
-                  statusUpdateResult.key === selectedReport?.key && statusUpdateResult.type === 'error'
-                    ? statusUpdateResult.message
-                    : ''
-                }
-                statusUpdateSuccess={
-                  statusUpdateResult.key === selectedReport?.key && statusUpdateResult.type === 'success'
-                    ? statusUpdateResult.message
-                    : ''
-                }
-                reportActionError={
-                  reportActionResult.key === selectedReport?.key && reportActionResult.type === 'error'
-                    ? reportActionResult.message
-                    : ''
-                }
-                reportActionSuccess={
-                  reportActionResult.key === selectedReport?.key && reportActionResult.type === 'success'
-                    ? reportActionResult.message
-                    : ''
-                }
-              />
-              <ReportsRecentActivityCard recentActivity={recentActivity} />
-              <ReportsQuickActionsCard reports={reports} />
-            </aside>
           </div>
         </section>
         <button
@@ -134,6 +112,25 @@ function AdminReports({ onLogout }) {
           aria-label="Close navigation menu"
           onClick={() => setIsMobileNavOpen(false)}
         />
+
+        {isDetailsModalOpen && (
+          <ReportDetailsModal
+            report={selectedReport}
+            onClose={handleCloseDetailsModal}
+            statusDraft={selectedStatusDraft}
+            onStatusDraftChange={handleStatusDraftChange}
+            onApplyStatusChange={handleApplyStatusChange}
+            onOpenEditModal={handleOpenEditModal}
+            onOpenDeleteModal={handleOpenDeleteModal}
+            isStatusUpdating={updatingReportKey === selectedReport?.key}
+            isEditSubmitting={savingReportKey === selectedReport?.key}
+            isDeleteSubmitting={deletingReportKey === selectedReport?.key}
+            statusUpdateError={selectedReportStatusError}
+            statusUpdateSuccess={selectedReportStatusSuccess}
+            reportActionError={selectedReportActionError}
+            reportActionSuccess={selectedReportActionSuccess}
+          />
+        )}
 
         {isEditModalOpen && (
           <ReportEditModal

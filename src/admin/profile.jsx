@@ -1,6 +1,7 @@
 import './profile.css'
 import { signOut } from 'firebase/auth'
 import { auth } from '../firebase.js'
+import DefaultAvatarImage from './DefaultAvatarImage.jsx'
 import useAdminProfile from './profile/useAdminProfile.jsx'
 import AdminSidebar from './sidebar.jsx'
 
@@ -21,7 +22,6 @@ function AdminProfile({ user, onLogout }) {
     setNewPassword,
     confirmPassword,
     setConfirmPassword,
-    initials,
     handleSaveProfile,
     handleChangePassword,
   } = useAdminProfile(user)
@@ -51,7 +51,7 @@ function AdminProfile({ user, onLogout }) {
             <h2 className="admin-card-title">Profile Overview</h2>
             <div className="admin-profile-grid">
               <div className="admin-avatar-wrap">
-                <div className="admin-avatar">{initials}</div>
+                <DefaultAvatarImage alt="Default admin profile" className="admin-avatar" />
               </div>
 
               <form className="admin-profile-form" onSubmit={handleSaveProfile}>

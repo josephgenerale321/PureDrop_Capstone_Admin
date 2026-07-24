@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 import AdminSidebar from '../sidebar.jsx'
 
 function AdminDashboardContent({
@@ -7,7 +8,6 @@ function AdminDashboardContent({
   isAccessDenied,
   loadError,
   dashboard,
-  adminInitials,
   adminName,
   userEmail,
 }) {
@@ -203,7 +203,7 @@ function AdminDashboardContent({
                       <div>
                         <dt>Admin Account</dt>
                         <dd>
-                          <span className="admin-dashboard-avatar">{adminInitials}</span>
+                          <DefaultAvatarImage alt="Default admin profile" className="admin-dashboard-avatar" />
                           <span className="admin-dashboard-avatar-text">{adminName || userEmail || 'Administrator'}</span>
                         </dd>
                       </div>

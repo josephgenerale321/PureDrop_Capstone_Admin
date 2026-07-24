@@ -1,7 +1,8 @@
-import { collectionGroup, deleteDoc, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { collectionGroup, deleteDoc, doc, getDoc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { auth, db } from '../../firebase.js'
 import { isSupabaseConfigured, supabase } from '../../supabase.js'
 
+const USERS_COLLECTION = 'regular_user'
 const REPORTS_COLLECTION = 'reports'
 const REPORTS_BUCKET = 'reports'
 const DATE_FORMAT_OPTIONS = { month: 'short', day: 'numeric', year: 'numeric' }
@@ -79,9 +80,64 @@ const formatTimeAgo = (value) => {
   return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
 }
 
-const mapReportDoc = (docSnap) => {
-  const data = docSnap.data()
+const normalizeString = (value) => (typeof value === 'string' ? value.trim() : '')
+
+const getReportUserId = (docSnap, data) => {
+  const explicitUserId = normalizeString(data.userId)
+  if (explicitUserId) {
+    return explicitUserId
+  }
+
+  return normalizeString(docSnap.ref.parent?.parent?.id)
+}
+
+const fetchUserProfilesByIds = async (userIds) => {
+  const uniqueUserIds = [...new Set(userIds.filter(Boolean))]
+  const profilesById = new Map()
+
+  await Promise.all(
+    uniqueUserIds.map(async (userId) => {
+      try {
+        const userSnap = await getDoc(doc(db, USERS_COLLECTION, userId))
+        if (!userSnap.exists()) {
+          profilesById.set(userId, {})
+          return
+        }
+
+        const userData = userSnap.data()
+        profilesById.set(userId, {
+          fullName: normalizeString(userData.fullName),
+          profileImageUrl: normalizeString(userData.profileImageUrl),
+        })
+      } catch {
+        profilesById.set(userId, {})
+      }
+    }),
+  )
+
+  return profilesById
+}
+
+const mapReportDocsWithProfiles = async (docs) => {
+  const reportDocs = docs.map((docSnap) => {
+    const data = docSnap.data()
+    return {
+      docSnap,
+      data,
+      userId: getReportUserId(docSnap, data),
+    }
+  })
+  const profilesById = await fetchUserProfilesByIds(reportDocs.map((item) => item.userId))
+
+  return reportDocs
+    .map(({ docSnap, data, userId }) => mapReportDoc(docSnap, data, profilesById.get(userId) || {}, userId))
+    .sort((left, right) => right.submittedAtMs - left.submittedAtMs)
+}
+
+const mapReportDoc = (docSnap, data = docSnap.data(), userProfile = {}, userId = getReportUserId(docSnap, data)) => {
   const submittedAtDate = toDateValue(data.createdAt) || toDateValue(data.submittedAt)
+  const reporterName = userProfile.fullName || normalizeString(data.reporterName) || 'Unknown Reporter'
+  const reporterAvatarUrl = userProfile.profileImageUrl || normalizeString(data.reporterAvatarUrl)
 
   return {
     key: docSnap.ref.path,
@@ -95,9 +151,9 @@ const mapReportDoc = (docSnap) => {
     dateSubmitted: formatDate(submittedAtDate),
     submittedAt: formatDateTime(submittedAtDate),
     submittedAtMs: submittedAtDate ? submittedAtDate.getTime() : 0,
-    reporterName: data.reporterName || 'Unknown Reporter',
-    reporterAvatarUrl: data.reporterAvatarUrl || '',
-    userId: data.userId || 'N/A',
+    reporterName,
+    reporterAvatarUrl,
+    userId: userId || 'N/A',
     waterMeter: data.waterMeter || 'N/A',
     location: data.location || data.address || 'N/A',
     locationDetails: data.locationDetails || 'N/A',
@@ -119,15 +175,19 @@ export const normalizeReportStatus = (value) => {
 export const fetchReportsFromFirestore = async () => {
   const snapshot = await getDocs(collectionGroup(db, REPORTS_COLLECTION))
 
-  return snapshot.docs.map((docSnap) => mapReportDoc(docSnap)).sort((left, right) => right.submittedAtMs - left.submittedAtMs)
+  return mapReportDocsWithProfiles(snapshot.docs)
 }
 
 export const subscribeToReportsRealtime = ({ onReports, onError }) => {
   return onSnapshot(
     collectionGroup(db, REPORTS_COLLECTION),
-    (snapshot) => {
-      const mappedReports = snapshot.docs.map((docSnap) => mapReportDoc(docSnap)).sort((left, right) => right.submittedAtMs - left.submittedAtMs)
-      onReports?.(mappedReports)
+    async (snapshot) => {
+      try {
+        const mappedReports = await mapReportDocsWithProfiles(snapshot.docs)
+        onReports?.(mappedReports)
+      } catch (error) {
+        onError?.(error)
+      }
     },
     (error) => {
       onError?.(error)

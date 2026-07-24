@@ -39,6 +39,7 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
   const [editForm, setEditForm] = useState(EMPTY_EDIT_FORM)
   const [editUserId, setEditUserId] = useState('')
   const [actionFeedback, setActionFeedback] = useState(createEmptyFeedback)
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -59,7 +60,7 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
 
   useEffect(() => {
     const isEditModalOpen = Boolean(editUserId)
-    if (typeof document === 'undefined' || (!isMobileNavOpen && !isEditModalOpen && !isCreateModalOpen)) {
+    if (typeof document === 'undefined' || (!isMobileNavOpen && !isEditModalOpen && !isCreateModalOpen && !isDetailsModalOpen)) {
       return undefined
     }
 
@@ -68,6 +69,11 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
 
     const handleEscape = (event) => {
       if (event.key !== 'Escape') {
+        return
+      }
+
+      if (isDetailsModalOpen) {
+        setIsDetailsModalOpen(false)
         return
       }
 
@@ -92,7 +98,7 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
       document.body.style.overflow = originalOverflow
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [editUserId, isCreateModalOpen, isMobileNavOpen])
+  }, [editUserId, isCreateModalOpen, isMobileNavOpen, isDetailsModalOpen])
 
   const handleToggleMobileNav = () => {
     setIsMobileNavOpen((current) => !current)
@@ -123,6 +129,16 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
 
   const handleCloseEditModal = () => {
     setEditUserId('')
+  }
+
+  const handleOpenDetailsModal = () => {
+    setIsDetailsModalOpen(true)
+    setIsCreateModalOpen(false)
+    setEditUserId('')
+  }
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false)
   }
 
   const handleCreateFieldChange = (field, value) => {
@@ -212,6 +228,7 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
     isMobileNavOpen,
     isCreateModalOpen,
     isEditModalOpen: Boolean(editUserId),
+    isDetailsModalOpen,
     createForm,
     editForm,
     editUserId,
@@ -222,6 +239,8 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
     handleCloseCreateModal,
     handleStartEdit,
     handleCloseEditModal,
+    handleOpenDetailsModal,
+    handleCloseDetailsModal,
     handleCreateFieldChange,
     handleEditFieldChange,
     handleCreateSubmit,

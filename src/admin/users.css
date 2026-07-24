@@ -65,6 +65,9 @@
 .admin-users-content {
   padding: 1.25rem;
   display: grid;
+  grid-auto-rows: max-content;
+  align-content: start;
+  align-items: start;
   gap: 1rem;
   min-width: 0;
 }
@@ -99,11 +102,13 @@
 
 .admin-users-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   gap: 1rem;
 }
 
 .admin-users-card {
+  align-self: start;
   border: 1px solid #d3dde8;
   border-radius: 0.9rem;
   background: #ffffff;
@@ -204,6 +209,53 @@
 
 .admin-users-edit-form {
   display: grid;
+}
+
+.admin-users-details-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.admin-users-details-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(16, 25, 40, 0.5);
+}
+
+.admin-users-details-modal {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  border: 1px solid #d3dde8;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(16, 25, 40, 0.28);
+  padding: 1rem;
+}
+
+.admin-users-details-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-users-details-modal-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.admin-users-details-modal-subtitle {
+  color: #4b5f75;
 }
 
 .admin-users-edit-modal-layer {
@@ -312,25 +364,13 @@
   align-items: center;
 }
 
-.admin-user-profile-image,
-.admin-user-profile-fallback {
+.admin-user-profile-image {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-}
-
-.admin-user-profile-image {
   object-fit: cover;
   border: 1px solid #d3dde8;
-}
-
-.admin-user-profile-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #dcecff;
-  color: #1f5da3;
-  font-weight: 700;
+  background: #eef3f8;
 }
 
 .admin-user-details-email {

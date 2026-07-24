@@ -1,10 +1,9 @@
 import './users.css'
 import { useState } from 'react'
 import UserFormModal from './users/UserFormModal.jsx'
-import UserDetailsPanel from './users/UserDetailsPanel.jsx'
+import UserDetailsModal from './users/UserDetailsModal.jsx'
 import UsersHeader from './users/UsersHeader.jsx'
 import UsersManagementTable from './users/UsersManagementTable.jsx'
-import UsersQuickActionsCard from './users/UsersQuickActionsCard.jsx'
 import useUsersData from './users/useUsersData.jsx'
 import useUsersPageState from './users/useUsersPageState.jsx'
 import AdminSidebar from './sidebar.jsx'
@@ -30,6 +29,7 @@ function AdminUsers({ onLogout }) {
     isMobileNavOpen,
     isCreateModalOpen,
     isEditModalOpen,
+    isDetailsModalOpen,
     createForm,
     editForm,
     editUserId,
@@ -40,6 +40,8 @@ function AdminUsers({ onLogout }) {
     handleCloseCreateModal,
     handleStartEdit,
     handleCloseEditModal,
+    handleOpenDetailsModal,
+    handleCloseDetailsModal,
     handleCreateFieldChange,
     handleEditFieldChange,
     handleCreateSubmit,
@@ -51,6 +53,11 @@ function AdminUsers({ onLogout }) {
     deleteUserAccount,
     setSelectedUserId,
   })
+
+  const handleViewUserDetails = (userId) => {
+    setSelectedUserId(userId)
+    handleOpenDetailsModal()
+  }
 
   return (
     <main className="admin-users-page">
@@ -77,16 +84,11 @@ function AdminUsers({ onLogout }) {
               isLoading={isLoading}
               loadError={loadError}
               selectedUserId={selectedUserId}
-              onViewDetails={setSelectedUserId}
+              onViewDetails={handleViewUserDetails}
               onStartEdit={handleStartEdit}
               onDeleteUser={handleDeleteUser}
               deletingUserId={deletingUserId}
             />
-
-            <aside className="admin-users-side-panels">
-              <UserDetailsPanel user={selectedUser} />
-              <UsersQuickActionsCard actionFeedback={actionFeedback} />
-            </aside>
           </div>
         </section>
         <button
@@ -118,6 +120,13 @@ function AdminUsers({ onLogout }) {
             onSubmit={handleEditSubmit}
             actionFeedback={actionFeedback}
             isSubmitting={savingUserId === editUserId}
+          />
+        )}
+
+        {isDetailsModalOpen && (
+          <UserDetailsModal
+            user={selectedUser}
+            onClose={handleCloseDetailsModal}
           />
         )}
       </div>

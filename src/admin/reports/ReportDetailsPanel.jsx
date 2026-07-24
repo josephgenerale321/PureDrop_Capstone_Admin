@@ -1,3 +1,5 @@
+import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
+
 const STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected', 'Resolved']
 
 function ReportDetailsPanel({
@@ -14,6 +16,7 @@ function ReportDetailsPanel({
   statusUpdateSuccess = '',
   reportActionError = '',
   reportActionSuccess = '',
+  isEmbedded = false,
 }) {
   const isStatusUnchanged =
     String(statusDraft || '')
@@ -23,18 +26,16 @@ function ReportDetailsPanel({
       .trim()
       .toLowerCase()
 
+  const PanelTag = isEmbedded ? 'div' : 'section'
+
   return (
-    <section className="admin-reports-card">
-      <h2 className="admin-reports-card-title mb-3">Report Details</h2>
+    <PanelTag className={isEmbedded ? 'admin-report-details-panel' : 'admin-reports-card'}>
+      {!isEmbedded && <h2 className="admin-reports-card-title mb-3">Report Details</h2>}
       {!report && <p className="text-muted mb-0">Select a report and click View Details.</p>}
       {report && (
         <div className="admin-report-details">
           <div className="admin-report-profile-head">
-            {report.reporterAvatarUrl ? (
-              <img src={report.reporterAvatarUrl} alt={`${report.reporterName} avatar`} className="admin-report-profile-image" />
-            ) : (
-              <div className="admin-report-profile-fallback">{(report.reporterName || 'R').slice(0, 1).toUpperCase()}</div>
-            )}
+            <DefaultAvatarImage src={report.reporterAvatarUrl} alt={`${report.reporterName} avatar`} className="admin-report-profile-image" />
             <div>
               <strong>{report.reporterName}</strong>
               <p className="admin-report-details-meta mb-0">Report #{report.reportId}</p>
@@ -154,7 +155,7 @@ function ReportDetailsPanel({
           </dl>
         </div>
       )}
-    </section>
+    </PanelTag>
   )
 }
 

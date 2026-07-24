@@ -1,4 +1,5 @@
 import UserPresenceBadge from './UserPresenceBadge.jsx'
+import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 
 function UserDetailsPanel({ user }) {
   return (
@@ -8,11 +9,7 @@ function UserDetailsPanel({ user }) {
       {user && (
         <div className="admin-user-details">
           <div className="admin-user-profile-head">
-            {user.profileImageUrl ? (
-              <img src={user.profileImageUrl} alt={`${user.name} profile`} className="admin-user-profile-image" />
-            ) : (
-              <div className="admin-user-profile-fallback">{(user.name || 'U').slice(0, 1).toUpperCase()}</div>
-            )}
+            <DefaultAvatarImage src={user.profileImageUrl} alt={`${user.name} profile`} className="admin-user-profile-image" />
             <div>
               <strong>{user.name}</strong>
               <p className="admin-user-details-email mb-0">{user.email}</p>

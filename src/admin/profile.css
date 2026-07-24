@@ -127,12 +127,9 @@
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 2rem;
-  font-weight: 700;
-  background: linear-gradient(180deg, #e8edf3 0%, #c7d0db 100%);
-  color: #36485b;
+  object-fit: cover;
+  border: 1px solid #d3dde8;
+  background: #eef3f8;
 }
 
 .admin-profile-form,

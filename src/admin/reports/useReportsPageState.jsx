@@ -41,6 +41,7 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [statusDraftByReportKey, setStatusDraftByReportKey] = useState({})
   const [statusUpdateResult, setStatusUpdateResult] = useState({ key: '', type: '', message: '' })
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [editForm, setEditForm] = useState(createEmptyEditForm)
@@ -56,6 +57,7 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
 
   const isEditModalVisible = isEditModalOpen && Boolean(selectedReport)
   const isDeleteModalVisible = isDeleteModalOpen && Boolean(selectedReport)
+  const isDetailsModalVisible = isDetailsModalOpen && Boolean(selectedReport)
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -75,7 +77,7 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
   }, [])
 
   useEffect(() => {
-    if (typeof document === 'undefined' || (!isMobileNavOpen && !isEditModalVisible && !isDeleteModalVisible)) {
+    if (typeof document === 'undefined' || (!isMobileNavOpen && !isDetailsModalVisible && !isEditModalVisible && !isDeleteModalVisible)) {
       return undefined
     }
 
@@ -94,6 +96,11 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
           return
         }
 
+        if (isDetailsModalVisible) {
+          setIsDetailsModalOpen(false)
+          return
+        }
+
         setIsMobileNavOpen(false)
       }
     }
@@ -104,7 +111,23 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
       document.body.style.overflow = originalOverflow
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [isDeleteModalVisible, isEditModalVisible, isMobileNavOpen])
+  }, [isDeleteModalVisible, isDetailsModalVisible, isEditModalVisible, isMobileNavOpen])
+
+  useEffect(() => {
+    if (!selectedReport) {
+      setIsDetailsModalOpen(false)
+    }
+  }, [selectedReport])
+
+  const handleOpenDetailsModal = () => {
+    setIsDetailsModalOpen(true)
+    setIsEditModalOpen(false)
+    setIsDeleteModalOpen(false)
+  }
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false)
+  }
 
   const handleStatusDraftChange = (nextValue) => {
     if (!selectedReport) {
@@ -155,6 +178,7 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
     }
 
     setEditForm(mapReportToEditForm(selectedReport))
+    setIsDetailsModalOpen(false)
     setIsDeleteModalOpen(false)
     setIsEditModalOpen(true)
     setReportActionResult(createEmptyReportActionResult())
@@ -203,6 +227,7 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
     }
 
     setIsEditModalOpen(false)
+    setIsDetailsModalOpen(false)
     setIsDeleteModalOpen(true)
     setReportActionResult(createEmptyReportActionResult())
   }
@@ -239,10 +264,13 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
     setIsMobileNavOpen,
     selectedStatusDraft,
     statusUpdateResult,
+    isDetailsModalOpen: isDetailsModalVisible,
     isEditModalOpen: isEditModalVisible,
     isDeleteModalOpen: isDeleteModalVisible,
     editForm,
     reportActionResult,
+    handleOpenDetailsModal,
+    handleCloseDetailsModal,
     handleStatusDraftChange,
     handleApplyStatusChange,
     handleOpenEditModal,

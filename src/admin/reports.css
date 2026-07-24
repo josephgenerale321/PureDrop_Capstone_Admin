@@ -65,6 +65,9 @@
 .admin-reports-content {
   padding: 1.25rem;
   display: grid;
+  grid-auto-rows: max-content;
+  align-content: start;
+  align-items: start;
   gap: 1rem;
   min-width: 0;
 }
@@ -98,44 +101,56 @@
 }
 
 .admin-reports-summary {
-  display: flex;
+  justify-self: start;
+  align-self: start;
+  display: inline-flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
+  width: fit-content;
+  max-width: 100%;
 }
 
-.summary-pill {
+.admin-report-summary-pill {
+  box-sizing: border-box;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   border-radius: 999px;
-  padding: 0.25rem 0.7rem;
+  padding: 0.15rem 0.55rem;
   background: #e6edf5;
   color: #24384d;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
+  white-space: nowrap;
+  width: fit-content;
 }
 
-.summary-pill-pending {
+.admin-report-summary-pill-pending {
   background: #fde6b1;
   color: #6d4c06;
 }
 
-.summary-pill-resolved {
+.admin-report-summary-pill-resolved {
   background: #bfe5cb;
   color: #104624;
 }
 
-.summary-pill-other {
+.admin-report-summary-pill-other {
   background: #d7dce4;
   color: #313d4d;
 }
 
 .admin-reports-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   gap: 1rem;
 }
 
 .admin-reports-card {
+  align-self: start;
   border: 1px solid #d3dde8;
   border-radius: 0.9rem;
   background: #ffffff;
@@ -251,6 +266,11 @@
   gap: 0.9rem;
 }
 
+.admin-report-details-panel {
+  display: grid;
+  gap: 0.9rem;
+}
+
 .admin-report-status-controls {
   border: 1px solid #dbe4ef;
   border-radius: 0.75rem;
@@ -312,25 +332,13 @@
   align-items: center;
 }
 
-.admin-report-profile-image,
-.admin-report-profile-fallback {
+.admin-report-profile-image {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-}
-
-.admin-report-profile-image {
   object-fit: cover;
   border: 1px solid #d3dde8;
-}
-
-.admin-report-profile-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #dcecff;
-  color: #1f5da3;
-  font-weight: 700;
+  background: #eef3f8;
 }
 
 .admin-report-details-meta {
@@ -397,6 +405,10 @@
   background: #ffffff;
   box-shadow: 0 18px 42px rgba(16, 25, 40, 0.28);
   padding: 1rem;
+}
+
+.admin-reports-details-modal {
+  width: min(780px, 100%);
 }
 
 .admin-reports-modal-head {
