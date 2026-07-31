@@ -172,11 +172,17 @@ function useReportsData() {
     }
   }, [])
 
-  const deleteReport = useCallback(async ({ reportKey, attachments }) => {
+  const deleteReport = useCallback(async ({ reportKey, attachments, userId, reportId, documentId }) => {
     setDeletingReportKey(reportKey)
 
     try {
-      const result = await deleteReportInFirestore({ reportKey, attachments })
+      const result = await deleteReportInFirestore({
+        reportKey,
+        attachments,
+        userId,
+        reportId,
+        documentId,
+      })
       if (!result.ok) {
         return result
       }

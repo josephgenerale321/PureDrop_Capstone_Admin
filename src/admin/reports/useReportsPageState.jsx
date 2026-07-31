@@ -115,8 +115,16 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
 
   useEffect(() => {
     if (!selectedReport) {
-      setIsDetailsModalOpen(false)
+      const timeoutId = window.setTimeout(() => {
+        setIsDetailsModalOpen(false)
+      }, 0)
+
+      return () => {
+        window.clearTimeout(timeoutId)
+      }
     }
+
+    return undefined
   }, [selectedReport])
 
   const handleOpenDetailsModal = () => {
@@ -245,6 +253,9 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
     const result = await deleteReport({
       reportKey: selectedReport.key,
       attachments: selectedReport.attachments,
+      userId: selectedReport.userId,
+      reportId: selectedReport.reportId,
+      documentId: selectedReport.documentId,
     })
 
     if (!result.ok) {

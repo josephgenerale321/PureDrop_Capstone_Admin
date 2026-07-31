@@ -5,6 +5,8 @@ import { isSupabaseConfigured, supabase } from '../../supabase.js'
 const USERS_COLLECTION = 'regular_user'
 const REPORTS_COLLECTION = 'reports'
 const REPORTS_BUCKET = 'reports'
+const REPORT_ATTACHMENT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'heic']
+const REPORT_ATTACHMENT_INDEX_LIMIT = 10
 const DATE_FORMAT_OPTIONS = { month: 'short', day: 'numeric', year: 'numeric' }
 const DATE_TIME_FORMAT_OPTIONS = { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }
 
@@ -344,6 +346,45 @@ const normalizeStoragePath = (value) => {
   }
 }
 
+const getReportAttachmentReportFolderPrefix = ({ reportId, documentId }) => {
+  const normalizedReportId = normalizeStoragePath(reportId)
+  const normalizedDocumentId = normalizeStoragePath(documentId)
+  const id = normalizedReportId && normalizedReportId !== 'N/A' ? normalizedReportId : normalizedDocumentId
+  return id && id !== 'N/A' ? id : ''
+}
+
+const getLegacyReportAttachmentFolderPrefix = ({ userId }) => {
+  const normalizedUserId = normalizeStoragePath(userId)
+  return normalizedUserId && normalizedUserId !== 'N/A' ? normalizedUserId : ''
+}
+
+const getLegacyReportAttachmentNamePrefix = ({ reportId, documentId }) => {
+  const normalizedReportId = normalizeStoragePath(reportId)
+  const normalizedDocumentId = normalizeStoragePath(documentId)
+  const id = normalizedReportId && normalizedReportId !== 'N/A' ? normalizedReportId : normalizedDocumentId
+  return id ? `${id}-` : ''
+}
+
+const buildReportAttachmentCandidatePaths = ({ userId, reportId, documentId }) => {
+  const reportFolderPrefix = getReportAttachmentReportFolderPrefix({ reportId, documentId })
+  const legacyFolderPrefix = getLegacyReportAttachmentFolderPrefix({ userId })
+  const legacyNamePrefix = getLegacyReportAttachmentNamePrefix({ reportId, documentId })
+  const reportFolderFallbackPaths = reportFolderPrefix
+    ? Array.from({ length: REPORT_ATTACHMENT_INDEX_LIMIT }, (_, index) =>
+        REPORT_ATTACHMENT_EXTENSIONS.map((extension) => `${reportFolderPrefix}/attachment-${index + 1}.${extension}`),
+      ).flat()
+    : []
+
+  const legacyPaths =
+    legacyFolderPrefix && legacyNamePrefix
+      ? Array.from({ length: REPORT_ATTACHMENT_INDEX_LIMIT }, (_, index) =>
+          REPORT_ATTACHMENT_EXTENSIONS.map((extension) => `${legacyFolderPrefix}/${legacyNamePrefix}${index}.${extension}`),
+        ).flat()
+      : []
+
+  return [...reportFolderFallbackPaths, ...legacyPaths]
+}
+
 const extractReportsAttachmentPath = (attachmentUrl) => {
   const rawValue = String(attachmentUrl || '').trim()
   if (!rawValue) {
@@ -362,6 +403,9 @@ const extractReportsAttachmentPath = (attachmentUrl) => {
     const markers = [
       `/storage/v1/object/public/${REPORTS_BUCKET}/`,
       `/storage/v1/object/sign/${REPORTS_BUCKET}/`,
+      `/storage/v1/object/authenticated/${REPORTS_BUCKET}/`,
+      `/storage/v1/render/image/public/${REPORTS_BUCKET}/`,
+      `/storage/v1/render/image/authenticated/${REPORTS_BUCKET}/`,
       `/storage/v1/object/${REPORTS_BUCKET}/`,
     ]
 
@@ -378,12 +422,61 @@ const extractReportsAttachmentPath = (attachmentUrl) => {
   return ''
 }
 
-const removeReportAttachmentsFromSupabase = async (attachments) => {
-  const attachmentUrls = Array.isArray(attachments) ? attachments.filter((item) => typeof item === 'string' && item.trim()) : []
+const listReportAttachmentPathsFromSupabase = async ({ userId, reportId, documentId }) => {
+  const reportFolderPrefix = getReportAttachmentReportFolderPrefix({ reportId, documentId })
+  const legacyFolderPrefix = getLegacyReportAttachmentFolderPrefix({ userId })
+  const legacyNamePrefix = getLegacyReportAttachmentNamePrefix({ reportId, documentId })
 
-  if (!attachmentUrls.length) {
-    return { ok: true }
+  if ((!reportFolderPrefix && (!legacyFolderPrefix || !legacyNamePrefix)) || !isSupabaseConfigured || !supabase) {
+    return {
+      ok: true,
+      paths: [],
+    }
   }
+
+  const listFolder = async (folderPrefix) => {
+    if (!folderPrefix) {
+      return { data: [] }
+    }
+
+    return supabase.storage.from(REPORTS_BUCKET).list(folderPrefix, {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: 'name', order: 'asc' },
+    })
+  }
+
+  const [reportFolderResult, legacyFolderResult] = await Promise.all([
+    listFolder(reportFolderPrefix),
+    listFolder(legacyFolderPrefix),
+  ])
+
+  if (reportFolderResult.error || legacyFolderResult.error) {
+    return {
+      ok: false,
+      error: 'Unable to list report attachments from Supabase storage.',
+    }
+  }
+
+  const reportFolderPaths = Array.isArray(reportFolderResult.data)
+    ? reportFolderResult.data
+        .filter((item) => typeof item?.name === 'string')
+        .map((item) => `${reportFolderPrefix}/${item.name}`)
+    : []
+  const legacyFolderPaths = Array.isArray(legacyFolderResult.data)
+    ? legacyFolderResult.data
+        .filter((item) => typeof item?.name === 'string' && item.name.startsWith(legacyNamePrefix))
+        .map((item) => `${legacyFolderPrefix}/${item.name}`)
+    : []
+
+  return {
+    ok: true,
+    paths: [...reportFolderPaths, ...legacyFolderPaths],
+  }
+}
+
+const removeReportAttachmentsFromSupabase = async ({ attachments, userId, reportId, documentId }) => {
+  const attachmentUrls = Array.isArray(attachments) ? attachments.filter((item) => typeof item === 'string' && item.trim()) : []
 
   const parsedPaths = attachmentUrls.map((url) => extractReportsAttachmentPath(url))
   if (parsedPaths.some((path) => !path)) {
@@ -400,7 +493,18 @@ const removeReportAttachmentsFromSupabase = async (attachments) => {
     }
   }
 
-  const uniquePaths = [...new Set(parsedPaths)]
+  const candidatePaths = buildReportAttachmentCandidatePaths({ userId, reportId, documentId })
+  const listedPathsResult = await listReportAttachmentPathsFromSupabase({ userId, reportId, documentId })
+  if (!listedPathsResult.ok && !parsedPaths.length && !candidatePaths.length) {
+    return listedPathsResult
+  }
+
+  const listedPaths = listedPathsResult.ok ? listedPathsResult.paths : []
+  const uniquePaths = [...new Set([...parsedPaths, ...candidatePaths, ...listedPaths])]
+  if (!uniquePaths.length) {
+    return { ok: true }
+  }
+
   const { error } = await supabase.storage.from(REPORTS_BUCKET).remove(uniquePaths)
   if (error) {
     return {
@@ -412,7 +516,7 @@ const removeReportAttachmentsFromSupabase = async (attachments) => {
   return { ok: true }
 }
 
-export const deleteReportInFirestore = async ({ reportKey, attachments }) => {
+export const deleteReportInFirestore = async ({ reportKey, attachments, userId, reportId, documentId }) => {
   if (!reportKey) {
     return {
       ok: false,
@@ -421,7 +525,12 @@ export const deleteReportInFirestore = async ({ reportKey, attachments }) => {
   }
 
   try {
-    const attachmentsDeleteResult = await removeReportAttachmentsFromSupabase(attachments)
+    const attachmentsDeleteResult = await removeReportAttachmentsFromSupabase({
+      attachments,
+      userId,
+      reportId,
+      documentId,
+    })
     if (!attachmentsDeleteResult.ok) {
       return attachmentsDeleteResult
     }

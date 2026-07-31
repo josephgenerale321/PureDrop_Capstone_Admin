@@ -378,6 +378,86 @@
   gap: 0.25rem;
 }
 
+.admin-report-map {
+  position: relative;
+  height: 240px;
+  margin-top: 0.55rem;
+  overflow: hidden;
+  border: 1px solid #c8d5e3;
+  border-radius: 0.75rem;
+  background: #dbeafe;
+}
+
+.admin-report-map-tiles {
+  position: absolute;
+  inset: 0;
+}
+
+.admin-report-map-tile {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  object-fit: cover;
+}
+
+.admin-report-map-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -100%) rotate(45deg);
+  border: 2px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  background: #e11d48;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.35);
+}
+
+.admin-report-map-pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.admin-report-map-label,
+.admin-report-map-attribution {
+  position: absolute;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.88);
+  color: #1e293b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.admin-report-map-label {
+  left: 0.65rem;
+  bottom: 0.65rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.admin-report-map-attribution {
+  right: 0.55rem;
+  bottom: 0.55rem;
+  padding: 0.32rem 0.4rem;
+}
+
+.admin-report-map-fallback {
+  margin-top: 0.45rem;
+  border: 1px dashed #c8d5e3;
+  border-radius: 0.55rem;
+  background: #f8fbff;
+  color: #637a91;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.88rem;
+}
+
 .admin-reports-modal-layer {
   position: fixed;
   inset: 0;

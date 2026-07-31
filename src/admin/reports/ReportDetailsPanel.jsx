@@ -1,4 +1,5 @@
 import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
+import AdminReportGpsMap from './AdminReportGpsMap.jsx'
 
 const STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected', 'Resolved']
 
@@ -133,7 +134,10 @@ function ReportDetailsPanel({
             </div>
             <div>
               <dt>GPS</dt>
-              <dd>{report.gpsLocation}</dd>
+              <dd>
+                <span>{report.gpsLocation}</span>
+                <AdminReportGpsMap gpsLocation={report.gpsLocation} />
+              </dd>
             </div>
             <div>
               <dt>Attachments</dt>
