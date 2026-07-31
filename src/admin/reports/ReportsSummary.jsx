@@ -3,7 +3,8 @@ function ReportsSummary({ totalReports, summary }) {
     <div className="admin-reports-summary">
       <span className="admin-report-summary-pill">Total: {totalReports}</span>
       <span className="admin-report-summary-pill admin-report-summary-pill-pending">Pending: {summary.pending}</span>
-      <span className="admin-report-summary-pill admin-report-summary-pill-resolved">Resolved: {summary.resolved}</span>
+      <span className="admin-report-summary-pill admin-report-summary-pill-resolving">Resolving: {summary.resolving}</span>
+      <span className="admin-report-summary-pill admin-report-summary-pill-approved">Approved: {summary.approved}</span>
       {summary.other > 0 && <span className="admin-report-summary-pill admin-report-summary-pill-other">Other: {summary.other}</span>}
     </div>
   )

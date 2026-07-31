@@ -132,9 +132,14 @@
   color: #6d4c06;
 }
 
-.admin-report-summary-pill-resolved {
+.admin-report-summary-pill-resolving {
   background: #bfe5cb;
   color: #104624;
+}
+
+.admin-report-summary-pill-approved {
+  background: #cfe2ff;
+  color: #0a386f;
 }
 
 .admin-report-summary-pill-other {
@@ -216,7 +221,7 @@
   color: #6d4c06;
 }
 
-.report-status-resolved {
+.report-status-resolving {
   background: #bfe5cb;
   color: #104624;
 }
@@ -232,7 +237,6 @@
   color: #0a386f;
 }
 
-.report-status-rejected,
 .report-status-critical {
   background: #e7a09f;
   color: #64201f;

@@ -199,7 +199,7 @@
   color: #6d4c06;
 }
 
-.report-status-resolved {
+.report-status-resolving {
   background: #bfe5cb;
   color: #104624;
 }
@@ -207,11 +207,6 @@
 .report-status-approved {
   background: #cfe2ff;
   color: #0a386f;
-}
-
-.report-status-rejected {
-  background: #e7a09f;
-  color: #64201f;
 }
 
 .admin-dashboard-side-panels {

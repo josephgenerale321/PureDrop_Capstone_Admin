@@ -104,14 +104,16 @@ function useReportsData() {
         const normalizedStatus = report.status.toLowerCase()
         if (normalizedStatus.includes('pending')) {
           result.pending += 1
-        } else if (normalizedStatus.includes('resolved')) {
-          result.resolved += 1
+        } else if (normalizedStatus.includes('resolving')) {
+          result.resolving += 1
+        } else if (normalizedStatus.includes('approved')) {
+          result.approved += 1
         } else {
           result.other += 1
         }
         return result
       },
-      { pending: 0, resolved: 0, other: 0 },
+      { pending: 0, resolving: 0, approved: 0, other: 0 },
     )
   }, [reports])
 

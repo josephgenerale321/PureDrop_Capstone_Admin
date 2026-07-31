@@ -128,8 +128,8 @@ function useAdminDashboard(user) {
         const mappedReports = mapReports(reportsSnap.docs)
         const totalReports = mappedReports.length
         const totalUsers = usersSnap.size
-        const openReports = mappedReports.filter((report) => report.status !== 'Resolved').length
-        const resolvedReports = mappedReports.filter((report) => report.status === 'Resolved').length
+        const openReports = mappedReports.filter((report) => report.status !== 'Approved').length
+        const approvedReports = mappedReports.filter((report) => report.status === 'Approved').length
         const reportsToday = mappedReports.filter((report) => isSameDate(report.submittedAtDate, new Date())).length
         const { systemStatusLabel, systemStatusClass } = getSystemStatus(openReports, totalReports)
 
@@ -137,7 +137,7 @@ function useAdminDashboard(user) {
           totalUsers,
           totalReports,
           openReports,
-          resolvedReports,
+          approvedReports,
           reportsToday,
           lastReportAtLabel: mappedReports[0]?.submittedAtLabel || 'N/A',
           systemStatusLabel,

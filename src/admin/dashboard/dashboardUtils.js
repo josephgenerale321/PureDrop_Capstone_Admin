@@ -4,7 +4,7 @@ export const createInitialDashboard = () => ({
   totalUsers: 0,
   totalReports: 0,
   openReports: 0,
-  resolvedReports: 0,
+  approvedReports: 0,
   reportsToday: 0,
   lastReportAtLabel: 'N/A',
   systemStatusLabel: 'Healthy',
@@ -68,8 +68,7 @@ export const normalizeStatus = (value) => {
     .toLowerCase()
 
   if (normalized === 'approved') return 'Approved'
-  if (normalized === 'rejected') return 'Rejected'
-  if (normalized === 'resolved') return 'Resolved'
+  if (normalized === 'resolving' || normalized === 'resolved') return 'Resolving'
   return 'Pending'
 }
 

@@ -115,13 +115,13 @@ function AdminDashboardContent({
                 <article className="admin-metric-card">
                   <p className="admin-metric-label">Open Reports</p>
                   <h2 className="admin-metric-value">{dashboard.openReports}</h2>
-                  <p className="admin-metric-note">Pending, approved, and rejected</p>
+                  <p className="admin-metric-note">Pending and resolving</p>
                 </article>
 
                 <article className="admin-metric-card">
                   <p className="admin-metric-label">System Status</p>
                   <h2 className={`admin-metric-value status-${dashboard.systemStatusClass}`}>{dashboard.systemStatusLabel}</h2>
-                  <p className="admin-metric-note">Resolved: {dashboard.resolvedReports}</p>
+                  <p className="admin-metric-note">Approved: {dashboard.approvedReports}</p>
                 </article>
               </section>
 

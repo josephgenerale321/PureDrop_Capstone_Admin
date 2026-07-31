@@ -12,9 +12,9 @@ const DATE_TIME_FORMAT_OPTIONS = { month: 'short', day: 'numeric', year: 'numeri
 
 const STATUS_LABELS = {
   pending: 'Pending',
+  resolving: 'Resolving',
+  resolved: 'Resolving',
   approved: 'Approved',
-  rejected: 'Rejected',
-  resolved: 'Resolved',
 }
 
 const toDateValue = (value) => {
@@ -140,6 +140,7 @@ const mapReportDoc = (docSnap, data = docSnap.data(), userProfile = {}, userId =
   const submittedAtDate = toDateValue(data.createdAt) || toDateValue(data.submittedAt)
   const reporterName = userProfile.fullName || normalizeString(data.reporterName) || 'Unknown Reporter'
   const reporterAvatarUrl = userProfile.profileImageUrl || normalizeString(data.reporterAvatarUrl)
+  const status = normalizeReportStatus(data.status) || 'Pending'
 
   return {
     key: docSnap.ref.path,
@@ -148,8 +149,8 @@ const mapReportDoc = (docSnap, data = docSnap.data(), userProfile = {}, userId =
     issue: data.issue || 'N/A',
     title: data.issue || data.category || 'Untitled report',
     category: data.category || 'Uncategorized',
-    status: data.status || 'Pending',
-    statusClass: formatStatusClass(data.status),
+    status,
+    statusClass: formatStatusClass(status),
     dateSubmitted: formatDate(submittedAtDate),
     submittedAt: formatDateTime(submittedAtDate),
     submittedAtMs: submittedAtDate ? submittedAtDate.getTime() : 0,

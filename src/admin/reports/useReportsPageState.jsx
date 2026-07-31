@@ -6,8 +6,7 @@ const normalizeReportStatus = (value) => {
     .toLowerCase()
 
   if (normalized === 'approved') return 'Approved'
-  if (normalized === 'rejected') return 'Rejected'
-  if (normalized === 'resolved') return 'Resolved'
+  if (normalized === 'resolving' || normalized === 'resolved') return 'Resolving'
   return 'Pending'
 }
 
