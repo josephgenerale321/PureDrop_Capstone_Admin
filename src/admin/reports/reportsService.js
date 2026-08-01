@@ -206,7 +206,7 @@ export const getReportsLoadErrorMessage = (error) => {
   return 'Unable to load reports right now.'
 }
 
-export const updateReportStatusInFirestore = async ({ reportKey, nextStatus }) => {
+export const updateReportStatusInFirestore = async ({ reportKey, nextStatus, userId, reportId, documentId }) => {
   if (!reportKey) {
     return {
       ok: false,
@@ -232,6 +232,10 @@ export const updateReportStatusInFirestore = async ({ reportKey, nextStatus }) =
       updatedAt: serverTimestamp(),
     })
 
+    // Fire-and-forget push notification through the Supabase Edge Function.
+    // Push failures must never block or break the status update in Firestore.
+    fireReportStatusPush({ userId, reportId, status: normalizedStatus, documentId })
+
     return {
       ok: true,
       normalizedStatus,
@@ -249,6 +253,48 @@ export const updateReportStatusInFirestore = async ({ reportKey, nextStatus }) =
       error: 'Unable to update status right now.',
     }
   }
+}
+
+/**
+ * Sends an Expo push notification via the Supabase `send-report-push` Edge
+ * Function after the admin changes a report's status. Best-effort and
+ * non-blocking: failures are swallowed and only logged to the console.
+ */
+const fireReportStatusPush = ({ userId, reportId, status, documentId }) => {
+  const normalizedUserId = normalizeString(userId)
+  const normalizedReportId = normalizeString(reportId) ? normalizeString(reportId) : normalizeString(documentId)
+
+  if (!normalizedUserId || !normalizeStatusPushSafe(status)) {
+    return
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    console.warn('Push skipped: Supabase is not configured in the admin dashboard.')
+    return
+  }
+
+  supabase.functions
+    .invoke('send-report-push', {
+      body: {
+        userId: normalizedUserId,
+        reportId: normalizedReportId,
+        status,
+        changedByAdmin: true,
+      },
+    })
+    .then(({ error }) => {
+      if (error) {
+        console.warn('Push notification skipped:', error.message || error)
+      }
+    })
+    .catch((error) => {
+      console.warn('Push notification skipped:', error instanceof Error ? error.message : String(error))
+    })
+}
+
+const normalizeStatusPushSafe = (value) => {
+  const normalized = String(value || '').trim().toLowerCase()
+  return normalized === 'approved' || normalized === 'resolving' || normalized === 'resolved' || normalized === 'pending'
 }
 
 const normalizeReportTextField = (value) => String(value || '').trim()

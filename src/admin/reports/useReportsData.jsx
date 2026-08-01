@@ -121,7 +121,15 @@ function useReportsData() {
     setUpdatingReportKey(reportKey)
 
     try {
-      const result = await updateReportStatusInFirestore({ reportKey, nextStatus })
+      const targetReport = reports.find((report) => report.key === reportKey) || null
+
+      const result = await updateReportStatusInFirestore({
+        reportKey,
+        nextStatus,
+        userId: targetReport?.userId || undefined,
+        reportId: targetReport?.reportId || undefined,
+        documentId: targetReport?.documentId || undefined,
+      })
       if (!result.ok) {
         return result
       }
@@ -144,7 +152,7 @@ function useReportsData() {
     } finally {
       setUpdatingReportKey(null)
     }
-  }, [])
+  }, [reports])
 
   const editReport = useCallback(async (reportKey, draft) => {
     setSavingReportKey(reportKey)
