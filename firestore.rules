@@ -89,7 +89,9 @@ service cloud.firestore {
       // Profile document is created by the authenticated owner.
       allow create: if isOwner(userId);
 
-      // Owners and admins can update while preserving role and identity fields.
+// Owners and admins can update while preserving role and identity fields.
+      // This covers profile-image writes (profileImageUrl / profileImagePath)
+      // performed when a user edits their profile picture.
       allow update: if (
                       (isOwner(userId) || isAdmin())
                       && isSafeRegularUserUpdate()
