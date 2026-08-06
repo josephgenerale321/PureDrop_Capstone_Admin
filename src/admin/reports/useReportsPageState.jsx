@@ -5,8 +5,9 @@ const normalizeReportStatus = (value) => {
     .trim()
     .toLowerCase()
 
-  if (normalized === 'approved') return 'Approved'
+if (normalized === 'approved') return 'Approved'
   if (normalized === 'resolving' || normalized === 'resolved') return 'Resolving'
+  if (normalized === 'rejected') return 'Rejected'
   return 'Pending'
 }
 

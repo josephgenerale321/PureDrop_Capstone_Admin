@@ -100,7 +100,7 @@ function useReportsData() {
 
   const summary = useMemo(() => {
     return reports.reduce(
-      (result, report) => {
+(result, report) => {
         const normalizedStatus = report.status.toLowerCase()
         if (normalizedStatus.includes('pending')) {
           result.pending += 1
@@ -108,12 +108,14 @@ function useReportsData() {
           result.resolving += 1
         } else if (normalizedStatus.includes('approved')) {
           result.approved += 1
+        } else if (normalizedStatus.includes('rejected')) {
+          result.rejected += 1
         } else {
           result.other += 1
         }
         return result
       },
-      { pending: 0, resolving: 0, approved: 0, other: 0 },
+      { pending: 0, resolving: 0, approved: 0, rejected: 0, other: 0 },
     )
   }, [reports])
 

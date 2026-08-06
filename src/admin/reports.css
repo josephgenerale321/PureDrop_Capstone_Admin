@@ -142,6 +142,11 @@
   color: #0a386f;
 }
 
+.admin-report-summary-pill-rejected {
+  background: #f8d7da;
+  color: #842029;
+}
+
 .admin-report-summary-pill-other {
   background: #d7dce4;
   color: #313d4d;
@@ -229,6 +234,11 @@
 .report-status-approved {
   background: #cfe2ff;
   color: #0a386f;
+}
+
+.report-status-rejected {
+  background: #f8d7da;
+  color: #842029;
 }
 
 .report-status-active,

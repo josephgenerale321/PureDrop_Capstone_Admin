@@ -15,6 +15,7 @@ const STATUS_LABELS = {
   resolving: 'Resolving',
   resolved: 'Resolving',
   approved: 'Approved',
+  rejected: 'Rejected',
 }
 
 const toDateValue = (value) => {
@@ -294,7 +295,7 @@ const fireReportStatusPush = ({ userId, reportId, status, documentId }) => {
 
 const normalizeStatusPushSafe = (value) => {
   const normalized = String(value || '').trim().toLowerCase()
-  return normalized === 'approved' || normalized === 'resolving' || normalized === 'resolved' || normalized === 'pending'
+  return normalized === 'approved' || normalized === 'resolving' || normalized === 'resolved' || normalized === 'pending' || normalized === 'rejected'
 }
 
 const normalizeReportTextField = (value) => String(value || '').trim()

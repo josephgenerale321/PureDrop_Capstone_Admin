@@ -1,7 +1,7 @@
 import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 import AdminReportGpsMap from './AdminReportGpsMap.jsx'
 
-const STATUS_OPTIONS = ['Pending', 'Resolving', 'Approved']
+const STATUS_OPTIONS = ['Pending', 'Resolving', 'Approved', 'Rejected']
 
 function ReportDetailsPanel({
   report,
