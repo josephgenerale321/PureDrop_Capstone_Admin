@@ -27,6 +27,32 @@
   padding: 0.85rem 1rem;
   border-bottom: 1px solid #d8e0ea;
   background: #083663;
+  position: relative;
+}
+
+.admin-settings-sidebar-close {
+  display: none;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease;
+}
+
+.admin-settings-sidebar-close:hover,
+.admin-settings-sidebar-close:focus {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .admin-settings-sidebar-logo {
@@ -320,10 +346,22 @@
     grid-template-columns: 1fr;
   }
 
+  .admin-settings-sidebar-close {
+    display: inline-flex;
+  }
+
+  .admin-settings-nav-item {
+    padding: 0.85rem 0.8rem;
+    font-size: 1rem;
+    min-height: 2.75rem;
+  }
+
   .admin-settings-mobile-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
   }
 
   .admin-settings-shell.is-nav-open .admin-settings-mobile-overlay {
@@ -338,8 +376,12 @@
 }
 
 @media (max-width: 767.98px) {
+  .admin-settings-sidebar-wrap {
+    width: min(92vw, 360px);
+  }
+
   .admin-settings-content {
-    padding: 1rem 0.75rem;
+    padding: calc(1rem + env(safe-area-inset-top)) 0.75rem calc(1rem + env(safe-area-inset-bottom));
   }
 
   .admin-settings-title {
@@ -362,6 +404,11 @@
 
   .admin-settings-top-actions .btn {
     flex: 1 1 calc(50% - 0.25rem);
+    min-height: 2.75rem;
+  }
+
+  .admin-settings-mobile-toggle .admin-settings-toggle-icon {
+    font-size: 1.1rem;
   }
 
   .admin-settings-side {
@@ -380,13 +427,32 @@
     flex-direction: column;
   }
 
+  .admin-settings-card-head .btn {
+    width: 100%;
+  }
+
   .admin-settings-add-role {
     min-width: 0;
     width: 100%;
     flex-direction: column;
   }
 
+  .admin-settings-add-role .btn,
+  .admin-settings-add-role .form-control {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
   .admin-settings-save-row .btn {
     width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .admin-settings-quick-actions .btn {
+    min-height: 2.75rem;
+  }
+
+  .admin-role-table {
+    min-width: 680px;
   }
 }

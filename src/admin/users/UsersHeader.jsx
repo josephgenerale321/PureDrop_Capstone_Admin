@@ -11,6 +11,9 @@ function UsersHeader({ isMobileNavOpen, onToggleMobileNav, onLogout }) {
           aria-expanded={isMobileNavOpen}
           aria-controls="admin-users-sidebar"
         >
+          <span className="admin-users-toggle-icon" aria-hidden="true">
+            {isMobileNavOpen ? '✕' : '☰'}
+          </span>
           {isMobileNavOpen ? 'Close Menu' : 'Menu'}
         </button>
         <h1 className="admin-users-title">Users</h1>

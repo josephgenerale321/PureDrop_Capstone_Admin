@@ -15,11 +15,15 @@ function AdminSidebar({ baseClass, activeItem, includeProfile = false, settingsD
   const logoClass = `${baseClass}-sidebar-logo`
   const navClass = `${baseClass}-nav`
   const navItemClass = `${baseClass}-nav-item`
+  const closeBtnClass = `${baseClass}-sidebar-close`
 
   return (
     <aside className={sidebarClass}>
       <div className={brandClass}>
         <img src={logo} className={logoClass} alt="PureDrop logo" />
+        <button type="button" className={closeBtnClass} aria-label="Close navigation menu" onClick={onNavigate}>
+          <span aria-hidden="true">✕</span>
+        </button>
       </div>
       <nav className={navClass}>
         {navItems.map((item) => (

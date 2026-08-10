@@ -94,6 +94,9 @@ function AdminSettings({ user, onLogout }) {
                 aria-expanded={isMobileNavOpen}
                 aria-controls="admin-settings-sidebar"
               >
+                <span className="admin-settings-toggle-icon" aria-hidden="true">
+                  {isMobileNavOpen ? '✕' : '☰'}
+                </span>
                 {isMobileNavOpen ? 'Close Menu' : 'Menu'}
               </button>
               <h1 className="admin-settings-title">Settings</h1>

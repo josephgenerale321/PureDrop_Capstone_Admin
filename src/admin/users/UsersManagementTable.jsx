@@ -52,17 +52,17 @@ function UsersManagementTable({
 
             {filteredUsers.map((user) => (
               <tr key={user.id} className={selectedUserId === user.id ? 'is-selected' : ''}>
-                <td>{user.id}</td>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>
+                <td data-label="User ID">{user.id}</td>
+                <td data-label="Name">{user.name}</td>
+                <td data-label="Email">{user.email}</td>
+                <td data-label="Role">
                   <span className={`badge-pill role-${user.roleClass}`}>{user.role}</span>
                 </td>
-                <td>
+                <td data-label="Status">
                   <UserPresenceBadge status={user.status} />
                 </td>
-                <td>{user.dateJoined}</td>
-                <td className="d-flex gap-2">
+                <td data-label="Date Joined">{user.dateJoined}</td>
+                <td data-label="Actions" className="d-flex gap-2 flex-wrap">
                   <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onViewDetails(user.id)}>
                     View Details
                   </button>

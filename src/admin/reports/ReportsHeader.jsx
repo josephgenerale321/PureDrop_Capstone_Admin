@@ -11,6 +11,9 @@ function ReportsHeader({ isMobileNavOpen, onToggleMobileNav, onLogout }) {
           aria-expanded={isMobileNavOpen}
           aria-controls="admin-reports-sidebar"
         >
+          <span className="admin-reports-toggle-icon" aria-hidden="true">
+            {isMobileNavOpen ? '✕' : '☰'}
+          </span>
           {isMobileNavOpen ? 'Close Menu' : 'Menu'}
         </button>
         <h1 className="admin-reports-title">Reports</h1>

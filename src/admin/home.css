@@ -27,6 +27,32 @@
   padding: 0.85rem 1rem;
   border-bottom: 1px solid #d8e0ea;
   background: #083663;
+  position: relative;
+}
+
+.admin-dashboard-sidebar-close {
+  display: none;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease;
+}
+
+.admin-dashboard-sidebar-close:hover,
+.admin-dashboard-sidebar-close:focus {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .admin-dashboard-sidebar-logo {
@@ -359,10 +385,22 @@
     grid-template-columns: 1fr;
   }
 
+  .admin-dashboard-sidebar-close {
+    display: inline-flex;
+  }
+
+  .admin-dashboard-nav-item {
+    padding: 0.85rem 0.8rem;
+    font-size: 1rem;
+    min-height: 2.75rem;
+  }
+
   .admin-dashboard-mobile-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
   }
 
   .admin-dashboard-shell.is-nav-open .admin-dashboard-mobile-overlay {
@@ -377,8 +415,12 @@
 }
 
 @media (max-width: 767.98px) {
+  .admin-dashboard-sidebar-wrap {
+    width: min(92vw, 360px);
+  }
+
   .admin-dashboard-content {
-    padding: 1rem 0.75rem;
+    padding: calc(1rem + env(safe-area-inset-top)) 0.75rem calc(1rem + env(safe-area-inset-bottom));
   }
 
   .admin-dashboard-title {
@@ -401,6 +443,11 @@
 
   .admin-dashboard-top-actions .btn {
     flex: 1 1 calc(50% - 0.25rem);
+    min-height: 2.75rem;
+  }
+
+  .admin-dashboard-mobile-toggle .admin-dashboard-toggle-icon {
+    font-size: 1.1rem;
   }
 
   .admin-dashboard-metrics {
@@ -413,5 +460,76 @@
 
   .admin-dashboard-card-head {
     flex-direction: column;
+  }
+
+  .admin-dashboard-card-head .btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  /* Dashboard table: convert to responsive card layout */
+  .admin-dashboard-grid .table-responsive {
+    overflow: visible;
+  }
+
+  .admin-dashboard-table {
+    min-width: 0;
+  }
+
+  .admin-dashboard-table thead {
+    display: none;
+  }
+
+  .admin-dashboard-table,
+  .admin-dashboard-table tbody,
+  .admin-dashboard-table tr,
+  .admin-dashboard-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-dashboard-table tr {
+    border: 1px solid #d3dde8;
+    border-radius: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background: #ffffff;
+  }
+
+  .admin-dashboard-table td {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    border: 0;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    min-height: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .admin-dashboard-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-dashboard-table td::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #637a91;
+  }
+
+  .admin-dashboard-table td .btn,
+  .admin-dashboard-table td a.btn {
+    width: 100%;
+    min-height: 2.75rem;
+    white-space: normal;
+  }
+
+  .admin-dashboard-card {
+    padding: 0.75rem;
   }
 }

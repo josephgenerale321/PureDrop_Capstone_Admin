@@ -75,6 +75,9 @@ function AdminDashboardContent({
                 aria-expanded={isMobileNavOpen}
                 aria-controls="admin-dashboard-sidebar"
               >
+                <span className="admin-dashboard-toggle-icon" aria-hidden="true">
+                  {isMobileNavOpen ? '✕' : '☰'}
+                </span>
                 {isMobileNavOpen ? 'Close Menu' : 'Menu'}
               </button>
               <h1 className="admin-dashboard-title">Administrator</h1>
@@ -160,15 +163,15 @@ function AdminDashboardContent({
                         )}
                         {dashboard.recentReports.map((report) => (
                           <tr key={report.key}>
-                            <td>REP-{report.reportId}</td>
-                            <td>{report.reporterName}</td>
-                            <td>{report.category}</td>
-                            <td>
+                            <td data-label="Report ID">REP-{report.reportId}</td>
+                            <td data-label="Reporter">{report.reporterName}</td>
+                            <td data-label="Category">{report.category}</td>
+                            <td data-label="Status">
                               <span className={`badge-pill report-status-${report.statusClass}`}>{report.status}</span>
                             </td>
-                            <td>{report.location}</td>
-                            <td>{report.statusUpdatedAtLabel}</td>
-                            <td>
+                            <td data-label="Location">{report.location}</td>
+                            <td data-label="Updated">{report.statusUpdatedAtLabel}</td>
+                            <td data-label="Action">
                               <Link to="/admin/reports" className="btn btn-sm btn-outline-secondary">
                                 Manage
                               </Link>

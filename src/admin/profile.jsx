@@ -1,4 +1,5 @@
 import './profile.css'
+import { useEffect, useState } from 'react'
 import { signOut } from 'firebase/auth'
 import { auth } from '../firebase.js'
 import DefaultAvatarImage from './DefaultAvatarImage.jsx'
@@ -6,6 +7,7 @@ import useAdminProfile from './profile/useAdminProfile.jsx'
 import AdminSidebar from './sidebar.jsx'
 
 function AdminProfile({ user, onLogout }) {
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const {
     fullName,
     setFullName,
@@ -26,6 +28,45 @@ function AdminProfile({ user, onLogout }) {
     handleChangePassword,
   } = useAdminProfile(user)
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const handleResize = () => {
+      if (window.innerWidth >= 992) {
+        setIsMobileNavOpen(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined' || !isMobileNavOpen) {
+      return undefined
+    }
+
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsMobileNavOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isMobileNavOpen])
+
   const handleLogout = async () => {
     await signOut(auth)
     onLogout?.()
@@ -33,12 +74,31 @@ function AdminProfile({ user, onLogout }) {
 
   return (
     <main className="admin-home-page">
-      <div className="admin-shell">
-        <AdminSidebar baseClass="admin" activeItem="profile" includeProfile />
+      <div className={`admin-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
+        <div id="admin-profile-sidebar" className="admin-sidebar-wrap">
+          <AdminSidebar
+            baseClass="admin"
+            activeItem="profile"
+            includeProfile
+            onNavigate={() => setIsMobileNavOpen(false)}
+          />
+        </div>
 
         <section className="admin-content">
           <header className="admin-content-header">
             <div>
+              <button
+                type="button"
+                className="btn btn-outline-secondary admin-mobile-toggle"
+                onClick={() => setIsMobileNavOpen((current) => !current)}
+                aria-expanded={isMobileNavOpen}
+                aria-controls="admin-profile-sidebar"
+              >
+                <span className="admin-toggle-icon" aria-hidden="true">
+                  {isMobileNavOpen ? '✕' : '☰'}
+                </span>
+                {isMobileNavOpen ? 'Close Menu' : 'Menu'}
+              </button>
               <h1 className="admin-page-title">Admin Profile</h1>
               <p className="admin-page-subtitle">Manage your personal account and security details.</p>
             </div>
@@ -147,6 +207,12 @@ function AdminProfile({ user, onLogout }) {
             </form>
           </section>
         </section>
+        <button
+          type="button"
+          className="admin-mobile-overlay"
+          aria-label="Close navigation menu"
+          onClick={() => setIsMobileNavOpen(false)}
+        />
       </div>
     </main>
   )
