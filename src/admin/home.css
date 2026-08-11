@@ -130,11 +130,39 @@
 }
 
 .admin-metric-card {
+  position: relative;
   border: 1px solid #d3dde8;
   border-radius: 0.9rem;
   background: #ffffff;
   box-shadow: 0 4px 14px rgba(16, 25, 40, 0.06);
-  padding: 1rem;
+  padding: 1rem 1rem 1rem 1.15rem;
+  overflow: hidden;
+}
+
+.admin-metric-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #8ab4e6;
+}
+
+.admin-metric-card:nth-child(1)::before {
+  background: #4f8ed9;
+}
+
+.admin-metric-card:nth-child(2)::before {
+  background: #2f9e63;
+}
+
+.admin-metric-card:nth-child(3)::before {
+  background: #e8923a;
+}
+
+.admin-metric-card:nth-child(4)::before {
+  background: #a855f7;
 }
 
 .admin-metric-label {
@@ -204,6 +232,49 @@
 .admin-dashboard-table thead th {
   background: #f1f4f8;
   white-space: nowrap;
+}
+
+.admin-dashboard-table th {
+  padding: 0.4rem 0.5rem;
+}
+
+.admin-sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  padding: 0.4rem 0.45rem;
+  margin: -0.4rem -0.45rem;
+  font-weight: 700;
+  color: #24384d;
+  cursor: pointer;
+  border-radius: 0.4rem;
+  font-size: 0.88rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.admin-sort-header:hover,
+.admin-sort-header:focus {
+  background: #dcecff;
+  color: #1f5da3;
+}
+
+.admin-sort-header.is-active {
+  color: #1f5da3;
+}
+
+.admin-sort-icon {
+  display: inline-flex;
+  font-size: 0.8rem;
+  color: #8a9bad;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.admin-sort-header.is-active .admin-sort-icon {
+  color: #1f5da3;
 }
 
 .admin-dashboard-table td {
@@ -494,13 +565,14 @@
     margin-bottom: 0.75rem;
     padding: 0.75rem;
     background: #ffffff;
+    box-shadow: 0 2px 8px rgba(16, 25, 40, 0.05);
   }
 
   .admin-dashboard-table td {
     display: grid;
     grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr);
     gap: 0.5rem;
-    padding: 0.4rem 0;
+    padding: 0.5rem 0;
     border: 0;
     border-bottom: 1px solid #eef2f7;
     text-align: left;
@@ -531,5 +603,30 @@
 
   .admin-dashboard-card {
     padding: 0.75rem;
+  }
+
+  .admin-dashboard-mobile-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-metric-card {
+    padding: 0.85rem 0.85rem 0.85rem 1rem;
+  }
+
+  .admin-metric-value {
+    font-size: 1.7rem;
+  }
+
+  .admin-dashboard-card-head .btn {
+    min-height: 2.75rem;
+  }
+
+  .dashboard-activity-list li {
+    padding-top: 0.75rem;
+  }
+
+  .dashboard-details-list dd {
+    font-size: 0.95rem;
   }
 }

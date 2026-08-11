@@ -121,6 +121,23 @@ const fetchUserProfilesByIds = async (userIds) => {
   return profilesById
 }
 
+const buildUidToDisplayIdMap = async () => {
+  try {
+    const usersSnap = await getDocs(collectionGroup(db, USERS_COLLECTION))
+    const uids = usersSnap.docs
+      .map((docSnap) => docSnap.data().uid || docSnap.id)
+      .filter(Boolean)
+    const sortedUids = [...new Set(uids)].sort((a, b) => String(a).localeCompare(String(b)))
+    const map = new Map()
+    sortedUids.forEach((uid, index) => {
+      map.set(uid, String(index + 1))
+    })
+    return map
+  } catch {
+    return new Map()
+  }
+}
+
 const mapReportDocsWithProfiles = async (docs) => {
   const reportDocs = docs.map((docSnap) => {
     const data = docSnap.data()
@@ -131,9 +148,17 @@ const mapReportDocsWithProfiles = async (docs) => {
     }
   })
   const profilesById = await fetchUserProfilesByIds(reportDocs.map((item) => item.userId))
+  const uidToDisplayId = await buildUidToDisplayIdMap()
 
   return reportDocs
-    .map(({ docSnap, data, userId }) => mapReportDoc(docSnap, data, profilesById.get(userId) || {}, userId))
+    .map(({ docSnap, data, userId }) => {
+      const mapped = mapReportDoc(docSnap, data, profilesById.get(userId) || {}, userId)
+      return {
+        ...mapped,
+        userIdRaw: userId,
+        userId: uidToDisplayId.get(userId) || 'N/A',
+      }
+    })
     .sort((left, right) => right.submittedAtMs - left.submittedAtMs)
 }
 

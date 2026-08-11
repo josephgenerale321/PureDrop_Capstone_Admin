@@ -253,7 +253,7 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
     const result = await deleteReport({
       reportKey: selectedReport.key,
       attachments: selectedReport.attachments,
-      userId: selectedReport.userId,
+      userId: selectedReport.userIdRaw || selectedReport.userId,
       reportId: selectedReport.reportId,
       documentId: selectedReport.documentId,
     })

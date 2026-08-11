@@ -140,7 +140,14 @@ export const subscribeUsers = ({ onUsers, onError }) => {
   return onSnapshot(
     collection(db, USERS_COLLECTION),
     (snapshot) => {
-      onUsers(snapshot.docs.map((docSnap) => mapUserDoc(docSnap)))
+      const users = snapshot.docs.map((docSnap) => mapUserDoc(docSnap))
+      // Sort by UID (alphabetically) and assign sequential display IDs (1, 2, 3...).
+      const sorted = [...users].sort((a, b) => String(a.uid || '').localeCompare(String(b.uid || '')))
+      const withDisplayId = sorted.map((user, index) => ({
+        ...user,
+        displayId: String(index + 1),
+      }))
+      onUsers(withDisplayId)
     },
     onError,
   )

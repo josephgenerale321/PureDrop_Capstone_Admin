@@ -3,6 +3,13 @@ import AdminReportGpsMap from './AdminReportGpsMap.jsx'
 
 const STATUS_OPTIONS = ['Pending', 'Resolving', 'Approved', 'Rejected']
 
+const STATUS_BADGE_CLASS = {
+  pending: 'report-status-pending',
+  resolving: 'report-status-resolving',
+  approved: 'report-status-approved',
+  rejected: 'report-status-rejected',
+}
+
 function ReportDetailsPanel({
   report,
   statusDraft,
@@ -37,10 +44,13 @@ function ReportDetailsPanel({
         <div className="admin-report-details">
           <div className="admin-report-profile-head">
             <DefaultAvatarImage src={report.reporterAvatarUrl} alt={`${report.reporterName} avatar`} className="admin-report-profile-image" />
-            <div>
-              <strong>{report.reporterName}</strong>
+            <div className="admin-report-profile-info">
+              <strong className="admin-report-profile-name">{report.reporterName}</strong>
               <p className="admin-report-details-meta mb-0">Report #{report.reportId}</p>
             </div>
+            <span className={`badge-pill ${STATUS_BADGE_CLASS[String(report.status || '').toLowerCase()] || 'report-status-active'}`}>
+              {report.status}
+            </span>
           </div>
 
           <div className="admin-report-status-controls">
@@ -97,10 +107,6 @@ function ReportDetailsPanel({
 
           <dl className="admin-report-details-list">
             <div>
-              <dt>Status</dt>
-              <dd>{report.status}</dd>
-            </div>
-            <div>
               <dt>Category</dt>
               <dd>{report.category}</dd>
             </div>
@@ -134,10 +140,7 @@ function ReportDetailsPanel({
             </div>
             <div>
               <dt>GPS</dt>
-              <dd>
-                <span>{report.gpsLocation}</span>
-                <AdminReportGpsMap gpsLocation={report.gpsLocation} />
-              </dd>
+              <dd>{report.gpsLocation}</dd>
             </div>
             <div>
               <dt>Attachments</dt>
@@ -148,7 +151,7 @@ function ReportDetailsPanel({
                     {report.attachments.map((url, index) => (
                       <li key={url}>
                         <a href={url} target="_blank" rel="noreferrer">
-                          Attachment {index + 1}
+                          📎 Attachment {index + 1}
                         </a>
                       </li>
                     ))}
@@ -157,6 +160,14 @@ function ReportDetailsPanel({
               </dd>
             </div>
           </dl>
+
+          <div className="admin-report-map-section">
+            <div className="admin-report-map-section-head">
+              <h3 className="admin-report-map-section-title">GPS Location Map</h3>
+              <span className="admin-report-map-section-coords">{report.gpsLocation}</span>
+            </div>
+            <AdminReportGpsMap gpsLocation={report.gpsLocation} />
+          </div>
         </div>
       )}
     </PanelTag>

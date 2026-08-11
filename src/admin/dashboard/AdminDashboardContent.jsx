@@ -1,7 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 import AdminSidebar from '../sidebar.jsx'
+
+const SORTABLE_COLUMNS = [
+  { key: 'reportId', label: 'Report ID', getValue: (report) => report.reportId },
+  { key: 'reporterName', label: 'Reporter', getValue: (report) => report.reporterName },
+  { key: 'category', label: 'Category', getValue: (report) => report.category },
+  { key: 'status', label: 'Status', getValue: (report) => report.status },
+  { key: 'location', label: 'Location', getValue: (report) => report.location },
+  { key: 'statusUpdatedAtLabel', label: 'Updated', getValue: (report) => report.statusUpdatedAtLabel },
+]
 
 function AdminDashboardContent({
   onLogout,
@@ -12,6 +21,56 @@ function AdminDashboardContent({
   userEmail,
 }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const [sortKey, setSortKey] = useState('')
+  const [sortDirection, setSortDirection] = useState('asc')
+
+  const sortedReports = useMemo(() => {
+    if (!dashboard?.recentReports || !sortKey) {
+      return dashboard?.recentReports || []
+    }
+
+    const column = SORTABLE_COLUMNS.find((item) => item.key === sortKey)
+    if (!column) {
+      return dashboard.recentReports
+    }
+
+    return [...dashboard.recentReports].sort((a, b) => {
+      const aValue = column.getValue(a)
+      const bValue = column.getValue(b)
+      const comparison = String(aValue ?? '')
+        .localeCompare(String(bValue ?? ''), undefined, { numeric: true, sensitivity: 'base' })
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+  }, [dashboard, sortKey, sortDirection])
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDirection('asc')
+    }
+  }
+
+  const renderSortIcon = (key) => {
+    if (sortKey !== key) {
+      return (
+        <span className="admin-sort-icon" aria-hidden="true">
+          ⇅
+        </span>
+      )
+    }
+
+    return sortDirection === 'asc' ? (
+      <span className="admin-sort-icon is-active" aria-hidden="true">
+        ↑
+      </span>
+    ) : (
+      <span className="admin-sort-icon is-active" aria-hidden="true">
+        ↓
+      </span>
+    )
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -144,24 +203,30 @@ function AdminDashboardContent({
                     <table className="table table-sm align-middle admin-dashboard-table">
                       <thead>
                         <tr>
-                          <th>Report ID</th>
-                          <th>Reporter</th>
-                          <th>Category</th>
-                          <th>Status</th>
-                          <th>Location</th>
-                          <th>Updated</th>
+                          {SORTABLE_COLUMNS.map((column) => (
+                            <th key={column.key}>
+                              <button
+                                type="button"
+                                className={`admin-sort-header${sortKey === column.key ? ' is-active' : ''}`}
+                                onClick={() => handleSort(column.key)}
+                              >
+                                {column.label}
+                                {renderSortIcon(column.key)}
+                              </button>
+                            </th>
+                          ))}
                           <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {!dashboard.recentReports.length && (
+                        {!sortedReports.length && (
                           <tr>
                             <td colSpan={7} className="text-center text-muted py-4">
                               No reports found.
                             </td>
                           </tr>
                         )}
-                        {dashboard.recentReports.map((report) => (
+                        {sortedReports.map((report) => (
                           <tr key={report.key}>
                             <td data-label="Report ID">REP-{report.reportId}</td>
                             <td data-label="Reporter">{report.reporterName}</td>

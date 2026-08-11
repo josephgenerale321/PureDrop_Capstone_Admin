@@ -1,6 +1,6 @@
 import './adminlogin.css'
 import { useState } from 'react'
-import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, signInWithEmailAndPassword } from 'firebase/auth'
+import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, setPersistence, signInWithEmailAndPassword } from 'firebase/auth'
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import logo from '../assets/logo.png'
 import { auth, db } from '../firebase.js'
@@ -11,9 +11,10 @@ const ADMIN_EMAIL_ALLOWLIST = (import.meta.env.VITE_ADMIN_EMAILS || '')
   .filter(Boolean)
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || ''
 
-function AdminLogin({ onSignInSuccess }) {
-  const [email, setEmail] = useState('')
+function AdminLogin({ rememberedEmail = '', onClearRememberedEmail }) {
+  const [email, setEmail] = useState(rememberedEmail || '')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -34,6 +35,12 @@ function AdminLogin({ onSignInSuccess }) {
         setErrorMessage('Access denied. Admin password is incorrect.')
         return
       }
+
+      // Apply persistence BEFORE signing in so the "saved login" behavior
+      // is respected. If "remember me" is checked, the session is persisted
+      // in localStorage (survives browser restarts). Otherwise the session
+      // only lasts for the current tab/session.
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
 
       let credential
       try {
@@ -65,10 +72,8 @@ function AdminLogin({ onSignInSuccess }) {
       )
 
       setSuccessMessage('Admin sign-in successful.')
-      onSignInSuccess?.({
-        uid: credential.user.uid,
-        email: credential.user.email || normalizedInputEmail,
-      })
+      // The app-level onAuthStateChanged listener (in useAdminSavedLogin)
+      // will detect this sign-in and auto-redirect to the dashboard.
     } catch (error) {
       if (error?.code === 'auth/invalid-credential-existing-user') {
         setErrorMessage('This admin email already exists in Firebase Auth, but the password is incorrect.')
@@ -130,6 +135,35 @@ function AdminLogin({ onSignInSuccess }) {
                         required
                       />
                     </div>
+
+                    <div className="form-check d-flex align-items-center gap-2">
+                      <input
+                        id="adminRememberMe"
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={rememberMe}
+                        onChange={(event) => setRememberMe(event.target.checked)}
+                      />
+                      <label htmlFor="adminRememberMe" className="form-check-label">
+                        Keep me signed in on this device
+                      </label>
+                    </div>
+
+                    {rememberedEmail && (
+                      <div className="d-flex align-items-center justify-content-between">
+                        <small className="text-muted">Signed in before as {rememberedEmail}</small>
+                        <button
+                          type="button"
+                          className="btn btn-link btn-sm p-0"
+                          onClick={() => {
+                            setEmail('')
+                            onClearRememberedEmail?.()
+                          }}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
 
                     <button type="submit" className="btn admin-signin-btn btn-lg mt-1" disabled={isSubmitting}>
                       {isSubmitting ? 'Signing In...' : 'Sign In'}

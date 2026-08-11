@@ -128,7 +128,7 @@ function useReportsData() {
       const result = await updateReportStatusInFirestore({
         reportKey,
         nextStatus,
-        userId: targetReport?.userId || undefined,
+        userId: targetReport?.userIdRaw || targetReport?.userId || undefined,
         reportId: targetReport?.reportId || undefined,
         documentId: targetReport?.documentId || undefined,
       })

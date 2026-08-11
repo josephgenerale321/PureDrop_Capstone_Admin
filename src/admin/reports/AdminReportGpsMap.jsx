@@ -1,6 +1,6 @@
 const TILE_SIZE = 256
 const DEFAULT_ZOOM = 16
-const MAP_TILE_RADIUS = 1
+const MAP_TILE_RADIUS = 2 // 5x5 grid = 1280x1280px coverage, fully fills the container
 const MAPTILER_API_KEY = String(import.meta.env.VITE_MAPTILER_API_KEY || '').trim()
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
@@ -83,6 +83,7 @@ function AdminReportGpsMap({ gpsLocation }) {
 
   const tiles = buildTiles(coordinate)
   const coordinateLabel = `${coordinate.latitude.toFixed(6)}, ${coordinate.longitude.toFixed(6)}`
+  const googleMapsUrl = `https://www.google.com/maps?q=${coordinate.latitude},${coordinate.longitude}`
 
   return (
     <div className="admin-report-map" aria-label={`GPS map centered at ${coordinateLabel}`} role="img">
@@ -94,12 +95,23 @@ function AdminReportGpsMap({ gpsLocation }) {
             className="admin-report-map-tile"
             src={tile.uri}
             style={{ left: tile.left, top: tile.top }}
+            loading="lazy"
           />
         ))}
       </div>
       <div className="admin-report-map-pin" aria-hidden="true" />
       <div className="admin-report-map-label">{coordinateLabel}</div>
       <div className="admin-report-map-attribution">MapTiler</div>
+
+      <a
+        className="admin-report-map-open"
+        href={googleMapsUrl}
+        target="_blank"
+        rel="noreferrer"
+        title="Open in Google Maps"
+      >
+        Open in Google Maps
+      </a>
     </div>
   )
 }
