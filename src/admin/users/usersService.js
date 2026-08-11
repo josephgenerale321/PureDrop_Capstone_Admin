@@ -1,8 +1,9 @@
 import { deleteApp, initializeApp } from 'firebase/app'
-import { createUserWithEmailAndPassword, getAuth, sendPasswordResetEmail } from 'firebase/auth'
+import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth'
 import { collection, deleteDoc, doc, getDocs, getFirestore, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { auth, db, functionsClient } from '../../firebase.js'
+import { isSupabaseConfigured, supabase } from '../../supabase.js'
 import { resolvePresenceStatus } from './presenceStatus.js'
 
 const USERS_COLLECTION = 'regular_user'
@@ -115,6 +116,7 @@ const mapUserDoc = (docSnap) => {
     email: data.email || 'N/A',
     role: displayRole,
     roleClass: roleClassName(data.role || 'user'),
+    roleRaw: data.role || 'regular_user',
     status,
     presenceStatusRaw,
     dateJoined: formatDate(data.createdAt),
@@ -171,29 +173,97 @@ export const sendPasswordResetEmailToUser = async (email) => {
     }
   }
 
-  try {
-    await sendPasswordResetEmail(auth, normalizedEmail)
+  if (!isSupabaseConfigured || !supabase) {
     return {
-      ok: true,
+      ok: false,
+      error: 'Supabase is not configured in the admin dashboard.',
     }
-  } catch (error) {
-    if (error?.code === 'auth/user-not-found') {
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('send-password-reset-otp', {
+      body: {
+        action: 'send',
+        email: normalizedEmail,
+      },
+    })
+
+    if (error) {
+      const message = error.message || 'Unable to send password reset email right now.'
       return {
         ok: false,
-        error: 'No account found for this email.',
+        error: message,
       }
     }
 
-    if (error?.code === 'auth/invalid-email') {
+    if (data?.sent === true) {
       return {
-        ok: false,
-        error: 'The email address is invalid.',
+        ok: true,
+        message: 'A password reset code has been sent to the user\'s email.',
+        codeDelivery: 'otp',
       }
     }
 
     return {
       ok: false,
-      error: 'Unable to send password reset email right now.',
+      error: data?.error?.message || 'Unable to send password reset email right now.',
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Unable to send password reset email right now.',
+    }
+  }
+}
+
+export const sendEmailVerificationLinkToUser = async (email) => {
+  const normalizedEmail = String(email || '').trim()
+  if (!normalizedEmail) {
+    return {
+      ok: false,
+      error: 'User email is missing.',
+    }
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      ok: false,
+      error: 'Supabase is not configured in the admin dashboard.',
+    }
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('email-verification-otp', {
+      body: {
+        action: 'send',
+        email: normalizedEmail,
+      },
+    })
+
+    if (error) {
+      const message = error.message || 'Unable to send verification email right now.'
+      return {
+        ok: false,
+        error: message,
+      }
+    }
+
+    if (data?.sent === true) {
+      return {
+        ok: true,
+        message: 'A verification code has been sent to the user\'s email.',
+        codeDelivery: 'otp',
+      }
+    }
+
+    return {
+      ok: false,
+      error: data?.error?.message || 'Unable to send verification email right now.',
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Unable to send verification email right now.',
     }
   }
 }

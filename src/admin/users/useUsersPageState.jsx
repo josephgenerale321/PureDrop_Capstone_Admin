@@ -14,6 +14,7 @@ const EMPTY_EDIT_FORM = {
   email: '',
   address: '',
   waterMeter: '',
+  status: 'Inactive',
 }
 
 const INITIAL_EDIT_REFERENCE = {
@@ -21,6 +22,7 @@ const INITIAL_EDIT_REFERENCE = {
   email: '',
   address: '',
   waterMeter: '',
+  status: 'Inactive',
 }
 
 const createEmptyCreateForm = () => ({
@@ -44,10 +46,13 @@ const mapUserToEditForm = (user) => ({
   email: user.email === 'N/A' ? '' : user.email,
   address: user.address === 'N/A' ? '' : user.address,
   waterMeter: user.waterMeter === 'N/A' ? '' : String(user.waterMeter),
+  status: user.status || 'Inactive',
 })
 
 const formsDiffer = (a, b) => {
-  return ['fullName', 'email', 'address', 'waterMeter'].some((key) => String(a[key] || '') !== String(b[key] || ''))
+  return ['fullName', 'email', 'address', 'waterMeter', 'status'].some(
+    (key) => String(a[key] || '') !== String(b[key] || ''),
+  )
 }
 
 const validateEditForm = (form) => {
@@ -89,6 +94,7 @@ function useUsersPageState({
   setSelectedUserId,
   updateUserStatus,
   sendPasswordReset,
+  sendVerificationEmail,
 }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -327,6 +333,7 @@ function useUsersPageState({
       return
     }
 
+    const statusChanged = String(editForm.status || '') !== String(editReference.status || '')
     const result = await updateUserAccount(editUserId, editForm)
     if (!result.ok) {
       setActionFeedback({
@@ -334,6 +341,17 @@ function useUsersPageState({
         message: result.error,
       })
       return
+    }
+
+    if (statusChanged && updateUserStatus) {
+      const statusResult = await updateUserStatus(editUserId, editForm.status)
+      if (!statusResult.ok) {
+        setActionFeedback({
+          type: 'error',
+          message: statusResult.error,
+        })
+        return
+      }
     }
 
     const updatedReference = { ...editForm }
@@ -345,6 +363,56 @@ function useUsersPageState({
     setEditUserEmail('')
     setIsConfirmCloseOpen(false)
     setPendingCloseAction(null)
+  }
+
+  const handleSendPasswordReset = async () => {
+    if (!editUserEmail) {
+      setActionFeedback({
+        type: 'error',
+        message: 'User email is missing.',
+      })
+      return
+    }
+
+    setActionFeedback(createEmptyFeedback())
+    const result = await sendPasswordReset(editUserEmail)
+    if (!result.ok) {
+      setActionFeedback({
+        type: 'error',
+        message: result.error,
+      })
+      return
+    }
+
+    setActionFeedback({
+      type: 'success',
+      message: result.message || 'Password reset email sent successfully.',
+    })
+  }
+
+  const handleSendVerificationEmail = async () => {
+    if (!editUserEmail) {
+      setActionFeedback({
+        type: 'error',
+        message: 'User email is missing.',
+      })
+      return
+    }
+
+    setActionFeedback(createEmptyFeedback())
+    const result = await sendVerificationEmail(editUserEmail)
+    if (!result.ok) {
+      setActionFeedback({
+        type: 'error',
+        message: result.error,
+      })
+      return
+    }
+
+    setActionFeedback({
+      type: 'success',
+      message: result.message || 'Verification email sent successfully.',
+    })
   }
 
   const handleDeleteUser = async (user) => {
@@ -408,6 +476,8 @@ function useUsersPageState({
     handleEditReset,
     handleCreateSubmit,
     handleEditSubmit,
+    handleSendPasswordReset,
+    handleSendVerificationEmail,
     handleDeleteUser,
   }
 }

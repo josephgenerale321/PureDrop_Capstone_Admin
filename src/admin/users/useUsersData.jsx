@@ -3,6 +3,7 @@ import {
   createUserAccountInFirestore,
   deleteUserAccountInFirestore,
   getUsersLoadErrorMessage,
+  sendEmailVerificationLinkToUser,
   sendPasswordResetEmailToUser,
   subscribeUsers,
   updateUserAccountInFirestore,
@@ -175,6 +176,10 @@ function useUsersData(search) {
     return sendPasswordResetEmailToUser(email)
   }
 
+  const sendVerificationEmail = async (email) => {
+    return sendEmailVerificationLinkToUser(email)
+  }
+
   const createUserAccount = async (payload) => {
     const email = String(payload?.email || '')
       .trim()
@@ -236,6 +241,7 @@ function useUsersData(search) {
     updateUserAccount,
     updateUserStatus,
     sendPasswordReset,
+    sendVerificationEmail,
     deleteUserAccount,
     creatingUserEmail,
     savingUserId,

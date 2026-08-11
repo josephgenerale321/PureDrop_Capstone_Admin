@@ -22,6 +22,10 @@ export const normalizePresenceStatus = (value) => {
     .trim()
     .toLowerCase()
 
+  if (normalized === 'suspended') {
+    return 'Suspended'
+  }
+
   if (normalized === 'active' || normalized === 'online') {
     return 'Active'
   }

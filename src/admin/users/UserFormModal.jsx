@@ -17,6 +17,9 @@ function UserFormModal({
   isConfirmCloseOpen = false,
   onConfirmDiscard,
   onCancelDiscard,
+  onSendPasswordReset,
+  onSendVerificationEmail,
+  emailVerified = false,
 }) {
   const isCreateMode = mode === 'create'
   const idPrefix = isCreateMode ? 'create-user' : 'edit-user'
@@ -117,6 +120,24 @@ function UserFormModal({
               required
             />
             {renderFieldError('email')}
+
+            {!isCreateMode && (
+              <div className="admin-users-email-verified-row">
+                <span className={`badge-pill admin-users-email-${emailVerified ? 'verified' : 'unverified'}`}>
+                  {emailVerified ? '✓ Email Verified' : '✗ Email Unverified'}
+                </span>
+                {!emailVerified && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={onSendVerificationEmail}
+                    disabled={isSubmitting}
+                  >
+                    Send Verification
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {isCreateMode && (
@@ -145,6 +166,24 @@ function UserFormModal({
                 required
               />
             </>
+          )}
+
+          {!isCreateMode && (
+            <div className="admin-users-field-wrapper mt-2">
+              <label className="form-label mb-1" htmlFor={`${idPrefix}-status`}>
+                Status
+              </label>
+              <select
+                id={`${idPrefix}-status`}
+                className="form-control"
+                value={form.status}
+                onChange={(event) => onChangeField('status', event.target.value)}
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Suspended">Suspended</option>
+              </select>
+            </div>
           )}
 
           <div className="admin-users-field-wrapper mt-2">
@@ -183,6 +222,19 @@ function UserFormModal({
             />
             {renderFieldError('waterMeter')}
           </div>
+
+          {!isCreateMode && (
+            <div className="admin-users-action-row mt-3">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={onSendPasswordReset}
+                disabled={isSubmitting || !userEmail}
+              >
+                Send Password Reset
+              </button>
+            </div>
+          )}
 
           {actionFeedback.message && (
             <p className={`admin-users-action-feedback mt-3 mb-0 ${actionFeedback.type === 'error' ? 'is-error' : 'is-success'}`}>

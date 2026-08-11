@@ -20,6 +20,9 @@ function AdminUsers({ onLogout }) {
     createUserAccount,
     updateUserAccount,
     deleteUserAccount,
+    updateUserStatus,
+    sendPasswordReset,
+    sendVerificationEmail,
     creatingUserEmail,
     savingUserId,
     deletingUserId,
@@ -56,12 +59,17 @@ function AdminUsers({ onLogout }) {
     handleEditReset,
     handleCreateSubmit,
     handleEditSubmit,
+    handleSendPasswordReset,
+    handleSendVerificationEmail,
     handleDeleteUser,
   } = useUsersPageState({
     createUserAccount,
     updateUserAccount,
     deleteUserAccount,
     setSelectedUserId,
+    updateUserStatus,
+    sendPasswordReset,
+    sendVerificationEmail,
   })
 
   const handleViewUserDetails = (userId) => {
@@ -140,6 +148,9 @@ function AdminUsers({ onLogout }) {
             isConfirmCloseOpen={isConfirmCloseOpen}
             onConfirmDiscard={handleConfirmDiscard}
             onCancelDiscard={handleCancelDiscard}
+            onSendPasswordReset={handleSendPasswordReset}
+            onSendVerificationEmail={handleSendVerificationEmail}
+            emailVerified={selectedUser?.emailVerified ?? false}
           />
         )}
 
