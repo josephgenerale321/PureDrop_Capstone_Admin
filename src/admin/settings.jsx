@@ -8,6 +8,7 @@ import QuickActionsCard from './settings/QuickActionsCard.jsx'
 import RecentActivityCard from './settings/RecentActivityCard.jsx'
 import RolesPermissionsCard from './settings/RolesPermissionsCard.jsx'
 import SecurityAccessCard from './settings/SecurityAccessCard.jsx'
+import AttachmentCleanupCard from './settings/AttachmentCleanupCard.jsx'
 import useAdminSettings from './settings/useAdminSettings.jsx'
 import ConfirmActionModal from './settings/ConfirmActionModal.jsx'
 
@@ -40,6 +41,17 @@ function AdminSettings({ user, onLogout }) {
     if (!confirmAction) return
     confirmAction.action()
     setConfirmAction(null)
+  }
+
+  const handleRequestDelete = (unused, performDelete) => {
+    if (!unused || unused.length === 0) {
+      return
+    }
+    setConfirmAction({
+      title: 'Delete Unused Attachments',
+      message: `This will permanently delete ${unused.length} unused profile attachment file(s) from the regular_user bucket. This action cannot be undone. Continue?`,
+      action: performDelete,
+    })
   }
 
   useEffect(() => {
@@ -147,6 +159,7 @@ function AdminSettings({ user, onLogout }) {
                 onSave={saveSettings}
                 isSaving={isSaving || isLoading}
               />
+              <AttachmentCleanupCard onRequestDelete={handleRequestDelete} />
             </div>
 
             <aside className="admin-settings-side">

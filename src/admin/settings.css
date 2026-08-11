@@ -281,6 +281,104 @@
   font-size: 0.92rem;
 }
 
+.admin-settings-card-subtitle {
+  font-size: 0.92rem;
+  color: #4b5f75;
+}
+
+.admin-settings-cleanup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.admin-settings-cleanup-list-wrap {
+  margin-top: 0.75rem;
+  border: 1px solid #e6edf5;
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: #f8fafc;
+}
+
+.admin-settings-cleanup-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0 0 0.25rem;
+}
+
+.admin-settings-cleanup-thumb {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.admin-settings-cleanup-thumb-media {
+  position: relative;
+}
+
+.admin-settings-cleanup-thumb img,
+.admin-settings-cleanup-thumb-fallback {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #d3dde8;
+  background: #eef3f8;
+  display: block;
+}
+
+.admin-settings-cleanup-thumb-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8aa0b8;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.admin-settings-cleanup-thumb-delete {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: rgba(185, 28, 28, 0.88);
+  color: #ffffff;
+  font-size: 0.8rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease;
+}
+
+.admin-settings-cleanup-thumb-delete:hover {
+  background: #7f1d1d;
+}
+
+.admin-settings-cleanup-thumb-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-settings-cleanup-thumb figcaption {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  color: #5a6d83;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .admin-settings-quick-actions {
   display: grid;
   gap: 0.55rem;
@@ -345,6 +443,174 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+/* Lightbox preview for cleanup thumbnails */
+.admin-settings-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.admin-settings-lightbox {
+  position: relative;
+  width: min(960px, 100%);
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 1.25rem;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.35);
+}
+
+.admin-settings-lightbox-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: rgba(185, 28, 28, 0.9);
+  color: #ffffff;
+  font-size: 0.9rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1;
+  transition: background-color 0.15s ease;
+}
+
+.admin-settings-lightbox-close:hover {
+  background: #7f1d1d;
+}
+
+.admin-settings-lightbox-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 0.6rem;
+  border: 1px solid #d3dde8;
+  background: #eef3f8;
+  display: block;
+}
+
+.admin-settings-lightbox-path {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  color: #5a6d83;
+  text-align: center;
+  word-break: break-all;
+}
+
+/* Confirmation modal (styled like the mobile signout modal) */
+.admin-settings-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.admin-settings-confirm-modal {
+  width: min(360px, 100%);
+  background: #ffffff;
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-settings-confirm-image {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  border: 1px solid #d3dde8;
+  background: #eef3f8;
+  display: block;
+}
+
+.admin-settings-confirm-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
+.admin-settings-confirm-message {
+  margin: 0 0 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  color: #5a6d83;
+  text-align: center;
+  word-break: break-all;
+}
+
+.admin-settings-confirm-actions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.admin-settings-confirm-yes {
+  flex: 1;
+  height: 3rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-settings-confirm-yes:hover {
+  background: #dc2626;
+}
+
+.admin-settings-confirm-no {
+  flex: 1;
+  height: 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-settings-confirm-no:hover {
+  background: #e2e8f0;
+}
+
+.admin-settings-confirm-yes:disabled,
+.admin-settings-confirm-no:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .admin-settings-mobile-overlay {
@@ -505,8 +771,21 @@
     min-height: 2.75rem;
   }
 
-  .admin-settings-quick-actions .btn {
+  .admin-settings-quick-actions .btn,
+  .admin-settings-cleanup-actions .btn {
     min-height: 2.75rem;
+  }
+
+  .admin-settings-cleanup-actions {
+    flex-direction: column;
+  }
+
+  .admin-settings-cleanup-actions .btn {
+    width: 100%;
+  }
+
+  .admin-settings-cleanup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .admin-role-table {
