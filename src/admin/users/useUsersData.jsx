@@ -3,8 +3,10 @@ import {
   createUserAccountInFirestore,
   deleteUserAccountInFirestore,
   getUsersLoadErrorMessage,
+  sendPasswordResetEmailToUser,
   subscribeUsers,
   updateUserAccountInFirestore,
+  updateUserStatusInFirestore,
 } from './usersService.js'
 import { resolvePresenceStatus } from './presenceStatus.js'
 
@@ -135,6 +137,44 @@ function useUsersData(search) {
     }
   }
 
+  const updateUserStatus = async (id, status) => {
+    if (!id) {
+      return {
+        ok: false,
+        error: 'Select a user first.',
+      }
+    }
+
+    setSavingUserId(id)
+    try {
+      const result = await updateUserStatusInFirestore({ id, status, users })
+      if (!result.ok) {
+        return result
+      }
+
+      setUsers((current) =>
+        current.map((user) => {
+          if (user.id !== id) {
+            return user
+          }
+          return {
+            ...user,
+            status,
+            presenceStatusRaw: status,
+          }
+        }),
+      )
+
+      return { ok: true }
+    } finally {
+      setSavingUserId('')
+    }
+  }
+
+  const sendPasswordReset = async (email) => {
+    return sendPasswordResetEmailToUser(email)
+  }
+
   const createUserAccount = async (payload) => {
     const email = String(payload?.email || '')
       .trim()
@@ -194,6 +234,8 @@ function useUsersData(search) {
     toggleStatus,
     createUserAccount,
     updateUserAccount,
+    updateUserStatus,
+    sendPasswordReset,
     deleteUserAccount,
     creatingUserEmail,
     savingUserId,

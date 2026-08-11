@@ -1,9 +1,38 @@
 import './adminlogin.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, setPersistence, signInWithEmailAndPassword } from 'firebase/auth'
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import logo from '../assets/logo.png'
 import { auth, db } from '../firebase.js'
+
+const ADMIN_LOCKOUT_KEY = 'puredrop_admin_lockout'
+const ADMIN_PROFILE_COLLECTION = 'admin_user'
+
+const DEFAULT_SECURITY = {
+  maxLoginAttempts: 5,
+  lockoutMinutes: 10,
+}
+
+function readLockoutState() {
+  try {
+    const raw = localStorage.getItem(ADMIN_LOCKOUT_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function writeLockoutState(value) {
+  try {
+    if (value) {
+      localStorage.setItem(ADMIN_LOCKOUT_KEY, JSON.stringify(value))
+    } else {
+      localStorage.removeItem(ADMIN_LOCKOUT_KEY)
+    }
+  } catch {
+    // Ignore storage errors.
+  }
+}
 
 const ADMIN_EMAIL_ALLOWLIST = (import.meta.env.VITE_ADMIN_EMAILS || '')
   .split(',')
@@ -18,20 +47,68 @@ function AdminLogin({ rememberedEmail = '', onClearRememberedEmail }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [securityConfig, setSecurityConfig] = useState(DEFAULT_SECURITY)
+
+  useEffect(() => {
+    let active = true
+    const loadSecurity = async () => {
+      try {
+        const stored = readLockoutState()
+        if (stored?.unlockedAt && Date.now() < stored.unlockedAt) {
+          const minutes = Math.ceil((stored.unlockedAt - Date.now()) / 60000)
+          if (active) {
+            setErrorMessage(`Account temporarily locked. Try again in ${minutes} minute(s).`)
+          }
+        }
+
+        // Attempt to read the saved admin's security config from Firestore.
+        // Best-effort: only applies when a saved session exists (has uid).
+        const saved = readSavedAdminUid()
+        if (!saved) {
+          if (active) setSecurityConfig(DEFAULT_SECURITY)
+          return
+        }
+        const adminDocSnap = await getDoc(doc(db, ADMIN_PROFILE_COLLECTION, saved))
+        const remote = adminDocSnap.exists() ? adminDocSnap.data()?.settings?.security : null
+        if (active) {
+          setSecurityConfig({
+            maxLoginAttempts: remote?.maxLoginAttempts || DEFAULT_SECURITY.maxLoginAttempts,
+            lockoutMinutes: remote?.lockoutMinutes || DEFAULT_SECURITY.lockoutMinutes,
+          })
+        }
+      } catch {
+        if (active) setSecurityConfig(DEFAULT_SECURITY)
+      }
+    }
+    loadSecurity()
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setErrorMessage('')
     setSuccessMessage('')
+
+    const lockout = readLockoutState()
+    if (lockout?.unlockedAt && Date.now() < lockout.unlockedAt) {
+      const minutes = Math.ceil((lockout.unlockedAt - Date.now()) / 60000)
+      setErrorMessage(`Account temporarily locked. Try again in ${minutes} minute(s).`)
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       const normalizedInputEmail = email.trim().toLowerCase()
       if (ADMIN_EMAIL_ALLOWLIST.length > 0 && !ADMIN_EMAIL_ALLOWLIST.includes(normalizedInputEmail)) {
+        setRecordFailedAttempt()
         setErrorMessage('Access denied. This email is not in the admin allowlist.')
         return
       }
       if (ADMIN_PASSWORD && password !== ADMIN_PASSWORD) {
+        setRecordFailedAttempt()
         setErrorMessage('Access denied. Admin password is incorrect.')
         return
       }
@@ -71,21 +148,49 @@ function AdminLogin({ rememberedEmail = '', onClearRememberedEmail }) {
         { merge: true },
       )
 
+      setErrorMessage('')
       setSuccessMessage('Admin sign-in successful.')
       // The app-level onAuthStateChanged listener (in useAdminSavedLogin)
       // will detect this sign-in and auto-redirect to the dashboard.
     } catch (error) {
       if (error?.code === 'auth/invalid-credential-existing-user') {
+        setRecordFailedAttempt()
         setErrorMessage('This admin email already exists in Firebase Auth, but the password is incorrect.')
       } else if (error?.code === 'auth/too-many-requests') {
+        setRecordFailedAttempt()
         setErrorMessage('Too many attempts. Please wait a bit before trying again.')
       } else if (error?.code === 'auth/network-request-failed') {
         setErrorMessage('Network error while signing in. Check your internet connection.')
       } else {
+        setRecordFailedAttempt()
         setErrorMessage(`Unable to sign in right now (${error?.code || 'unknown-error'}).`)
       }
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const setRecordFailedAttempt = () => {
+    const lockout = readLockoutState() || { attempts: 0 }
+    const attempts = lockout.attempts + 1
+    const maxAttempts = securityConfig.maxLoginAttempts || DEFAULT_SECURITY.maxLoginAttempts
+
+    if (attempts >= maxAttempts) {
+      const lockoutMinutes = securityConfig.lockoutMinutes || DEFAULT_SECURITY.lockoutMinutes
+      const unlockedAt = Date.now() + lockoutMinutes * 60 * 1000
+      writeLockoutState({ attempts, unlockedAt })
+      setErrorMessage(`Too many failed attempts. Account locked for ${lockoutMinutes} minute(s).`)
+    } else {
+      writeLockoutState({ attempts })
+    }
+  }
+
+  const readSavedAdminUid = () => {
+    try {
+      const raw = localStorage.getItem('puredrop_admin_session')
+      return raw ? JSON.parse(raw)?.uid || null : null
+    } catch {
+      return null
     }
   }
 

@@ -112,6 +112,13 @@ service cloud.firestore {
       allow create, update: if isOwner(userId) && isValidAdminUserWrite();
     }
 
+    // Per-admin activity log (settings changes, role updates, etc.).
+    match /admin_activity/{userId}/events/{eventId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if false;
+    }
+
     // Required for collectionGroup(db, "reports") queries.
     match /{documentPath=**}/reports/{reportId} {
       allow get, list: if isSignedIn();

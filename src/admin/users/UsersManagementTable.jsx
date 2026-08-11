@@ -7,6 +7,7 @@ const SORTABLE_COLUMNS = [
   { key: 'email', label: 'Email Address', getValue: (user) => user.email },
   { key: 'role', label: 'Role', getValue: (user) => user.role },
   { key: 'status', label: 'Status', getValue: (user) => user.status },
+  { key: 'emailVerified', label: 'Email Verified', getValue: (user) => (user.emailVerified ? 'Verified' : 'Unverified') },
   { key: 'dateJoined', label: 'Date Joined', getValue: (user) => user.dateJoined },
 ]
 
@@ -111,7 +112,7 @@ function UsersManagementTable({
           <tbody>
             {!isLoading && !sortedUsers.length && (
               <tr>
-                <td colSpan={7} className="text-center text-muted py-4">
+                <td colSpan={8} className="text-center text-muted py-4">
                   {loadError || 'No users found.'}
                 </td>
               </tr>
@@ -127,6 +128,11 @@ function UsersManagementTable({
                 </td>
                 <td data-label="Status">
                   <UserPresenceBadge status={user.status} />
+                </td>
+                <td data-label="Email Verified">
+                  <span className={`badge-pill ${user.emailVerified ? 'email-verified' : 'email-unverified'}`}>
+                    {user.emailVerified ? '✓ Verified' : '✗ Unverified'}
+                  </span>
                 </td>
                 <td data-label="Date Joined">{user.dateJoined}</td>
                 <td data-label="Actions" className="d-flex gap-2 flex-wrap">
@@ -150,7 +156,7 @@ function UsersManagementTable({
 
             {isLoading && (
               <tr>
-                <td colSpan={7} className="text-center text-muted py-4">
+                <td colSpan={8} className="text-center text-muted py-4">
                   Loading users...
                 </td>
               </tr>

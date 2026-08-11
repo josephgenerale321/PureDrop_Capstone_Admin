@@ -1,12 +1,13 @@
 const REPORT_EMAIL_TYPES = [
-  { key: 'highSystem', label: 'High System' },
-  { key: 'priorityLevel', label: 'Priority Level' },
-  { key: 'lowPressure', label: 'Low Pressure' },
+  { key: 'noWater', label: 'No Water' },
+  { key: 'dirtyWater', label: 'Dirty Water' },
+  { key: 'waterLeaking', label: 'Water Leaking' },
   { key: 'infrastructure', label: 'Infrastructure' },
 ]
 
 function NotificationsCard({
   notifications,
+  fieldErrors = {},
   onToggleReportEmailType,
   onSystemHealthAlertsChange,
   onWeeklySummaryEmailChange,
@@ -61,10 +62,11 @@ function NotificationsCard({
           </label>
           <input
             id="weeklySummaryEmail"
-            className="form-control"
+            className={`form-control${fieldErrors.weeklySummaryEmail ? ' is-invalid' : ''}`}
             value={notifications.weeklySummaryEmail}
             onChange={(event) => onWeeklySummaryEmailChange(event.target.value)}
           />
+          {fieldErrors.weeklySummaryEmail && <div className="invalid-feedback d-block">{fieldErrors.weeklySummaryEmail}</div>}
         </div>
       </div>
     </section>

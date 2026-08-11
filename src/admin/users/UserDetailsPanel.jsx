@@ -47,6 +47,14 @@ function UserDetailsPanel({ user }) {
                 <dd>{user.waterMeter}</dd>
               </div>
               <div>
+                <dt>Email Verified</dt>
+                <dd>
+                  <span className={`badge-pill ${user.emailVerified ? 'email-verified' : 'email-unverified'}`}>
+                    {user.emailVerified ? '✓ Verified' : '✗ Unverified'}
+                  </span>
+                </dd>
+              </div>
+              <div>
                 <dt>Report Counter</dt>
                 <dd>{user.reportCounter}</dd>
               </div>

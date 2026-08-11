@@ -16,6 +16,13 @@ const EMPTY_EDIT_FORM = {
   waterMeter: '',
 }
 
+const INITIAL_EDIT_REFERENCE = {
+  fullName: '',
+  email: '',
+  address: '',
+  waterMeter: '',
+}
+
 const createEmptyCreateForm = () => ({
   ...EMPTY_CREATE_FORM,
 })
@@ -25,6 +32,13 @@ const createEmptyFeedback = () => ({
   message: '',
 })
 
+const createEmptyErrors = () => ({
+  fullName: '',
+  email: '',
+  address: '',
+  waterMeter: '',
+})
+
 const mapUserToEditForm = (user) => ({
   fullName: user.name === 'N/A' ? '' : user.name,
   email: user.email === 'N/A' ? '' : user.email,
@@ -32,14 +46,68 @@ const mapUserToEditForm = (user) => ({
   waterMeter: user.waterMeter === 'N/A' ? '' : String(user.waterMeter),
 })
 
-function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAccount, setSelectedUserId }) {
+const formsDiffer = (a, b) => {
+  return ['fullName', 'email', 'address', 'waterMeter'].some((key) => String(a[key] || '') !== String(b[key] || ''))
+}
+
+const validateEditForm = (form) => {
+  const errors = {}
+
+  if (!form.fullName.trim()) {
+    errors.fullName = 'Full name is required.'
+  } else if (form.fullName.trim().length < 2) {
+    errors.fullName = 'Name must be at least 2 characters.'
+  }
+
+  if (!form.email.trim()) {
+    errors.email = 'Email is required.'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    errors.email = 'Enter a valid email address.'
+  }
+
+  if (!form.address.trim()) {
+    errors.address = 'Address is required.'
+  }
+
+  if (form.waterMeter && Number(form.waterMeter) < 0) {
+    errors.waterMeter = 'Water meter cannot be negative.'
+  }
+
+  return errors
+}
+
+const validateField = (field, value, form) => {
+  const nextForm = { ...form, [field]: value }
+  const errors = validateEditForm(nextForm)
+  return errors[field] || ''
+}
+
+function useUsersPageState({
+  createUserAccount,
+  updateUserAccount,
+  deleteUserAccount,
+  setSelectedUserId,
+  updateUserStatus,
+  sendPasswordReset,
+}) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [createForm, setCreateForm] = useState(createEmptyCreateForm)
   const [editForm, setEditForm] = useState(EMPTY_EDIT_FORM)
   const [editUserId, setEditUserId] = useState('')
+  const [editUserName, setEditUserName] = useState('')
+  const [editUserEmail, setEditUserEmail] = useState('')
+  const [editReference, setEditReference] = useState(INITIAL_EDIT_REFERENCE)
+  const [editFieldErrors, setEditFieldErrors] = useState(createEmptyErrors)
+  const [editValidatedFields, setEditValidatedFields] = useState(() => new Set())
   const [actionFeedback, setActionFeedback] = useState(createEmptyFeedback)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false)
+  const [pendingCloseAction, setPendingCloseAction] = useState(null)
+  const [isSaveSuccess, setIsSaveSuccess] = useState(false)
+
+  const isEditModalOpen = Boolean(editUserId)
+  const isEditDirty = isEditModalOpen && formsDiffer(editForm, editReference)
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -59,7 +127,6 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
   }, [])
 
   useEffect(() => {
-    const isEditModalOpen = Boolean(editUserId)
     if (typeof document === 'undefined' || (!isMobileNavOpen && !isEditModalOpen && !isCreateModalOpen && !isDetailsModalOpen)) {
       return undefined
     }
@@ -77,8 +144,18 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
         return
       }
 
+      if (isConfirmCloseOpen) {
+        setIsConfirmCloseOpen(false)
+        return
+      }
+
       if (isEditModalOpen) {
-        setEditUserId('')
+        if (isEditDirty) {
+          setPendingCloseAction('close')
+          setIsConfirmCloseOpen(true)
+        } else {
+          setEditUserId('')
+        }
         return
       }
 
@@ -98,7 +175,7 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
       document.body.style.overflow = originalOverflow
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [editUserId, isCreateModalOpen, isMobileNavOpen, isDetailsModalOpen])
+  }, [editUserId, isEditModalOpen, isCreateModalOpen, isMobileNavOpen, isDetailsModalOpen, isConfirmCloseOpen, isEditDirty])
 
   const handleToggleMobileNav = () => {
     setIsMobileNavOpen((current) => !current)
@@ -123,12 +200,48 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
     setIsCreateModalOpen(false)
     setSelectedUserId(user.id)
     setEditUserId(user.id)
-    setEditForm(mapUserToEditForm(user))
+    setEditUserName(user.name === 'N/A' ? '' : user.name)
+    setEditUserEmail(user.email === 'N/A' ? '' : user.email)
+    const mapped = mapUserToEditForm(user)
+    setEditForm(mapped)
+    setEditReference(mapped)
+    setEditFieldErrors(createEmptyErrors())
+    setEditValidatedFields(new Set())
     setActionFeedback(createEmptyFeedback())
+    setIsConfirmCloseOpen(false)
+    setPendingCloseAction(null)
+    setIsSaveSuccess(false)
   }
 
   const handleCloseEditModal = () => {
+    if (isEditDirty) {
+      setPendingCloseAction('close')
+      setIsConfirmCloseOpen(true)
+      return
+    }
     setEditUserId('')
+    setEditUserName('')
+    setEditUserEmail('')
+    setIsConfirmCloseOpen(false)
+    setPendingCloseAction(null)
+    setIsSaveSuccess(false)
+  }
+
+  const handleConfirmDiscard = () => {
+    setIsConfirmCloseOpen(false)
+    if (pendingCloseAction === 'close') {
+      setEditUserId('')
+      setEditUserName('')
+      setEditUserEmail('')
+      setPendingCloseAction(null)
+      setIsSaveSuccess(false)
+    }
+    setPendingCloseAction(null)
+  }
+
+  const handleCancelDiscard = () => {
+    setIsConfirmCloseOpen(false)
+    setPendingCloseAction(null)
   }
 
   const handleOpenDetailsModal = () => {
@@ -155,6 +268,21 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
     }))
   }
 
+  const handleEditFieldBlur = (field) => {
+    setEditValidatedFields((current) => new Set(current).add(field))
+    setEditFieldErrors((current) => ({
+      ...current,
+      [field]: validateField(field, editForm[field], editForm),
+    }))
+  }
+
+  const handleEditReset = () => {
+    setEditForm({ ...editReference })
+    setEditFieldErrors(createEmptyErrors())
+    setEditValidatedFields(new Set())
+    setActionFeedback(createEmptyFeedback())
+  }
+
   const handleCreateSubmit = async (event) => {
     event.preventDefault()
     setActionFeedback(createEmptyFeedback())
@@ -179,6 +307,26 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
     event.preventDefault()
     setActionFeedback(createEmptyFeedback())
 
+    const validationErrors = validateEditForm(editForm)
+
+    if (Object.keys(validationErrors).length > 0) {
+      setEditFieldErrors(validationErrors)
+      setEditValidatedFields(new Set(['fullName', 'email', 'address', 'waterMeter']))
+      setActionFeedback({
+        type: 'error',
+        message: 'Please fix the highlighted fields before saving.',
+      })
+      return
+    }
+
+    if (!isEditDirty) {
+      setActionFeedback({
+        type: 'success',
+        message: 'No changes were made.',
+      })
+      return
+    }
+
     const result = await updateUserAccount(editUserId, editForm)
     if (!result.ok) {
       setActionFeedback({
@@ -188,11 +336,15 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
       return
     }
 
-    setActionFeedback({
-      type: 'success',
-      message: 'User account updated successfully.',
-    })
+    const updatedReference = { ...editForm }
+    setEditReference(updatedReference)
+    setActionFeedback(createEmptyFeedback())
+    setIsSaveSuccess(true)
     setEditUserId('')
+    setEditUserName('')
+    setEditUserEmail('')
+    setIsConfirmCloseOpen(false)
+    setPendingCloseAction(null)
   }
 
   const handleDeleteUser = async (user) => {
@@ -227,11 +379,18 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
   return {
     isMobileNavOpen,
     isCreateModalOpen,
-    isEditModalOpen: Boolean(editUserId),
+    isEditModalOpen,
     isDetailsModalOpen,
+    isConfirmCloseOpen,
+    isEditDirty,
+    isSaveSuccess,
     createForm,
     editForm,
     editUserId,
+    editFieldErrors,
+    editValidatedFields,
+    editUserName,
+    editUserEmail,
     actionFeedback,
     handleToggleMobileNav,
     handleCloseMobileNav,
@@ -239,10 +398,14 @@ function useUsersPageState({ createUserAccount, updateUserAccount, deleteUserAcc
     handleCloseCreateModal,
     handleStartEdit,
     handleCloseEditModal,
+    handleConfirmDiscard,
+    handleCancelDiscard,
     handleOpenDetailsModal,
     handleCloseDetailsModal,
     handleCreateFieldChange,
     handleEditFieldChange,
+    handleEditFieldBlur,
+    handleEditReset,
     handleCreateSubmit,
     handleEditSubmit,
     handleDeleteUser,

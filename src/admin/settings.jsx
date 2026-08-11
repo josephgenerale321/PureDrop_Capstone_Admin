@@ -9,15 +9,18 @@ import RecentActivityCard from './settings/RecentActivityCard.jsx'
 import RolesPermissionsCard from './settings/RolesPermissionsCard.jsx'
 import SecurityAccessCard from './settings/SecurityAccessCard.jsx'
 import useAdminSettings from './settings/useAdminSettings.jsx'
+import ConfirmActionModal from './settings/ConfirmActionModal.jsx'
 
 function AdminSettings({ user, onLogout }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
   const {
     settings,
     recentActivity,
     isLoading,
     isSaving,
     saveStatus,
+    fieldErrors,
     setGeneralField,
     setSecurityField,
     toggleReportEmailType,
@@ -26,11 +29,18 @@ function AdminSettings({ user, onLogout }) {
     setRoleName,
     toggleRolePermission,
     addRole,
+    deleteRole,
     saveSettings,
     restoreDefaults,
     exportSettings,
     bulkEnableViewPermission,
   } = useAdminSettings(user)
+
+  const runConfirmedAction = () => {
+    if (!confirmAction) return
+    confirmAction.action()
+    setConfirmAction(null)
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -119,10 +129,11 @@ function AdminSettings({ user, onLogout }) {
 
           <div className="admin-settings-grid">
             <div className="admin-settings-main">
-              <GeneralConfigurationCard general={settings.general} onChange={setGeneralField} />
-              <SecurityAccessCard security={settings.security} onChange={setSecurityField} />
+              <GeneralConfigurationCard general={settings.general} fieldErrors={fieldErrors} onChange={setGeneralField} />
+              <SecurityAccessCard security={settings.security} fieldErrors={fieldErrors} onChange={setSecurityField} />
               <NotificationsCard
                 notifications={settings.notifications}
+                fieldErrors={fieldErrors}
                 onToggleReportEmailType={toggleReportEmailType}
                 onSystemHealthAlertsChange={setSystemHealthAlerts}
                 onWeeklySummaryEmailChange={setWeeklySummaryEmail}
@@ -132,6 +143,7 @@ function AdminSettings({ user, onLogout }) {
                 onRoleNameChange={setRoleName}
                 onTogglePermission={toggleRolePermission}
                 onAddRole={addRole}
+                onDeleteRole={deleteRole}
                 onSave={saveSettings}
                 isSaving={isSaving || isLoading}
               />
@@ -141,11 +153,32 @@ function AdminSettings({ user, onLogout }) {
               <RecentActivityCard items={recentActivity} />
               <QuickActionsCard
                 onExport={exportSettings}
-                onBulkUpdatePermissions={bulkEnableViewPermission}
-                onRestoreDefaults={restoreDefaults}
+                onBulkUpdatePermissions={() =>
+                  setConfirmAction({
+                    title: 'Bulk Update User Permissions',
+                    message: 'This will enable view access for every role. Continue?',
+                    action: bulkEnableViewPermission,
+                  })
+                }
+                onRestoreDefaults={() =>
+                  setConfirmAction({
+                    title: 'Restore System Default Settings',
+                    message: 'This will reset all settings to defaults (profile details kept). Continue?',
+                    action: restoreDefaults,
+                  })
+                }
               />
             </aside>
           </div>
+
+          {confirmAction && (
+            <ConfirmActionModal
+              title={confirmAction.title}
+              message={confirmAction.message}
+              onConfirm={runConfirmedAction}
+              onCancel={() => setConfirmAction(null)}
+            />
+          )}
         </section>
         <button
           type="button"

@@ -1,9 +1,20 @@
 import { useEffect, useState } from 'react'
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+} from 'firebase/firestore'
 import { db } from '../../firebase.js'
 
 const SETTINGS_STORAGE_KEY = 'puredrop_admin_settings'
 const ADMIN_PROFILE_COLLECTION = 'admin_user'
+const ACTIVITY_COLLECTION = 'admin_activity'
 
 const DEFAULT_SETTINGS = {
   general: {
@@ -18,9 +29,9 @@ const DEFAULT_SETTINGS = {
   },
   notifications: {
     reportEmailTypes: {
-      highSystem: true,
-      priorityLevel: true,
-      lowPressure: false,
+      noWater: true,
+      dirtyWater: true,
+      waterLeaking: false,
       infrastructure: false,
     },
     systemHealthAlerts: 'enable',
@@ -45,12 +56,7 @@ const DEFAULT_SETTINGS = {
   ],
 }
 
-const DEFAULT_ACTIVITY = [
-  { id: 'security-updated', title: 'Security Settings Updated', timeAgo: '5 mins ago' },
-  { id: 'admin-role-modified', title: 'Admin User Role Modified', timeAgo: '15 mins ago' },
-  { id: 'general-config-saved', title: 'General Config Changes Saved', timeAgo: '1 hr ago' },
-  { id: 'language-updated', title: 'Default Language Changed to Spanish', timeAgo: '3 hrs ago' },
-]
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const cloneSettings = (value) => JSON.parse(JSON.stringify(value))
 
@@ -89,15 +95,85 @@ const toRoleId = (value) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || 'new-role'
 
+const validateSettings = (settings) => {
+  const errors = {}
+
+  if (!settings.general.fullName.trim()) {
+    errors.fullName = 'Full name is required.'
+  }
+  if (settings.general.email && !EMAIL_RE.test(settings.general.email)) {
+    errors.email = 'Enter a valid email address.'
+  }
+  if (settings.general.address.trim() && settings.general.address.trim().length < 5) {
+    errors.address = 'Address looks too short.'
+  }
+  if (settings.notifications.weeklySummaryEmail && !EMAIL_RE.test(settings.notifications.weeklySummaryEmail)) {
+    errors.weeklySummaryEmail = 'Enter a valid summary email.'
+  }
+  if (!Number.isFinite(settings.security.lockoutMinutes) || settings.security.lockoutMinutes < 1) {
+    errors.lockoutMinutes = 'Lockout must be at least 1 minute.'
+  }
+  if (!Number.isFinite(settings.security.maxLoginAttempts) || settings.security.maxLoginAttempts < 1) {
+    errors.maxLoginAttempts = 'Max attempts must be at least 1.'
+  }
+
+  const rolesWithView = settings.roles.filter((role) => role.permissions.view)
+  if (settings.roles.length > 0 && rolesWithView.length === 0) {
+    errors.roles = 'At least one role must keep view access.'
+  }
+
+  return errors
+}
+
 function useAdminSettings(user) {
   const [settings, setSettings] = useState(() => readStoredSettings())
-  const [recentActivity, setRecentActivity] = useState(DEFAULT_ACTIVITY)
+  const [recentActivity, setRecentActivity] = useState([])
+  const [fieldErrors, setFieldErrors] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState({ type: '', message: '' })
 
   const pushActivity = (title) => {
-    setRecentActivity((current) => [{ id: `${Date.now()}-${Math.random()}`, title, timeAgo: 'Just now' }, ...current].slice(0, 6))
+    setRecentActivity((current) => [{ id: `${Date.now()}-${Math.random()}`, title, timeAgo: 'Just now' }, ...current].slice(0, 8))
+  }
+
+  const loadActivity = async () => {
+    if (!user?.uid) return
+    try {
+      const activityQuery = query(
+        collection(db, ACTIVITY_COLLECTION, user.uid, 'events'),
+        orderBy('createdAt', 'desc'),
+        limit(8),
+      )
+      const snapshot = await getDocs(activityQuery)
+      const items = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data()
+        return {
+          id: docSnap.id,
+          title: data.title || 'Activity',
+          timeAgo: data.timeAgo || 'Just now',
+        }
+      })
+      if (items.length) {
+        setRecentActivity(items)
+      }
+    } catch {
+      // Activity is non-critical; keep whatever is in state.
+    }
+  }
+
+  const recordActivity = async (title) => {
+    pushActivity(title)
+    if (!user?.uid) return
+    try {
+      await setDoc(doc(collection(db, ACTIVITY_COLLECTION, user.uid, 'events')), {
+        title,
+        timeAgo: 'Just now',
+        createdAt: serverTimestamp(),
+      })
+    } catch {
+      // Best-effort persistence; ignore failures.
+    }
   }
 
   useEffect(() => {
@@ -169,6 +245,7 @@ function useAdminSettings(user) {
     }
 
     loadAdminSettings()
+    loadActivity()
 
     return () => {
       isMounted = false
@@ -236,20 +313,33 @@ function useAdminSettings(user) {
   }
 
   const toggleRolePermission = (roleId, permissionKey) => {
-    setSettings((current) => ({
-      ...current,
-      roles: current.roles.map((role) =>
-        role.id === roleId
-          ? {
-              ...role,
-              permissions: {
-                ...role.permissions,
-                [permissionKey]: !role.permissions[permissionKey],
-              },
-            }
-          : role,
-      ),
-    }))
+    setSettings((current) => {
+      // Prevent removing view access from every role (would lock staff out).
+      if (permissionKey === 'view') {
+        const role = current.roles.find((item) => item.id === roleId)
+        const currentlyEnabled = Boolean(role?.permissions?.view)
+        const otherRolesHaveView = current.roles.some((item) => item.id !== roleId && item.permissions.view)
+        if (currentlyEnabled && !otherRolesHaveView) {
+          setSaveStatus({ type: 'error', message: 'At least one role must keep view access.' })
+          return current
+        }
+      }
+
+      return {
+        ...current,
+        roles: current.roles.map((role) =>
+          role.id === roleId
+            ? {
+                ...role,
+                permissions: {
+                  ...role.permissions,
+                  [permissionKey]: !role.permissions[permissionKey],
+                },
+              }
+            : role,
+        ),
+      }
+    })
   }
 
   const addRole = (name) => {
@@ -284,15 +374,47 @@ function useAdminSettings(user) {
     })
 
     setSaveStatus({ type: 'success', message: `Role "${trimmedName}" added.` })
-    pushActivity(`Role "${trimmedName}" added`)
+    recordActivity(`Role "${trimmedName}" added`)
+  }
+
+  const deleteRole = (roleId) => {
+    setSettings((current) => {
+      const role = current.roles.find((item) => item.id === roleId)
+      if (!role) return current
+      if (role.id === 'admin') {
+        setSaveStatus({ type: 'error', message: 'The Admin role cannot be deleted.' })
+        return current
+      }
+
+      const remainingWithView = current.roles.some((item) => item.id !== roleId && item.permissions.view)
+      if (!remainingWithView) {
+        setSaveStatus({ type: 'error', message: 'Cannot delete the only role with view access.' })
+        return current
+      }
+
+      recordActivity(`Role "${role.name}" deleted`)
+      setSaveStatus({ type: 'success', message: `Role "${role.name}" deleted.` })
+      return {
+        ...current,
+        roles: current.roles.filter((item) => item.id !== roleId),
+      }
+    })
   }
 
   const saveSettings = async () => {
     if (!user?.uid) {
       setSaveStatus({ type: 'error', message: 'No active admin session.' })
-      return
+      return false
     }
 
+    const errors = validateSettings(settings)
+    if (Object.keys(errors).length > 0) {
+      setSaveStatus({ type: 'error', message: Object.values(errors)[0] })
+      setFieldErrors(errors)
+      return false
+    }
+
+    setFieldErrors({})
     setIsSaving(true)
     setSaveStatus({ type: '', message: '' })
 
@@ -329,13 +451,15 @@ function useAdminSettings(user) {
       )
 
       setSaveStatus({ type: 'success', message: 'Settings saved successfully.' })
-      pushActivity('Settings saved')
+      recordActivity('Settings saved')
+      return true
     } catch (error) {
       if (error?.code === 'permission-denied') {
         setSaveStatus({ type: 'error', message: 'Save failed: permission denied by Firestore rules.' })
       } else {
         setSaveStatus({ type: 'error', message: 'Unable to save settings right now.' })
       }
+      return false
     } finally {
       setIsSaving(false)
     }
@@ -349,8 +473,9 @@ function useAdminSettings(user) {
         email: user?.email || current.general.email,
       },
     }))
+    setFieldErrors({})
     setSaveStatus({ type: 'success', message: 'Default settings restored (profile details kept).' })
-    pushActivity('Restored system default settings')
+    recordActivity('Restored system default settings')
   }
 
   const exportSettings = () => {
@@ -379,7 +504,7 @@ function useAdminSettings(user) {
       })),
     }))
     setSaveStatus({ type: 'success', message: 'Bulk permission update applied (view access enabled).' })
-    pushActivity('Bulk user permissions updated')
+    recordActivity('Bulk user permissions updated')
   }
 
   return {
@@ -388,6 +513,7 @@ function useAdminSettings(user) {
     isLoading,
     isSaving,
     saveStatus,
+    fieldErrors,
     setGeneralField,
     setSecurityField,
     toggleReportEmailType,
@@ -396,6 +522,7 @@ function useAdminSettings(user) {
     setRoleName,
     toggleRolePermission,
     addRole,
+    deleteRole,
     saveSettings,
     restoreDefaults,
     exportSettings,

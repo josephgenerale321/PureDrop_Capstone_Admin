@@ -1,5 +1,5 @@
 import { deleteApp, initializeApp } from 'firebase/app'
-import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth'
+import { createUserWithEmailAndPassword, getAuth, sendPasswordResetEmail } from 'firebase/auth'
 import { collection, deleteDoc, doc, getDocs, getFirestore, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { auth, db, functionsClient } from '../../firebase.js'
@@ -133,6 +133,7 @@ const mapUserDoc = (docSnap) => {
     profileImagePath: data.profileImagePath || 'N/A',
     reportCounter: data.reportCounter ?? 0,
     waterMeter: data.waterMeter ?? 'N/A',
+    emailVerified: data.emailVerified ?? false,
   }
 }
 
@@ -159,6 +160,78 @@ export const getUsersLoadErrorMessage = (error) => {
   }
 
   return 'Unable to load users right now.'
+}
+
+export const sendPasswordResetEmailToUser = async (email) => {
+  const normalizedEmail = String(email || '').trim()
+  if (!normalizedEmail) {
+    return {
+      ok: false,
+      error: 'User email is missing.',
+    }
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, normalizedEmail)
+    return {
+      ok: true,
+    }
+  } catch (error) {
+    if (error?.code === 'auth/user-not-found') {
+      return {
+        ok: false,
+        error: 'No account found for this email.',
+      }
+    }
+
+    if (error?.code === 'auth/invalid-email') {
+      return {
+        ok: false,
+        error: 'The email address is invalid.',
+      }
+    }
+
+    return {
+      ok: false,
+      error: 'Unable to send password reset email right now.',
+    }
+  }
+}
+
+export const updateUserStatusInFirestore = async ({ id, status, users }) => {
+  if (!id) {
+    return {
+      ok: false,
+      error: 'Select a user first.',
+    }
+  }
+
+  const targetUser = users.find((user) => user.id === id)
+  const targetDocId = targetUser?.docId || id
+
+  try {
+    await updateDoc(doc(db, USERS_COLLECTION, targetDocId), {
+      status,
+      presenceStatus: status,
+      updatedAt: serverTimestamp(),
+    })
+
+    return {
+      ok: true,
+    }
+  } catch (error) {
+    if (error?.code === 'permission-denied') {
+      return {
+        ok: false,
+        error: 'Unable to update user status: permission denied by Firestore rules.',
+      }
+    }
+
+    return {
+      ok: false,
+      error: 'Unable to update user status right now.',
+    }
+  }
 }
 
 export const updateUserAccountInFirestore = async ({ id, updates, users }) => {

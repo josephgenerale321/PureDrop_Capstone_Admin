@@ -290,6 +290,63 @@
   width: 100%;
 }
 
+.admin-role-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.admin-role-delete-btn {
+  color: #b91c1c;
+  padding: 0;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.admin-role-delete-btn:hover {
+  color: #7f1d1d;
+  text-decoration: underline;
+}
+
+.admin-settings-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(16, 25, 40, 0.5);
+}
+
+.admin-settings-modal {
+  width: min(440px, 100%);
+  border: 1px solid #d3dde8;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  box-shadow: 0 12px 40px rgba(16, 25, 40, 0.24);
+  padding: 1.25rem;
+}
+
+.admin-settings-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.admin-settings-modal-message {
+  margin: 0 0 1rem;
+  color: #4b5f75;
+}
+
+.admin-settings-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .admin-settings-mobile-overlay {
   display: none;
 }

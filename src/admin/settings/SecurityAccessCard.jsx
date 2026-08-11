@@ -1,4 +1,4 @@
-function SecurityAccessCard({ security, onChange }) {
+function SecurityAccessCard({ security, fieldErrors = {}, onChange }) {
   return (
     <section className="admin-settings-card">
       <h2 className="admin-settings-card-title">Security and Access</h2>
@@ -12,10 +12,11 @@ function SecurityAccessCard({ security, onChange }) {
             type="number"
             min={1}
             max={120}
-            className="form-control"
+            className={`form-control${fieldErrors.lockoutMinutes ? ' is-invalid' : ''}`}
             value={security.lockoutMinutes}
             onChange={(event) => onChange('lockoutMinutes', Number(event.target.value))}
           />
+          {fieldErrors.lockoutMinutes && <div className="invalid-feedback d-block">{fieldErrors.lockoutMinutes}</div>}
         </div>
         <div>
           <p className="form-label mb-2">Enable Two-Factor Authentication</p>
@@ -37,10 +38,11 @@ function SecurityAccessCard({ security, onChange }) {
             type="number"
             min={1}
             max={15}
-            className="form-control"
+            className={`form-control${fieldErrors.maxLoginAttempts ? ' is-invalid' : ''}`}
             value={security.maxLoginAttempts}
             onChange={(event) => onChange('maxLoginAttempts', Number(event.target.value))}
           />
+          {fieldErrors.maxLoginAttempts && <div className="invalid-feedback d-block">{fieldErrors.maxLoginAttempts}</div>}
         </div>
       </div>
     </section>

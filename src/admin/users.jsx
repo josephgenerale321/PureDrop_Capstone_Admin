@@ -30,9 +30,15 @@ function AdminUsers({ onLogout }) {
     isCreateModalOpen,
     isEditModalOpen,
     isDetailsModalOpen,
+    isConfirmCloseOpen,
+    isEditDirty,
     createForm,
     editForm,
     editUserId,
+    editFieldErrors,
+    editValidatedFields,
+    editUserName,
+    editUserEmail,
     actionFeedback,
     handleToggleMobileNav,
     handleCloseMobileNav,
@@ -40,10 +46,14 @@ function AdminUsers({ onLogout }) {
     handleCloseCreateModal,
     handleStartEdit,
     handleCloseEditModal,
+    handleConfirmDiscard,
+    handleCancelDiscard,
     handleOpenDetailsModal,
     handleCloseDetailsModal,
     handleCreateFieldChange,
     handleEditFieldChange,
+    handleEditFieldBlur,
+    handleEditReset,
     handleCreateSubmit,
     handleEditSubmit,
     handleDeleteUser,
@@ -114,12 +124,22 @@ function AdminUsers({ onLogout }) {
           <UserFormModal
             mode="edit"
             userId={editUserId}
+            userName={editUserName}
+            userEmail={editUserEmail}
             form={editForm}
             onChangeField={handleEditFieldChange}
             onClose={handleCloseEditModal}
             onSubmit={handleEditSubmit}
             actionFeedback={actionFeedback}
             isSubmitting={savingUserId === editUserId}
+            fieldErrors={editFieldErrors}
+            validatedFields={editValidatedFields}
+            onFieldBlur={handleEditFieldBlur}
+            onReset={handleEditReset}
+            isDirty={isEditDirty}
+            isConfirmCloseOpen={isConfirmCloseOpen}
+            onConfirmDiscard={handleConfirmDiscard}
+            onCancelDiscard={handleCancelDiscard}
           />
         )}
 

@@ -8,7 +8,7 @@ const PERMISSION_COLUMNS = [
   { key: 'close', label: 'Close' },
 ]
 
-function RolesPermissionsCard({ roles, onRoleNameChange, onTogglePermission, onAddRole, onSave, isSaving }) {
+function RolesPermissionsCard({ roles, onRoleNameChange, onTogglePermission, onAddRole, onDeleteRole, onSave, isSaving }) {
   const [newRoleName, setNewRoleName] = useState('')
 
   const handleAddRole = () => {
@@ -44,11 +44,23 @@ function RolesPermissionsCard({ roles, onRoleNameChange, onTogglePermission, onA
 
           {roles.map((role) => (
             <div key={role.id} className="admin-role-row">
-              <input
-                className="form-control form-control-sm admin-role-name-input"
-                value={role.name}
-                onChange={(event) => onRoleNameChange(role.id, event.target.value)}
-              />
+              <div className="admin-role-name-cell">
+                <input
+                  className="form-control form-control-sm admin-role-name-input"
+                  value={role.name}
+                  onChange={(event) => onRoleNameChange(role.id, event.target.value)}
+                />
+                {role.id !== 'admin' && (
+                  <button
+                    type="button"
+                    className="btn btn-link btn-sm admin-role-delete-btn"
+                    onClick={() => onDeleteRole(role.id)}
+                    title={`Delete ${role.name} role`}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
               {PERMISSION_COLUMNS.map((column) => (
                 <label key={`${role.id}-${column.key}`} className="admin-settings-checkbox admin-settings-center">
                   <input

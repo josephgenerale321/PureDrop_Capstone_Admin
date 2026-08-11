@@ -270,6 +270,16 @@
   color: #64201f;
 }
 
+.email-verified {
+  background: #9bd8ac;
+  color: #0f4a1e;
+}
+
+.email-unverified {
+  background: #f6de8e;
+  color: #5b4400;
+}
+
 .admin-users-side-panels {
   display: grid;
   gap: 1rem;
@@ -404,6 +414,52 @@
   font-size: 0.82rem;
 }
 
+.admin-users-field-wrapper {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-users-field-error {
+  margin: 0;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.4rem;
+  background: #fde3e3;
+  color: #712525;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  border: 1px solid #f5c6c6;
+}
+
+.admin-users-field-error::before {
+  content: '⚠ ';
+  font-size: 0.78rem;
+}
+
+.admin-users-edit-form .form-control.is-invalid {
+  border-color: #dc3545;
+  border-width: 1.5px;
+}
+
+.admin-users-dirty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #f6de8e;
+  color: #5b4400;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-users-dirty-badge::before {
+  content: '●';
+  font-size: 0.6rem;
+}
+
 .activity-list {
   list-style: none;
   margin: 0;
@@ -514,6 +570,54 @@
   color: #101928;
   word-break: break-word;
   font-size: 0.92rem;
+}
+
+.admin-users-confirm-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1070;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.admin-users-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(16, 25, 40, 0.55);
+}
+
+.admin-users-confirm-dialog {
+  position: relative;
+  width: min(440px, 100%);
+  border: 1px solid #d3dde8;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(16, 25, 40, 0.3);
+  padding: 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-users-confirm-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #101928;
+}
+
+.admin-users-confirm-message {
+  color: #4b5f75;
+  font-size: 0.92rem;
+}
+
+.admin-users-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .admin-users-mobile-overlay {
@@ -686,6 +790,15 @@
   }
 
   .admin-users-edit-modal-actions .btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .admin-users-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .admin-users-confirm-actions .btn {
     width: 100%;
     min-height: 2.75rem;
   }
