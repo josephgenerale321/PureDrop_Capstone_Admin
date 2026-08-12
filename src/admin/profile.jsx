@@ -1,13 +1,22 @@
 import './profile.css'
-import { signOut } from 'firebase/auth'
-import { auth } from '../firebase.js'
 import DefaultAvatarImage from './DefaultAvatarImage.jsx'
 import useAdminProfile from './profile/useAdminProfile.jsx'
 import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
+import useLogout from './useLogout.js'
+import LogoutConfirmModal from './LogoutConfirmModal.jsx'
+import { LogoutIcon } from './AdminIcons.jsx'
 
 function AdminProfile({ user, onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
+  const {
+    isLogoutModalOpen,
+    isSigningOut,
+    logoutError,
+    confirmLogout,
+    closeLogoutModal,
+    handleConfirmLogout,
+  } = useLogout(onLogout)
   const {
     fullName,
     setFullName,
@@ -27,11 +36,6 @@ function AdminProfile({ user, onLogout }) {
     handleSaveProfile,
     handleChangePassword,
   } = useAdminProfile(user)
-
-  const handleLogout = async () => {
-    await signOut(auth)
-    onLogout?.()
-  }
 
   return (
     <main className="admin-home-page">
@@ -58,8 +62,9 @@ function AdminProfile({ user, onLogout }) {
               <h1 className="admin-page-title">Admin Profile</h1>
               <p className="admin-page-subtitle">Manage your personal account and security details.</p>
             </div>
-            <button type="button" className="btn btn-outline-secondary" onClick={handleLogout}>
-              Logout
+            <button type="button" className="btn btn-outline-secondary admin-header-icon-btn admin-header-icon-btn-danger" onClick={confirmLogout} title="Logout">
+              <LogoutIcon className="admin-header-icon" />
+              <span>Logout</span>
             </button>
           </header>
 
@@ -170,6 +175,15 @@ function AdminProfile({ user, onLogout }) {
           onClick={closeMobileNav}
         />
       </div>
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        isSigningOut={isSigningOut}
+        error={logoutError}
+        userEmail={user?.email || ''}
+        onConfirm={handleConfirmLogout}
+        onClose={closeLogoutModal}
+      />
     </main>
   )
 }

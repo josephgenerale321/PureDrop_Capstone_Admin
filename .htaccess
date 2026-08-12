@@ -1,0 +1,158 @@
+# ============================================================
+# PureDrop Admin — Apache Configuration
+# Optimized for a Vite/React SPA deployed on Apache
+# ============================================================
+
+# ------------------------------------------------------------
+# 1. SPA Routing — send all non-file/non-directory requests
+#    to index.html so React Router can handle client-side routes
+# ------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Don't rewrite existing files or directories
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Rewrite everything else to index.html
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# ------------------------------------------------------------
+# 2. Security Headers
+# ------------------------------------------------------------
+<IfModule mod_headers.c>
+  # Prevent MIME type sniffing
+  Header set X-Content-Type-Options "nosniff"
+
+  # Prevent clickjacking
+  Header set X-Frame-Options "SAMEORIGIN"
+
+  # Enable XSS protection (legacy browsers)
+  Header set X-XSS-Protection "1; mode=block"
+
+  # Referrer policy
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Permissions policy
+  Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+  # HSTS (only when served over HTTPS)
+  # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  # Content Security Policy (adjust as needed for your Firebase/Supabase domains)
+  # Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;"
+</IfModule>
+
+# ------------------------------------------------------------
+# 3. Compression — Gzip/Brotli for faster loading
+# ------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE text/javascript
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE image/svg+xml
+  AddOutputFilterByType DEFLATE application/x-javascript
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE application/xhtml+xml
+  AddOutputFilterByType DEFLATE application/rss+xml
+  AddOutputFilterByType DEFLATE application/atom+xml
+  AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+  AddOutputFilterByType DEFLATE application/x-font-ttf
+  AddOutputFilterByType DEFLATE font/opentype
+  AddOutputFilterByType DEFLATE font/woff
+  AddOutputFilterByType DEFLATE font/woff2
+</IfModule>
+
+# ------------------------------------------------------------
+# 4. Browser Caching — cache static assets aggressively
+# ------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 month"
+
+  # HTML — short cache (SPA updates frequently)
+  ExpiresByType text/html "access plus 0 seconds"
+
+  # CSS/JS — long cache (hashed filenames from Vite)
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+
+  # Images — long cache
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/x-icon "access plus 1 year"
+
+  # Fonts — long cache
+  ExpiresByType font/woff "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType application/vnd.ms-fontobject "access plus 1 year"
+  ExpiresByType application/x-font-ttf "access plus 1 year"
+  ExpiresByType font/opentype "access plus 1 year"
+
+  # JSON — short cache
+  ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+# ------------------------------------------------------------
+# 5. ETag / Cache-Control headers
+# ------------------------------------------------------------
+<IfModule mod_headers.c>
+  # Disable ETags for hashed assets (use Cache-Control instead)
+  FileETag None
+
+  # Hashed assets (Vite outputs hashed filenames) — cache forever
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|svg|webp|woff|woff2|ttf|eot)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # index.html — no cache (always get fresh)
+  <FilesMatch "^index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>
+
+# ------------------------------------------------------------
+# 6. Protect sensitive files
+# ------------------------------------------------------------
+<FilesMatch "^(\.env|\.git|\.htaccess|\.htpasswd|package\.json|package-lock\.json|vite\.config\.js|firebase\.json|firestore\.rules|README\.md|TODO\.md|dist123\.zip)$">
+  Require all denied
+</FilesMatch>
+
+# Block access to hidden files/directories
+<IfModule mod_rewrite.c>
+  RewriteRule (^\.|/\.) - [F]
+</IfModule>
+
+# Block access to node_modules and source maps in production
+<IfModule mod_rewrite.c>
+  RewriteRule ^node_modules/ - [F]
+  RewriteRule \.map$ - [F]
+</IfModule>
+
+# ------------------------------------------------------------
+# 7. Directory listing — disable
+# ------------------------------------------------------------
+Options -Indexes
+
+# ------------------------------------------------------------
+# 8. Default character set
+# ------------------------------------------------------------
+AddDefaultCharset UTF-8
+
+# ------------------------------------------------------------
+# 9. Error pages
+# ------------------------------------------------------------
+ErrorDocument 404 /index.html
+ErrorDocument 403 /index.html

@@ -8,10 +8,20 @@ import useUsersData from './users/useUsersData.jsx'
 import useUsersPageState from './users/useUsersPageState.jsx'
 import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
+import useLogout from './useLogout.js'
+import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 
 function AdminUsers({ onLogout }) {
   const [search, setSearch] = useState('')
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
+  const {
+    isLogoutModalOpen,
+    isSigningOut,
+    logoutError,
+    confirmLogout,
+    closeLogoutModal,
+    handleConfirmLogout,
+  } = useLogout(onLogout)
   const {
     filteredUsers,
     isLoading,
@@ -84,7 +94,7 @@ function AdminUsers({ onLogout }) {
         </div>
 
         <section className="admin-users-content">
-          <UsersHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} onLogout={onLogout} />
+          <UsersHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} onLogout={confirmLogout} />
 
           <div className="admin-users-grid">
             <UsersManagementTable
@@ -154,6 +164,15 @@ function AdminUsers({ onLogout }) {
           />
         )}
       </div>
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        isSigningOut={isSigningOut}
+        error={logoutError}
+        userEmail={''}
+        onConfirm={handleConfirmLogout}
+        onClose={closeLogoutModal}
+      />
     </main>
   )
 }

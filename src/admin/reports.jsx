@@ -9,9 +9,19 @@ import useReportsData from './reports/useReportsData.jsx'
 import useReportsPageState from './reports/useReportsPageState.jsx'
 import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
+import useLogout from './useLogout.js'
+import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 
 function AdminReports({ onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
+  const {
+    isLogoutModalOpen,
+    isSigningOut,
+    logoutError,
+    confirmLogout,
+    closeLogoutModal,
+    handleConfirmLogout,
+  } = useLogout(onLogout)
   const {
     reports,
     search,
@@ -80,7 +90,7 @@ function AdminReports({ onLogout }) {
         </div>
 
         <section className="admin-reports-content">
-          <ReportsHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} onLogout={onLogout} />
+          <ReportsHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} onLogout={confirmLogout} />
           <ReportsSummary totalReports={reports.length} summary={summary} />
 
           <div className="admin-reports-grid">
@@ -152,6 +162,15 @@ function AdminReports({ onLogout }) {
           />
         )}
       </div>
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        isSigningOut={isSigningOut}
+        error={logoutError}
+        userEmail={''}
+        onConfirm={handleConfirmLogout}
+        onClose={closeLogoutModal}
+      />
     </main>
   )
 }

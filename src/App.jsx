@@ -6,6 +6,7 @@ import AdminSettings from './admin/settings.jsx'
 import AdminUsers from './admin/users.jsx'
 import AdminLogin from './login/adminlogin.jsx'
 import useAdminSavedLogin from './admin/savedlogin/adminsavelogin.jsx'
+import NoInternetScreen from './components/NoInternetScreen.jsx'
 
 function App() {
   const { adminUser, isRestoring, rememberedEmail, signOut, clearRememberedEmail } = useAdminSavedLogin()
@@ -30,20 +31,22 @@ function App() {
     )
   }
 
-  if (!adminUser) {
-    return <AdminLogin rememberedEmail={rememberedEmail} onClearRememberedEmail={clearRememberedEmail} />
-  }
-
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route path="/admin/dashboard" element={<AdminHome user={adminUser} onLogout={signOut} />} />
-      <Route path="/admin/profile" element={<AdminProfile user={adminUser} onLogout={signOut} />} />
-      <Route path="/admin/users" element={<AdminUsers user={adminUser} onLogout={signOut} />} />
-      <Route path="/admin/reports" element={<AdminReports user={adminUser} onLogout={signOut} />} />
-      <Route path="/admin/settings" element={<AdminSettings user={adminUser} onLogout={signOut} />} />
-      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
-    </Routes>
+    <NoInternetScreen>
+      {!adminUser ? (
+        <AdminLogin rememberedEmail={rememberedEmail} onClearRememberedEmail={clearRememberedEmail} />
+      ) : (
+        <Routes>
+          <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<AdminHome user={adminUser} onLogout={signOut} />} />
+          <Route path="/admin/profile" element={<AdminProfile user={adminUser} onLogout={signOut} />} />
+          <Route path="/admin/users" element={<AdminUsers user={adminUser} onLogout={signOut} />} />
+          <Route path="/admin/reports" element={<AdminReports user={adminUser} onLogout={signOut} />} />
+          <Route path="/admin/settings" element={<AdminSettings user={adminUser} onLogout={signOut} />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+        </Routes>
+      )}
+    </NoInternetScreen>
   )
 }
 

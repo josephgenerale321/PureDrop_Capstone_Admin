@@ -101,7 +101,10 @@ function hasSessionExpired() {
  */
 export function useAdminSavedLogin() {
   const [adminUser, setAdminUser] = useState(() => readSavedSession())
-  const [isRestoring, setIsRestoring] = useState(true)
+  // Only show the "restoring" state when there's actually a saved session
+  // to restore. On a new device / incognito / after sign-out, there's nothing
+  // to restore, so skip the loading screen and show the login form immediately.
+  const [isRestoring, setIsRestoring] = useState(() => Boolean(readSavedSession()))
   const [rememberedEmail, setRememberedEmail] = useState(() => readRememberedEmail())
   const activityTimerRef = useRef(null)
 

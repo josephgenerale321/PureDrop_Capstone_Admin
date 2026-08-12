@@ -3,6 +3,9 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
+import useLogout from './useLogout.js'
+import LogoutConfirmModal from './LogoutConfirmModal.jsx'
+import { ProfileIcon, LogoutIcon } from './AdminIcons.jsx'
 import GeneralConfigurationCard from './settings/GeneralConfigurationCard.jsx'
 import NotificationsCard from './settings/NotificationsCard.jsx'
 import QuickActionsCard from './settings/QuickActionsCard.jsx'
@@ -15,6 +18,14 @@ import ConfirmActionModal from './settings/ConfirmActionModal.jsx'
 
 function AdminSettings({ user, onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
+  const {
+    isLogoutModalOpen,
+    isSigningOut,
+    logoutError,
+    confirmLogout,
+    closeLogoutModal,
+    handleConfirmLogout,
+  } = useLogout(onLogout)
   const [confirmAction, setConfirmAction] = useState(null)
   const {
     settings,
@@ -81,11 +92,13 @@ function AdminSettings({ user, onLogout }) {
               <p className="admin-settings-subtitle">Configure admin profile and PureDrop application preferences.</p>
             </div>
             <div className="admin-settings-top-actions">
-              <Link to="/admin/profile" className="btn btn-outline-secondary">
-                Admin Profile
+              <Link to="/admin/profile" className="btn btn-outline-secondary admin-header-icon-btn" title="Admin Profile">
+                <ProfileIcon className="admin-header-icon" />
+                <span>Profile</span>
               </Link>
-              <button type="button" className="btn btn-outline-secondary" onClick={onLogout}>
-                Logout
+              <button type="button" className="btn btn-outline-secondary admin-header-icon-btn admin-header-icon-btn-danger" onClick={confirmLogout} title="Logout">
+                <LogoutIcon className="admin-header-icon" />
+                <span>Logout</span>
               </button>
             </div>
           </header>
@@ -156,6 +169,15 @@ function AdminSettings({ user, onLogout }) {
           onClick={closeMobileNav}
         />
       </div>
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        isSigningOut={isSigningOut}
+        error={logoutError}
+        userEmail={user?.email || ''}
+        onConfirm={handleConfirmLogout}
+        onClose={closeLogoutModal}
+      />
     </main>
   )
 }

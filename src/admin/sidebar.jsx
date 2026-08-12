@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import DefaultAvatarImage from './DefaultAvatarImage.jsx'
+import { LogoutIcon } from './AdminIcons.jsx'
 import './sidebar.css'
 
 const NAV_ITEMS = [
@@ -138,7 +139,8 @@ function AdminSidebar({
           )}
           {onLogout && (
             <button type="button" className="admin-sidebar-logout" onClick={onLogout}>
-              Logout
+              <LogoutIcon className="admin-sidebar-logout-icon" />
+              <span>Logout</span>
             </button>
           )}
         </div>

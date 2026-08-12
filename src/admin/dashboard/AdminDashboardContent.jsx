@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom'
 import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 import AdminSidebar from '../sidebar.jsx'
 import useAdminMobileNav from '../useAdminMobileNav.js'
+import useLogout from '../useLogout.js'
+import LogoutConfirmModal from '../LogoutConfirmModal.jsx'
+import { ProfileIcon, LogoutIcon } from '../AdminIcons.jsx'
 
 const SORTABLE_COLUMNS = [
   { key: 'reportId', label: 'Report ID', getValue: (report) => report.reportId },
@@ -22,6 +25,14 @@ function AdminDashboardContent({
   userEmail,
 }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
+  const {
+    isLogoutModalOpen,
+    isSigningOut,
+    logoutError,
+    confirmLogout,
+    closeLogoutModal,
+    handleConfirmLogout,
+  } = useLogout(onLogout)
   const [sortKey, setSortKey] = useState('')
   const [sortDirection, setSortDirection] = useState('asc')
 
@@ -99,11 +110,13 @@ function AdminDashboardContent({
               <p className="admin-dashboard-subtitle">Manage users, reports, and system updates.</p>
             </div>
             <div className="admin-dashboard-top-actions">
-              <Link to="/admin/profile" className="btn btn-outline-secondary">
-                Admin Profile
+              <Link to="/admin/profile" className="btn btn-outline-secondary admin-header-icon-btn" title="Admin Profile">
+                <ProfileIcon className="admin-header-icon" />
+                <span>Profile</span>
               </Link>
-              <button type="button" className="btn btn-outline-secondary" onClick={onLogout}>
-                Logout
+              <button type="button" className="btn btn-outline-secondary admin-header-icon-btn admin-header-icon-btn-danger" onClick={confirmLogout} title="Logout">
+                <LogoutIcon className="admin-header-icon" />
+                <span>Logout</span>
               </button>
             </div>
           </header>
@@ -261,6 +274,15 @@ function AdminDashboardContent({
           onClick={closeMobileNav}
         />
       </div>
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        isSigningOut={isSigningOut}
+        error={logoutError}
+        userEmail={userEmail}
+        onConfirm={handleConfirmLogout}
+        onClose={closeLogoutModal}
+      />
     </main>
   )
 }
