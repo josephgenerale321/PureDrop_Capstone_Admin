@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 import AdminSidebar from '../sidebar.jsx'
+import useAdminMobileNav from '../useAdminMobileNav.js'
 
 const SORTABLE_COLUMNS = [
   { key: 'reportId', label: 'Report ID', getValue: (report) => report.reportId },
@@ -20,7 +21,7 @@ function AdminDashboardContent({
   adminName,
   userEmail,
 }) {
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
   const [sortKey, setSortKey] = useState('')
   const [sortDirection, setSortDirection] = useState('asc')
 
@@ -72,56 +73,11 @@ function AdminDashboardContent({
     )
   }
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined
-    }
-
-    const handleResize = () => {
-      if (window.innerWidth >= 992) {
-        setIsMobileNavOpen(false)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (typeof document === 'undefined' || !isMobileNavOpen) {
-      return undefined
-    }
-
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    const handleEscape = (event) => {
-      if (event.key === 'Escape') {
-        setIsMobileNavOpen(false)
-      }
-    }
-
-    document.addEventListener('keydown', handleEscape)
-
-    return () => {
-      document.body.style.overflow = originalOverflow
-      document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isMobileNavOpen])
-
   return (
     <main className="admin-dashboard-page">
       <div className={`admin-dashboard-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-dashboard-sidebar" className="admin-dashboard-sidebar-wrap">
-          <AdminSidebar
-            baseClass="admin-dashboard"
-            activeItem="dashboard"
-            onNavigate={() => {
-              setIsMobileNavOpen(false)
-            }}
-          />
+          <AdminSidebar activeItem="dashboard" onClose={closeMobileNav} />
         </div>
 
         <section className="admin-dashboard-content">
@@ -130,7 +86,7 @@ function AdminDashboardContent({
               <button
                 type="button"
                 className="btn btn-outline-secondary admin-dashboard-mobile-toggle"
-                onClick={() => setIsMobileNavOpen((current) => !current)}
+                onClick={toggleMobileNav}
                 aria-expanded={isMobileNavOpen}
                 aria-controls="admin-dashboard-sidebar"
               >
@@ -302,7 +258,7 @@ function AdminDashboardContent({
           type="button"
           className="admin-dashboard-mobile-overlay"
           aria-label="Close navigation menu"
-          onClick={() => setIsMobileNavOpen(false)}
+          onClick={closeMobileNav}
         />
       </div>
     </main>

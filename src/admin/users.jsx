@@ -7,9 +7,11 @@ import UsersManagementTable from './users/UsersManagementTable.jsx'
 import useUsersData from './users/useUsersData.jsx'
 import useUsersPageState from './users/useUsersPageState.jsx'
 import AdminSidebar from './sidebar.jsx'
+import useAdminMobileNav from './useAdminMobileNav.js'
 
 function AdminUsers({ onLogout }) {
   const [search, setSearch] = useState('')
+  const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
   const {
     filteredUsers,
     isLoading,
@@ -29,7 +31,6 @@ function AdminUsers({ onLogout }) {
   } = useUsersData(search)
 
   const {
-    isMobileNavOpen,
     isCreateModalOpen,
     isEditModalOpen,
     isDetailsModalOpen,
@@ -43,8 +44,6 @@ function AdminUsers({ onLogout }) {
     editUserName,
     editUserEmail,
     actionFeedback,
-    handleToggleMobileNav,
-    handleCloseMobileNav,
     handleOpenCreateModal,
     handleCloseCreateModal,
     handleStartEdit,
@@ -81,17 +80,11 @@ function AdminUsers({ onLogout }) {
     <main className="admin-users-page">
       <div className={`admin-users-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-users-sidebar" className="admin-users-sidebar-wrap">
-          <AdminSidebar
-            baseClass="admin-users"
-            activeItem="users"
-            onNavigate={() => {
-              handleCloseMobileNav()
-            }}
-          />
+          <AdminSidebar activeItem="users" onClose={closeMobileNav} />
         </div>
 
         <section className="admin-users-content">
-          <UsersHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={handleToggleMobileNav} onLogout={onLogout} />
+          <UsersHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} onLogout={onLogout} />
 
           <div className="admin-users-grid">
             <UsersManagementTable
@@ -113,7 +106,7 @@ function AdminUsers({ onLogout }) {
           type="button"
           className="admin-users-mobile-overlay"
           aria-label="Close navigation menu"
-          onClick={handleCloseMobileNav}
+          onClick={closeMobileNav}
         />
 
         {isCreateModalOpen && (

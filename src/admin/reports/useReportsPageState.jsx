@@ -38,7 +38,6 @@ const mapReportToEditForm = (report) => ({
 })
 
 function useReportsPageState({ selectedReport, updateReportStatus, editReport, deleteReport }) {
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [statusDraftByReportKey, setStatusDraftByReportKey] = useState({})
   const [statusUpdateResult, setStatusUpdateResult] = useState({ key: '', type: '', message: '' })
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
@@ -60,24 +59,7 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
   const isDetailsModalVisible = isDetailsModalOpen && Boolean(selectedReport)
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined
-    }
-
-    const handleResize = () => {
-      if (window.innerWidth >= 992) {
-        setIsMobileNavOpen(false)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (typeof document === 'undefined' || (!isMobileNavOpen && !isDetailsModalVisible && !isEditModalVisible && !isDeleteModalVisible)) {
+    if (typeof document === 'undefined' || (!isDetailsModalVisible && !isEditModalVisible && !isDeleteModalVisible)) {
       return undefined
     }
 
@@ -100,8 +82,6 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
           setIsDetailsModalOpen(false)
           return
         }
-
-        setIsMobileNavOpen(false)
       }
     }
 
@@ -111,7 +91,7 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
       document.body.style.overflow = originalOverflow
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [isDeleteModalVisible, isDetailsModalVisible, isEditModalVisible, isMobileNavOpen])
+  }, [isDeleteModalVisible, isDetailsModalVisible, isEditModalVisible])
 
   useEffect(() => {
     if (!selectedReport) {
@@ -271,8 +251,6 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
   }
 
   return {
-    isMobileNavOpen,
-    setIsMobileNavOpen,
     selectedStatusDraft,
     statusUpdateResult,
     isDetailsModalOpen: isDetailsModalVisible,

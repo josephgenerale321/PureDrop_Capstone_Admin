@@ -1,0 +1,229 @@
+/* Shared Admin Sidebar Styles */
+.admin-sidebar {
+  border-right: 1px solid #d8e0ea;
+  background: #ffffff;
+  height: 100%;
+}
+
+.admin-sidebar-brand {
+  min-height: 140px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #d8e0ea;
+  background: #083663;
+  position: relative;
+}
+
+.admin-sidebar-close {
+  display: none;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease;
+}
+
+.admin-sidebar-close:hover,
+.admin-sidebar-close:focus {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.admin-sidebar-logo {
+  width: min(190px, 100%);
+  height: auto;
+  object-fit: contain;
+}
+
+.admin-sidebar-nav {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 0.75rem;
+}
+
+.admin-sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: transparent;
+  text-align: left;
+  padding: 0.65rem 0.8rem;
+  color: #24384d;
+  text-decoration: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-sidebar-nav-item:hover {
+  background: #e9f0f8;
+  color: #24384d;
+}
+
+.admin-sidebar-nav-item.is-active,
+.admin-sidebar-nav-item.active {
+  background: #dcecff;
+  color: #1f5da3;
+  font-weight: 600;
+}
+
+.admin-sidebar-nav-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: #5a6d83;
+  transition: color 0.15s ease;
+}
+
+.admin-sidebar-nav-item:hover .admin-sidebar-nav-icon,
+.admin-sidebar-nav-item.is-active .admin-sidebar-nav-icon,
+.admin-sidebar-nav-item.active .admin-sidebar-nav-icon {
+  color: #1f5da3;
+}
+
+.admin-sidebar-nav-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-sidebar-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #e8923a;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.admin-sidebar-footer {
+  margin-top: auto;
+  padding: 0.75rem;
+  border-top: 1px solid #d8e0ea;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.4rem;
+  border-radius: 0.65rem;
+  background: #f1f4f8;
+}
+
+.admin-sidebar-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #d3dde8;
+  background: #eef3f8;
+  flex: 0 0 36px;
+}
+
+.admin-sidebar-user-info {
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.admin-sidebar-user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #101928;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sidebar-user-role {
+  font-size: 0.78rem;
+  color: #5a6d83;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sidebar-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid #d3dde8;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  color: #24384d;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-sidebar-logout:hover,
+.admin-sidebar-logout:focus {
+  background: #fde3e3;
+  border-color: #e7a09f;
+  color: #712525;
+}
+
+.admin-sidebar-logout-icon {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (max-width: 991.98px) {
+  .admin-sidebar {
+    height: 100dvh;
+    overflow-y: auto;
+    border-right: 1px solid #d8e0ea;
+    border-bottom: 0;
+    box-shadow: 0 8px 30px rgba(16, 25, 40, 0.2);
+  }
+
+  .admin-sidebar-brand {
+    min-height: 96px;
+  }
+
+  .admin-sidebar-logo {
+    width: min(170px, 90%);
+  }
+
+  .admin-sidebar-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar-close {
+    display: inline-flex;
+  }
+
+  .admin-sidebar-nav-item {
+    padding: 0.85rem 0.8rem;
+    font-size: 1rem;
+    min-height: 2.75rem;
+  }
+}

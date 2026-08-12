@@ -8,8 +8,10 @@ import ReportsSummary from './reports/ReportsSummary.jsx'
 import useReportsData from './reports/useReportsData.jsx'
 import useReportsPageState from './reports/useReportsPageState.jsx'
 import AdminSidebar from './sidebar.jsx'
+import useAdminMobileNav from './useAdminMobileNav.js'
 
 function AdminReports({ onLogout }) {
+  const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
   const {
     reports,
     search,
@@ -31,8 +33,6 @@ function AdminReports({ onLogout }) {
   } = useReportsData()
 
   const {
-    isMobileNavOpen,
-    setIsMobileNavOpen,
     selectedStatusDraft,
     statusUpdateResult,
     isDetailsModalOpen,
@@ -76,21 +76,11 @@ function AdminReports({ onLogout }) {
     <main className="admin-reports-page">
       <div className={`admin-reports-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-reports-sidebar" className="admin-reports-sidebar-wrap">
-          <AdminSidebar
-            baseClass="admin-reports"
-            activeItem="reports"
-            onNavigate={() => {
-              setIsMobileNavOpen(false)
-            }}
-          />
+          <AdminSidebar activeItem="reports" onClose={closeMobileNav} />
         </div>
 
         <section className="admin-reports-content">
-          <ReportsHeader
-            isMobileNavOpen={isMobileNavOpen}
-            onToggleMobileNav={() => setIsMobileNavOpen((current) => !current)}
-            onLogout={onLogout}
-          />
+          <ReportsHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} onLogout={onLogout} />
           <ReportsSummary totalReports={reports.length} summary={summary} />
 
           <div className="admin-reports-grid">
@@ -110,7 +100,7 @@ function AdminReports({ onLogout }) {
           type="button"
           className="admin-reports-mobile-overlay"
           aria-label="Close navigation menu"
-          onClick={() => setIsMobileNavOpen(false)}
+          onClick={closeMobileNav}
         />
 
         {isDetailsModalOpen && (

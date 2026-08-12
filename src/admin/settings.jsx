@@ -1,7 +1,8 @@
 import './settings.css'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminSidebar from './sidebar.jsx'
+import useAdminMobileNav from './useAdminMobileNav.js'
 import GeneralConfigurationCard from './settings/GeneralConfigurationCard.jsx'
 import NotificationsCard from './settings/NotificationsCard.jsx'
 import QuickActionsCard from './settings/QuickActionsCard.jsx'
@@ -13,7 +14,7 @@ import useAdminSettings from './settings/useAdminSettings.jsx'
 import ConfirmActionModal from './settings/ConfirmActionModal.jsx'
 
 function AdminSettings({ user, onLogout }) {
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
   const [confirmAction, setConfirmAction] = useState(null)
   const {
     settings,
@@ -54,56 +55,11 @@ function AdminSettings({ user, onLogout }) {
     })
   }
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined
-    }
-
-    const handleResize = () => {
-      if (window.innerWidth >= 992) {
-        setIsMobileNavOpen(false)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (typeof document === 'undefined' || !isMobileNavOpen) {
-      return undefined
-    }
-
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    const handleEscape = (event) => {
-      if (event.key === 'Escape') {
-        setIsMobileNavOpen(false)
-      }
-    }
-
-    document.addEventListener('keydown', handleEscape)
-
-    return () => {
-      document.body.style.overflow = originalOverflow
-      document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isMobileNavOpen])
-
   return (
     <main className="admin-settings-page">
       <div className={`admin-settings-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-settings-sidebar" className="admin-settings-sidebar-wrap">
-          <AdminSidebar
-            baseClass="admin-settings"
-            activeItem="settings"
-            onNavigate={() => {
-              setIsMobileNavOpen(false)
-            }}
-          />
+          <AdminSidebar activeItem="settings" onClose={closeMobileNav} />
         </div>
 
         <section className="admin-settings-content">
@@ -112,7 +68,7 @@ function AdminSettings({ user, onLogout }) {
               <button
                 type="button"
                 className="btn btn-outline-secondary admin-settings-mobile-toggle"
-                onClick={() => setIsMobileNavOpen((current) => !current)}
+                onClick={toggleMobileNav}
                 aria-expanded={isMobileNavOpen}
                 aria-controls="admin-settings-sidebar"
               >
@@ -197,7 +153,7 @@ function AdminSettings({ user, onLogout }) {
           type="button"
           className="admin-settings-mobile-overlay"
           aria-label="Close navigation menu"
-          onClick={() => setIsMobileNavOpen(false)}
+          onClick={closeMobileNav}
         />
       </div>
     </main>

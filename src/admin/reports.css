@@ -14,80 +14,6 @@
   min-width: 0;
 }
 
-.admin-reports-sidebar {
-  border-right: 1px solid #d8e0ea;
-  background: #ffffff;
-}
-
-.admin-reports-sidebar-brand {
-  min-height: 140px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid #d8e0ea;
-  background: #083663;
-  position: relative;
-}
-
-.admin-reports-sidebar-close {
-  display: none;
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 0.6rem;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-size: 1rem;
-  line-height: 1;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: background-color 0.15s ease;
-}
-
-.admin-reports-sidebar-close:hover,
-.admin-reports-sidebar-close:focus {
-  background: rgba(255, 255, 255, 0.24);
-}
-
-.admin-reports-sidebar-logo {
-  width: min(190px, 100%);
-  height: auto;
-  object-fit: contain;
-}
-
-.admin-reports-nav {
-  display: grid;
-  gap: 0.35rem;
-  padding: 1rem 0.75rem;
-}
-
-.admin-reports-nav-item {
-  border: 0;
-  border-radius: 0.65rem;
-  background: transparent;
-  text-align: left;
-  padding: 0.65rem 0.8rem;
-  color: #24384d;
-  text-decoration: none;
-}
-
-.admin-reports-nav-item:hover {
-  background: #e9f0f8;
-  color: #24384d;
-}
-
-.admin-reports-nav-item.is-active {
-  background: #dcecff;
-  color: #1f5da3;
-  font-weight: 600;
-}
-
 .admin-reports-content {
   padding: 1.25rem;
   display: grid;
@@ -741,36 +667,6 @@
 
   .admin-reports-shell.is-nav-open .admin-reports-sidebar-wrap {
     transform: translateX(0);
-  }
-
-  .admin-reports-sidebar {
-    height: 100dvh;
-    overflow-y: auto;
-    border-right: 1px solid #d8e0ea;
-    border-bottom: 0;
-    box-shadow: 0 8px 30px rgba(16, 25, 40, 0.2);
-  }
-
-  .admin-reports-sidebar-brand {
-    min-height: 96px;
-  }
-
-  .admin-reports-sidebar-logo {
-    width: min(170px, 90%);
-  }
-
-  .admin-reports-nav {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-reports-sidebar-close {
-    display: inline-flex;
-  }
-
-  .admin-reports-nav-item {
-    padding: 0.85rem 0.8rem;
-    font-size: 1rem;
-    min-height: 2.75rem;
   }
 
   .admin-reports-mobile-toggle {

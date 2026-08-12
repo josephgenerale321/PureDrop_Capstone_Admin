@@ -63,12 +63,12 @@ function RolesPermissionsCard({ roles, onRoleNameChange, onTogglePermission, onA
               </div>
               {PERMISSION_COLUMNS.map((column) => (
                 <label key={`${role.id}-${column.key}`} className="admin-settings-checkbox admin-settings-center">
+                  <span className="admin-role-permission-label">{column.label}</span>
                   <input
                     type="checkbox"
                     checked={Boolean(role.permissions[column.key])}
                     onChange={() => onTogglePermission(role.id, column.key)}
                   />
-                  <span>{column.label}</span>
                 </label>
               ))}
             </div>

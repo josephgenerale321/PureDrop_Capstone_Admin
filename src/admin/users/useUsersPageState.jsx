@@ -96,7 +96,6 @@ function useUsersPageState({
   sendPasswordReset,
   sendVerificationEmail,
 }) {
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [createForm, setCreateForm] = useState(createEmptyCreateForm)
   const [editForm, setEditForm] = useState(EMPTY_EDIT_FORM)
@@ -116,24 +115,7 @@ function useUsersPageState({
   const isEditDirty = isEditModalOpen && formsDiffer(editForm, editReference)
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined
-    }
-
-    const handleResize = () => {
-      if (window.innerWidth >= 992) {
-        setIsMobileNavOpen(false)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (typeof document === 'undefined' || (!isMobileNavOpen && !isEditModalOpen && !isCreateModalOpen && !isDetailsModalOpen)) {
+    if (typeof document === 'undefined' || (!isEditModalOpen && !isCreateModalOpen && !isDetailsModalOpen)) {
       return undefined
     }
 
@@ -170,9 +152,6 @@ function useUsersPageState({
         return
       }
 
-      if (isMobileNavOpen) {
-        setIsMobileNavOpen(false)
-      }
     }
 
     document.addEventListener('keydown', handleEscape)
@@ -181,15 +160,7 @@ function useUsersPageState({
       document.body.style.overflow = originalOverflow
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [editUserId, isEditModalOpen, isCreateModalOpen, isMobileNavOpen, isDetailsModalOpen, isConfirmCloseOpen, isEditDirty])
-
-  const handleToggleMobileNav = () => {
-    setIsMobileNavOpen((current) => !current)
-  }
-
-  const handleCloseMobileNav = () => {
-    setIsMobileNavOpen(false)
-  }
+  }, [editUserId, isEditModalOpen, isCreateModalOpen, isDetailsModalOpen, isConfirmCloseOpen, isEditDirty])
 
   const handleOpenCreateModal = () => {
     setIsCreateModalOpen(true)
@@ -445,7 +416,6 @@ function useUsersPageState({
   }
 
   return {
-    isMobileNavOpen,
     isCreateModalOpen,
     isEditModalOpen,
     isDetailsModalOpen,
@@ -460,8 +430,6 @@ function useUsersPageState({
     editUserName,
     editUserEmail,
     actionFeedback,
-    handleToggleMobileNav,
-    handleCloseMobileNav,
     handleOpenCreateModal,
     handleCloseCreateModal,
     handleStartEdit,
