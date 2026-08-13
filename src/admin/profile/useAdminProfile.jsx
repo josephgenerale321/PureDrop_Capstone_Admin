@@ -16,6 +16,10 @@ function useAdminProfile(user) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [successModal, setSuccessModal] = useState({ isOpen: false, title: 'Success', message: '' })
+  const [errorModal, setErrorModal] = useState({ isOpen: false, title: 'Error', message: '' })
+  const [isPasswordConfirmOpen, setIsPasswordConfirmOpen] = useState(false)
+  const [passwordConfirmError, setPasswordConfirmError] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -80,11 +84,26 @@ function useAdminProfile(user) {
         { merge: true },
       )
       setProfileStatus('Profile updated successfully.')
+      setSuccessModal({
+        isOpen: true,
+        title: 'Profile Updated',
+        message: 'Your profile changes have been saved successfully.',
+      })
     } catch (error) {
       if (error?.code === 'permission-denied') {
         setProfileStatus('Save failed: permission denied by Firestore rules.')
+        setErrorModal({
+          isOpen: true,
+          title: 'Save Failed',
+          message: 'Unable to save profile changes: permission denied by Firestore rules.',
+        })
       } else {
         setProfileStatus('Unable to save profile changes.')
+        setErrorModal({
+          isOpen: true,
+          title: 'Save Failed',
+          message: 'Unable to save profile changes. Please try again.',
+        })
       }
     } finally {
       setIsSavingProfile(false)
@@ -94,31 +113,67 @@ function useAdminProfile(user) {
   const handleChangePassword = async (event) => {
     event.preventDefault()
     setPasswordStatus('')
+    setPasswordConfirmError('')
 
     if (!auth.currentUser || !auth.currentUser.email) {
       setPasswordStatus('No active admin session.')
+      setErrorModal({
+        isOpen: true,
+        title: 'No Active Session',
+        message: 'No active admin session. Please sign in again.',
+      })
       return
     }
     if (newPassword.length < 6) {
       setPasswordStatus('New password must be at least 6 characters.')
+      setErrorModal({
+        isOpen: true,
+        title: 'Password Too Short',
+        message: 'New password must be at least 6 characters.',
+      })
       return
     }
     if (newPassword !== confirmPassword) {
       setPasswordStatus('New password and confirmation do not match.')
+      setErrorModal({
+        isOpen: true,
+        title: 'Passwords Do Not Match',
+        message: 'New password and confirmation do not match.',
+      })
       return
     }
 
+    setIsPasswordConfirmOpen(true)
+  }
+
+  const closePasswordConfirm = () => {
+    if (isUpdatingPassword) {
+      return
+    }
+    setIsPasswordConfirmOpen(false)
+    setPasswordConfirmError('')
+  }
+
+  const performPasswordChange = async () => {
     setIsUpdatingPassword(true)
+    setPasswordConfirmError('')
     try {
       const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword)
       await reauthenticateWithCredential(auth.currentUser, credential)
       await updatePassword(auth.currentUser, newPassword)
       setPasswordStatus('Password updated successfully.')
+      setSuccessModal({
+        isOpen: true,
+        title: 'Password Updated',
+        message: 'Your password has been updated successfully.',
+      })
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
+      setIsPasswordConfirmOpen(false)
     } catch {
       setPasswordStatus('Unable to update password. Check current password and try again.')
+      setPasswordConfirmError('Unable to update password. Check your current password and try again.')
     } finally {
       setIsUpdatingPassword(false)
     }
@@ -141,8 +196,16 @@ function useAdminProfile(user) {
     confirmPassword,
     setConfirmPassword,
     initials,
+    successModal,
+    errorModal,
+    isPasswordConfirmOpen,
+    passwordConfirmError,
     handleSaveProfile,
     handleChangePassword,
+    closePasswordConfirm,
+    performPasswordChange,
+    handleCloseSuccessModal: () => setSuccessModal((current) => ({ ...current, isOpen: false })),
+    handleCloseErrorModal: () => setErrorModal((current) => ({ ...current, isOpen: false })),
   }
 }
 

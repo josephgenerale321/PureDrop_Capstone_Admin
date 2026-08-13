@@ -190,6 +190,15 @@ function useReportsPageState({ selectedReport, updateReportStatus, editReport, d
       return
     }
 
+    if (editForm.waterMeter && editForm.waterMeter.replace(/[^\d]/g, '').length > 6) {
+      setReportActionResult({
+        key: selectedReport.key,
+        type: 'error',
+        message: 'Water meter must be at most 6 digits.',
+      })
+      return
+    }
+
     setReportActionResult(createEmptyReportActionResult())
     const result = await editReport(selectedReport.key, editForm)
     if (!result.ok) {

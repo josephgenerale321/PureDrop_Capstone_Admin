@@ -2,6 +2,7 @@ import './users.css'
 import { useState } from 'react'
 import UserFormModal from './users/UserFormModal.jsx'
 import UserDetailsModal from './users/UserDetailsModal.jsx'
+import DeleteUserConfirmModal from './users/DeleteUserConfirmModal.jsx'
 import UsersHeader from './users/UsersHeader.jsx'
 import UsersManagementTable from './users/UsersManagementTable.jsx'
 import useUsersData from './users/useUsersData.jsx'
@@ -70,7 +71,13 @@ function AdminUsers({ onLogout }) {
     handleEditSubmit,
     handleSendPasswordReset,
     handleSendVerificationEmail,
-    handleDeleteUser,
+    isDeleteModalOpen,
+    deleteTarget,
+    deleteError,
+    isDeleteSubmitting,
+    handleOpenDeleteModal,
+    handleCloseDeleteModal,
+    handleConfirmDelete,
   } = useUsersPageState({
     createUserAccount,
     updateUserAccount,
@@ -107,7 +114,7 @@ function AdminUsers({ onLogout }) {
               selectedUserId={selectedUserId}
               onViewDetails={handleViewUserDetails}
               onStartEdit={handleStartEdit}
-              onDeleteUser={handleDeleteUser}
+              onDeleteUser={handleOpenDeleteModal}
               deletingUserId={deletingUserId}
             />
           </div>
@@ -164,6 +171,16 @@ function AdminUsers({ onLogout }) {
           />
         )}
       </div>
+
+      <DeleteUserConfirmModal
+        isOpen={isDeleteModalOpen}
+        userName={deleteTarget?.name || ''}
+        userEmail={deleteTarget?.email || ''}
+        isDeleting={isDeleteSubmitting}
+        error={deleteError}
+        onConfirm={handleConfirmDelete}
+        onClose={handleCloseDeleteModal}
+      />
 
       <LogoutConfirmModal
         isOpen={isLogoutModalOpen}

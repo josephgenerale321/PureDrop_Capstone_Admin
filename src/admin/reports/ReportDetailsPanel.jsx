@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 import AdminReportGpsMap from './AdminReportGpsMap.jsx'
 
@@ -26,6 +27,7 @@ function ReportDetailsPanel({
   reportActionSuccess = '',
   isEmbedded = false,
 }) {
+  const [lightboxUrl, setLightboxUrl] = useState('')
   const isStatusUnchanged =
     String(statusDraft || '')
       .trim()
@@ -35,6 +37,16 @@ function ReportDetailsPanel({
       .toLowerCase()
 
   const PanelTag = isEmbedded ? 'div' : 'section'
+
+  const openLightbox = (url) => {
+    if (url) {
+      setLightboxUrl(url)
+    }
+  }
+
+  const closeLightbox = () => {
+    setLightboxUrl('')
+  }
 
   return (
     <PanelTag className={isEmbedded ? 'admin-report-details-panel' : 'admin-reports-card'}>
@@ -147,15 +159,29 @@ function ReportDetailsPanel({
               <dd>
                 {!report.attachments.length && <span className="text-muted">No attachments</span>}
                 {!!report.attachments.length && (
-                  <ul className="admin-report-attachments">
+                  <div className="admin-report-attachments-grid">
                     {report.attachments.map((url, index) => (
-                      <li key={url}>
-                        <a href={url} target="_blank" rel="noreferrer">
-                          📎 Attachment {index + 1}
-                        </a>
-                      </li>
+                      <figure className="admin-report-attachment-thumb" key={url}>
+                        <div className="admin-report-attachment-thumb-media">
+                          <img
+                            src={url}
+                            alt={`Attachment ${index + 1}`}
+                            loading="lazy"
+                            onClick={() => openLightbox(url)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault()
+                                openLightbox(url)
+                              }
+                            }}
+                          />
+                        </div>
+                        <figcaption>Attachment {index + 1}</figcaption>
+                      </figure>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </dd>
             </div>
@@ -167,6 +193,31 @@ function ReportDetailsPanel({
               <span className="admin-report-map-section-coords">{report.gpsLocation}</span>
             </div>
             <AdminReportGpsMap gpsLocation={report.gpsLocation} />
+          </div>
+        </div>
+      )}
+
+      {lightboxUrl && (
+        <div className="admin-report-lightbox-overlay" role="presentation" onClick={closeLightbox}>
+          <div
+            className="admin-report-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reportLightboxTitle"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="admin-report-lightbox-close"
+              onClick={closeLightbox}
+              aria-label="Close preview"
+            >
+              ✕
+            </button>
+            <img src={lightboxUrl} alt="Report attachment preview" className="admin-report-lightbox-image" />
+            <p id="reportLightboxTitle" className="admin-report-lightbox-path">
+              {lightboxUrl}
+            </p>
           </div>
         </div>
       )}

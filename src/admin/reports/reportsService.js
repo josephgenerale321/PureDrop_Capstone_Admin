@@ -1,4 +1,4 @@
-import { collectionGroup, deleteDoc, doc, getDoc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { auth, db } from '../../firebase.js'
 import { isSupabaseConfigured, supabase } from '../../supabase.js'
 
@@ -121,21 +121,25 @@ const fetchUserProfilesByIds = async (userIds) => {
   return profilesById
 }
 
-const buildUidToDisplayIdMap = async () => {
+const buildUidToDisplayIdMap = async (additionalUids = []) => {
+  let uids = []
+
   try {
-    const usersSnap = await getDocs(collectionGroup(db, USERS_COLLECTION))
-    const uids = usersSnap.docs
+    const usersSnap = await getDocs(collection(db, USERS_COLLECTION))
+    uids = usersSnap.docs
       .map((docSnap) => docSnap.data().uid || docSnap.id)
       .filter(Boolean)
-    const sortedUids = [...new Set(uids)].sort((a, b) => String(a).localeCompare(String(b)))
-    const map = new Map()
-    sortedUids.forEach((uid, index) => {
-      map.set(uid, String(index + 1))
-    })
-    return map
   } catch {
-    return new Map()
+    // Fall through: still build the map from the report user IDs below.
   }
+
+  const allUids = [...new Set([...uids, ...additionalUids.filter(Boolean)])]
+  const sortedUids = allUids.sort((a, b) => String(a).localeCompare(String(b)))
+  const map = new Map()
+  sortedUids.forEach((uid, index) => {
+    map.set(uid, String(index + 1))
+  })
+  return map
 }
 
 const mapReportDocsWithProfiles = async (docs) => {
@@ -147,8 +151,9 @@ const mapReportDocsWithProfiles = async (docs) => {
       userId: getReportUserId(docSnap, data),
     }
   })
-  const profilesById = await fetchUserProfilesByIds(reportDocs.map((item) => item.userId))
-  const uidToDisplayId = await buildUidToDisplayIdMap()
+  const reportUserIds = reportDocs.map((item) => item.userId)
+  const profilesById = await fetchUserProfilesByIds(reportUserIds)
+  const uidToDisplayId = await buildUidToDisplayIdMap(reportUserIds)
 
   return reportDocs
     .map(({ docSnap, data, userId }) => {
@@ -338,6 +343,13 @@ const buildEditableReportPayload = (draft) => {
     return {
       ok: false,
       error: 'Issue and category are required.',
+    }
+  }
+
+  if (waterMeter && waterMeter.replace(/[^\d]/g, '').length > 6) {
+    return {
+      ok: false,
+      error: 'Water meter must be at most 6 digits.',
     }
   }
 

@@ -5,6 +5,8 @@ import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
 import useLogout from './useLogout.js'
 import LogoutConfirmModal from './LogoutConfirmModal.jsx'
+import SuccessAlertModal from './SuccessAlertModal.jsx'
+import ConfirmPasswordChangeModal from './ConfirmPasswordChangeModal.jsx'
 import { LogoutIcon } from './AdminIcons.jsx'
 
 function AdminProfile({ user, onLogout }) {
@@ -35,6 +37,14 @@ function AdminProfile({ user, onLogout }) {
     setConfirmPassword,
     handleSaveProfile,
     handleChangePassword,
+    successModal,
+    errorModal,
+    isPasswordConfirmOpen,
+    passwordConfirmError,
+    closePasswordConfirm,
+    performPasswordChange,
+    handleCloseSuccessModal,
+    handleCloseErrorModal,
   } = useAdminProfile(user)
 
   return (
@@ -175,6 +185,29 @@ function AdminProfile({ user, onLogout }) {
           onClick={closeMobileNav}
         />
       </div>
+
+      <SuccessAlertModal
+        isOpen={successModal.isOpen}
+        title={successModal.title}
+        message={successModal.message}
+        onClose={handleCloseSuccessModal}
+      />
+
+      <SuccessAlertModal
+        isOpen={errorModal.isOpen}
+        title={errorModal.title}
+        message={errorModal.message}
+        onClose={handleCloseErrorModal}
+        variant="error"
+      />
+
+      <ConfirmPasswordChangeModal
+        isOpen={isPasswordConfirmOpen}
+        isUpdating={isUpdatingPassword}
+        error={passwordConfirmError}
+        onConfirm={performPasswordChange}
+        onClose={closePasswordConfirm}
+      />
 
       <LogoutConfirmModal
         isOpen={isLogoutModalOpen}

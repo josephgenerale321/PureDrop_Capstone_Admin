@@ -71,7 +71,12 @@ const toNumericWaterMeter = (value) => {
     return null
   }
 
-  const parsed = Number(value)
+  const digitsOnly = String(value).replace(/[^\d]/g, '')
+  if (digitsOnly.length > 6) {
+    return NaN
+  }
+
+  const parsed = Number(digitsOnly)
   if (!Number.isFinite(parsed) || parsed < 0) {
     return NaN
   }

@@ -76,6 +76,8 @@ const validateEditForm = (form) => {
 
   if (form.waterMeter && Number(form.waterMeter) < 0) {
     errors.waterMeter = 'Water meter cannot be negative.'
+  } else if (form.waterMeter && form.waterMeter.replace(/[^\d]/g, '').length > 6) {
+    errors.waterMeter = 'Water meter must be at most 6 digits.'
   }
 
   return errors
@@ -110,6 +112,11 @@ function useUsersPageState({
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false)
   const [pendingCloseAction, setPendingCloseAction] = useState(null)
   const [isSaveSuccess, setIsSaveSuccess] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
+  const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false)
+
+  const isDeleteModalOpen = Boolean(deleteTarget)
 
   const isEditModalOpen = Boolean(editUserId)
   const isEditDirty = isEditModalOpen && formsDiffer(editForm, editReference)
@@ -386,22 +393,32 @@ function useUsersPageState({
     })
   }
 
-  const handleDeleteUser = async (user) => {
-    const confirmed = window.confirm(
-      `Delete account for ${user.name} (${user.email})? This will remove the user's Firebase login and report documents.`,
-    )
-    if (!confirmed) {
+  const handleOpenDeleteModal = (user) => {
+    setDeleteTarget(user)
+    setDeleteError('')
+  }
+
+  const handleCloseDeleteModal = () => {
+    if (isDeleteSubmitting) {
+      return
+    }
+    setDeleteTarget(null)
+    setDeleteError('')
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || isDeleteSubmitting) {
       return
     }
 
-    setActionFeedback(createEmptyFeedback())
-    const result = await deleteUserAccount(user.id)
+    setIsDeleteSubmitting(true)
+    setDeleteError('')
+
+    const result = await deleteUserAccount(deleteTarget.id)
 
     if (!result.ok) {
-      setActionFeedback({
-        type: 'error',
-        message: result.error,
-      })
+      setDeleteError(result.error || 'Unable to delete user right now.')
+      setIsDeleteSubmitting(false)
       return
     }
 
@@ -410,9 +427,13 @@ function useUsersPageState({
       message: result.message || 'User account and Firebase login deleted successfully.',
     })
 
-    if (editUserId === user.id) {
+    if (editUserId === deleteTarget.id) {
       setEditUserId('')
     }
+
+    setIsDeleteSubmitting(false)
+    setDeleteTarget(null)
+    setDeleteError('')
   }
 
   return {
@@ -422,6 +443,13 @@ function useUsersPageState({
     isConfirmCloseOpen,
     isEditDirty,
     isSaveSuccess,
+    isDeleteModalOpen,
+    deleteTarget,
+    deleteError,
+    isDeleteSubmitting,
+    handleOpenDeleteModal,
+    handleCloseDeleteModal,
+    handleConfirmDelete,
     createForm,
     editForm,
     editUserId,
@@ -446,7 +474,6 @@ function useUsersPageState({
     handleEditSubmit,
     handleSendPasswordReset,
     handleSendVerificationEmail,
-    handleDeleteUser,
   }
 }
 

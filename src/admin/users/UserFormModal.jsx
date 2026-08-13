@@ -1,3 +1,5 @@
+import AddressSelect from './AddressSelect.jsx'
+
 function UserFormModal({
   mode,
   userId,
@@ -45,9 +47,9 @@ function UserFormModal({
   const getFieldClass = (field) => {
     const error = getFieldError(field)
     if (!error) {
-      return 'form-control'
+      return 'admin-users-edit-input'
     }
-    return 'form-control is-invalid'
+    return 'admin-users-edit-input is-invalid'
   }
 
   const renderFieldError = (field) => {
@@ -66,26 +68,28 @@ function UserFormModal({
     <div className="admin-users-edit-modal-layer" role="presentation">
       <button type="button" className="admin-users-edit-modal-backdrop" aria-label={backdropAriaLabel} onClick={onClose} />
       <section className="admin-users-edit-modal" role="dialog" aria-modal="true" aria-labelledby={modalTitleId}>
-        <div className="admin-users-edit-modal-head">
-          <div>
-            <h2 id={modalTitleId} className="admin-users-edit-modal-title">
-              {title}
-            </h2>
-            <p className="admin-users-edit-modal-subtitle mb-0">{subtitle}</p>
-            {!isCreateMode && isDirty && (
-              <span className="admin-users-dirty-badge">Unsaved changes</span>
-            )}
-          </div>
-          <div className="d-flex flex-column align-items-end gap-2">
-            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
-              Close
-            </button>
-          </div>
+        {/* Header with centered title and close button */}
+        <div className="admin-users-edit-modal-header">
+          <h2 id={modalTitleId} className="admin-users-edit-modal-title">
+            {title}
+          </h2>
+          <button
+            type="button"
+            className="admin-users-edit-modal-close"
+            onClick={onClose}
+            aria-label={backdropAriaLabel}
+          >
+            x
+          </button>
         </div>
 
+        {!isCreateMode && isDirty && (
+          <span className="admin-users-dirty-badge">Unsaved changes</span>
+        )}
+
         <form className="admin-users-edit-form" onSubmit={onSubmit} noValidate>
-          <div className="admin-users-field-wrapper">
-            <label className="form-label mb-1" htmlFor={`${idPrefix}-full-name`}>
+          <div className="admin-users-edit-field">
+            <label className="admin-users-edit-label" htmlFor={`${idPrefix}-full-name`}>
               Full Name
             </label>
             <input
@@ -103,8 +107,8 @@ function UserFormModal({
             {renderFieldError('fullName')}
           </div>
 
-          <div className="admin-users-field-wrapper mt-2">
-            <label className="form-label mb-1" htmlFor={`${idPrefix}-email`}>
+          <div className="admin-users-edit-field">
+            <label className="admin-users-edit-label" htmlFor={`${idPrefix}-email`}>
               Email
             </label>
             <input
@@ -142,40 +146,46 @@ function UserFormModal({
 
           {isCreateMode && (
             <>
-              <label className="form-label mb-1 mt-2" htmlFor={`${idPrefix}-password`}>
-                Password
-              </label>
-              <input
-                id={`${idPrefix}-password`}
-                type="password"
-                className="form-control"
-                value={form.password}
-                onChange={(event) => onChangeField('password', event.target.value)}
-                required
-              />
+              <div className="admin-users-edit-field">
+                <label className="admin-users-edit-label" htmlFor={`${idPrefix}-password`}>
+                  Password
+                </label>
+                <input
+                  id={`${idPrefix}-password`}
+                  type="password"
+                  className="admin-users-edit-input"
+                  value={form.password}
+                  onChange={(event) => onChangeField('password', event.target.value)}
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
 
-              <label className="form-label mb-1 mt-2" htmlFor={`${idPrefix}-confirm-password`}>
-                Confirm Password
-              </label>
-              <input
-                id={`${idPrefix}-confirm-password`}
-                type="password"
-                className="form-control"
-                value={form.confirmPassword}
-                onChange={(event) => onChangeField('confirmPassword', event.target.value)}
-                required
-              />
+              <div className="admin-users-edit-field">
+                <label className="admin-users-edit-label" htmlFor={`${idPrefix}-confirm-password`}>
+                  Confirm Password
+                </label>
+                <input
+                  id={`${idPrefix}-confirm-password`}
+                  type="password"
+                  className="admin-users-edit-input"
+                  value={form.confirmPassword}
+                  onChange={(event) => onChangeField('confirmPassword', event.target.value)}
+                  placeholder="Confirm password"
+                  required
+                />
+              </div>
             </>
           )}
 
           {!isCreateMode && (
-            <div className="admin-users-field-wrapper mt-2">
-              <label className="form-label mb-1" htmlFor={`${idPrefix}-status`}>
+            <div className="admin-users-edit-field">
+              <label className="admin-users-edit-label" htmlFor={`${idPrefix}-status`}>
                 Status
               </label>
               <select
                 id={`${idPrefix}-status`}
-                className="form-control"
+                className="admin-users-edit-input"
                 value={form.status}
                 onChange={(event) => onChangeField('status', event.target.value)}
               >
@@ -186,27 +196,24 @@ function UserFormModal({
             </div>
           )}
 
-          <div className="admin-users-field-wrapper mt-2">
-            <label className="form-label mb-1" htmlFor={`${idPrefix}-address`}>
+          <div className="admin-users-edit-field">
+            <label className="admin-users-edit-label" htmlFor={`${idPrefix}-address`}>
               Address
             </label>
-            <input
+            <AddressSelect
               id={`${idPrefix}-address`}
-              className={getFieldClass('address')}
               value={form.address}
-              onChange={(event) => onChangeField('address', event.target.value)}
+              onChange={(value) => onChangeField('address', value)}
               onBlur={() => onFieldBlur && onFieldBlur('address')}
-              placeholder="e.g. Purok 3, Barangay Poblacion"
-              maxLength={200}
-              aria-describedby={getFieldError('address') ? `${idPrefix}-address-error` : undefined}
-              required
+              hasError={Boolean(getFieldError('address'))}
+              placeholder={isCreateMode ? 'Select barangay (optional)' : 'Select barangay (Toledo City only)'}
             />
             {renderFieldError('address')}
             {isCreateMode && <small className="admin-users-field-note">If missing, this app automatically appends ", Toledo City".</small>}
           </div>
 
-          <div className="admin-users-field-wrapper mt-2">
-            <label className="form-label mb-1" htmlFor={`${idPrefix}-water-meter`}>
+          <div className="admin-users-edit-field">
+            <label className="admin-users-edit-label" htmlFor={`${idPrefix}-water-meter`}>
               Water Meter
             </label>
             <input
@@ -214,20 +221,20 @@ function UserFormModal({
               className={getFieldClass('waterMeter')}
               inputMode="numeric"
               value={form.waterMeter}
-              onChange={(event) => onChangeField('waterMeter', event.target.value)}
+              onChange={(event) => onChangeField('waterMeter', event.target.value.replace(/[^\d]/g, '').slice(0, 6))}
               onBlur={() => onFieldBlur && onFieldBlur('waterMeter')}
               placeholder={isCreateMode ? 'Optional' : 'e.g. 12345'}
-              maxLength={20}
+              maxLength={6}
               aria-describedby={getFieldError('waterMeter') ? `${idPrefix}-water-meter-error` : undefined}
             />
             {renderFieldError('waterMeter')}
           </div>
 
           {!isCreateMode && (
-            <div className="admin-users-action-row mt-3">
+            <div className="admin-users-edit-action-row">
               <button
                 type="button"
-                className="btn btn-sm btn-outline-secondary"
+                className="admin-users-edit-action-btn"
                 onClick={onSendPasswordReset}
                 disabled={isSubmitting || !userEmail}
               >
@@ -237,26 +244,26 @@ function UserFormModal({
           )}
 
           {actionFeedback.message && (
-            <p className={`admin-users-action-feedback mt-3 mb-0 ${actionFeedback.type === 'error' ? 'is-error' : 'is-success'}`}>
+            <p className={`admin-users-action-feedback ${actionFeedback.type === 'error' ? 'is-error' : 'is-success'}`}>
               {actionFeedback.message}
             </p>
           )}
 
-          <div className="admin-users-edit-modal-actions">
+          <div className="admin-users-edit-actions">
             {!isCreateMode && (
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="admin-users-edit-cancel"
                 onClick={onReset}
                 disabled={!isDirty || isSubmitting}
               >
                 Reset
               </button>
             )}
-            <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
+            <button type="button" className="admin-users-edit-cancel" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={isSubmitDisabled}>
+            <button type="submit" className="admin-users-edit-submit" disabled={isSubmitDisabled}>
               {isSubmitting ? submittingLabel : submitLabel}
             </button>
           </div>

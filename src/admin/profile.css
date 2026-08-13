@@ -118,6 +118,226 @@
   color: #1f5da3;
 }
 
+/* Success/Error alert modal (matches logout modal design) */
+.admin-success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.admin-success-modal {
+  width: min(360px, 100%);
+  background: #ffffff;
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-success-icon-wrap {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #dcf5e3;
+  color: #16a34a;
+  margin-bottom: 0.25rem;
+}
+
+.admin-success-icon-wrap.is-error {
+  background: #fde3e3;
+  color: #dc2626;
+}
+
+.admin-success-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.admin-success-icon-error {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-success-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
+.admin-success-message {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.admin-success-actions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.admin-success-confirm {
+  flex: 1;
+  height: 3rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #16a34a;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-success-confirm:hover {
+  background: #15803d;
+}
+
+.admin-success-confirm.is-error {
+  background: #ef4444;
+}
+
+.admin-success-confirm.is-error:hover {
+  background: #dc2626;
+}
+
+.admin-success-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Password change confirmation modal (matches logout modal design) */
+.admin-password-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.admin-password-confirm-modal {
+  width: min(360px, 100%);
+  background: #ffffff;
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-password-confirm-icon-wrap {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #0284c7;
+  margin-bottom: 0.25rem;
+}
+
+.admin-password-confirm-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.admin-password-confirm-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
+.admin-password-confirm-message {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.admin-password-confirm-error {
+  margin: 0 0 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.5rem;
+  background: #fde3e3;
+  color: #712525;
+  font-size: 0.82rem;
+  text-align: center;
+  width: 100%;
+}
+
+.admin-password-confirm-actions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.admin-password-confirm-yes {
+  flex: 1;
+  height: 3rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-password-confirm-yes:hover {
+  background: #0369a1;
+}
+
+.admin-password-confirm-cancel {
+  flex: 1;
+  height: 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-password-confirm-cancel:hover {
+  background: #e2e8f0;
+}
+
+.admin-password-confirm-yes:disabled,
+.admin-password-confirm-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1199.98px) {
   .admin-page-title {
     font-size: 2rem;
@@ -207,6 +427,49 @@
   .admin-avatar {
     width: 120px;
     height: 120px;
+  }
+
+  .admin-success-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .admin-success-modal {
+    width: 100%;
+    border-radius: 1.5rem 1.5rem 0 0;
+    border-bottom: 0;
+    padding: 2rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .admin-success-actions {
+    flex-direction: column;
+  }
+
+  .admin-success-confirm {
+    width: 100%;
+    min-height: 3rem;
+  }
+
+  .admin-password-confirm-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .admin-password-confirm-modal {
+    width: 100%;
+    border-radius: 1.5rem 1.5rem 0 0;
+    border-bottom: 0;
+    padding: 2rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .admin-password-confirm-actions {
+    flex-direction: column;
+  }
+
+  .admin-password-confirm-yes,
+  .admin-password-confirm-cancel {
+    width: 100%;
+    min-height: 3rem;
   }
 }
 
