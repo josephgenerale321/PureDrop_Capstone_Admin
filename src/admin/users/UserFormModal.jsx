@@ -22,6 +22,18 @@ function UserFormModal({
   onSendPasswordReset,
   onSendVerificationEmail,
   emailVerified = false,
+  newPassword = '',
+  confirmNewPassword = '',
+  isUpdatingPassword = false,
+  onChangeNewPassword,
+  onChangeConfirmNewPassword,
+  verificationCode = '',
+  onChangeVerificationCode,
+  isVerificationCodeSent = false,
+  isVerifyingEmail = false,
+  isEmailVerified = false,
+  onSendVerificationCode,
+  onVerifyEmailCode,
 }) {
   const isCreateMode = mode === 'create'
   const idPrefix = isCreateMode ? 'create-user' : 'edit-user'
@@ -175,6 +187,62 @@ function UserFormModal({
                   required
                 />
               </div>
+
+              <div className="admin-users-edit-password-section">
+                <h3 className="admin-users-edit-section-title">Email Verification</h3>
+                <p className="admin-users-edit-section-note">
+                  Send a 6-digit verification code to the user's email and verify it to mark the email as verified.
+                </p>
+
+                {!isEmailVerified ? (
+                  <>
+                    <div className="admin-users-edit-action-row">
+                      <button
+                        type="button"
+                        className="admin-users-edit-action-btn"
+                        onClick={onSendVerificationCode}
+                        disabled={isSubmitting || !form.email}
+                      >
+                        Send Verification Code
+                      </button>
+                    </div>
+
+                    {isVerificationCodeSent && (
+                      <>
+                        <div className="admin-users-edit-field">
+                          <label className="admin-users-edit-label" htmlFor={`${idPrefix}-verification-code`}>
+                            6-Digit Code
+                          </label>
+                          <input
+                            id={`${idPrefix}-verification-code`}
+                            type="text"
+                            inputMode="numeric"
+                            className="admin-users-edit-input"
+                            value={verificationCode}
+                            onChange={(event) => onChangeVerificationCode && onChangeVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                            placeholder="Enter 6-digit code"
+                            maxLength={6}
+                          />
+                        </div>
+                        <div className="admin-users-edit-action-row">
+                          <button
+                            type="button"
+                            className="admin-users-edit-action-btn"
+                            onClick={onVerifyEmailCode}
+                            disabled={isSubmitting || isVerifyingEmail || verificationCode.length !== 6}
+                          >
+                            {isVerifyingEmail ? 'Verifying...' : 'Verify Email'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="admin-users-email-verified-row">
+                    <span className="admin-users-email-verified">✓ Email Verified</span>
+                  </div>
+                )}
+              </div>
             </>
           )}
 
@@ -231,15 +299,49 @@ function UserFormModal({
           </div>
 
           {!isCreateMode && (
-            <div className="admin-users-edit-action-row">
-              <button
-                type="button"
-                className="admin-users-edit-action-btn"
-                onClick={onSendPasswordReset}
-                disabled={isSubmitting || !userEmail}
-              >
-                Send Password Reset
-              </button>
+            <div className="admin-users-edit-password-section">
+              <h3 className="admin-users-edit-section-title">Change Password</h3>
+              <p className="admin-users-edit-section-note">
+                Set a new password for this user directly. No email verification needed.
+              </p>
+              <div className="admin-users-edit-field">
+                <label className="admin-users-edit-label" htmlFor={`${idPrefix}-new-password`}>
+                  New Password
+                </label>
+                <input
+                  id={`${idPrefix}-new-password`}
+                  type="password"
+                  className="admin-users-edit-input"
+                  value={newPassword}
+                  onChange={(event) => onChangeNewPassword && onChangeNewPassword(event.target.value)}
+                  placeholder="Enter new password"
+                  minLength={6}
+                />
+              </div>
+              <div className="admin-users-edit-field">
+                <label className="admin-users-edit-label" htmlFor={`${idPrefix}-confirm-new-password`}>
+                  Confirm New Password
+                </label>
+                <input
+                  id={`${idPrefix}-confirm-new-password`}
+                  type="password"
+                  className="admin-users-edit-input"
+                  value={confirmNewPassword}
+                  onChange={(event) => onChangeConfirmNewPassword && onChangeConfirmNewPassword(event.target.value)}
+                  placeholder="Confirm new password"
+                  minLength={6}
+                />
+              </div>
+              <div className="admin-users-edit-action-row">
+                <button
+                  type="button"
+                  className="admin-users-edit-action-btn"
+                  onClick={onSendPasswordReset}
+                  disabled={isSubmitting || isUpdatingPassword || !userEmail}
+                >
+                  {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
             </div>
           )}
 

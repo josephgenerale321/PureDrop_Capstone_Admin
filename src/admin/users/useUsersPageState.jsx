@@ -95,8 +95,10 @@ function useUsersPageState({
   deleteUserAccount,
   setSelectedUserId,
   updateUserStatus,
-  sendPasswordReset,
   sendVerificationEmail,
+  setUserPassword,
+  verifyEmailOtp,
+  markEmailVerified,
 }) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [createForm, setCreateForm] = useState(createEmptyCreateForm)
@@ -108,6 +110,13 @@ function useUsersPageState({
   const [editFieldErrors, setEditFieldErrors] = useState(createEmptyErrors)
   const [editValidatedFields, setEditValidatedFields] = useState(() => new Set())
   const [actionFeedback, setActionFeedback] = useState(createEmptyFeedback)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+  const [verificationCode, setVerificationCode] = useState('')
+  const [isVerificationCodeSent, setIsVerificationCodeSent] = useState(false)
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false)
+  const [isEmailVerified, setIsEmailVerified] = useState(false)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false)
   const [pendingCloseAction, setPendingCloseAction] = useState(null)
@@ -174,10 +183,18 @@ function useUsersPageState({
     setEditUserId('')
     setCreateForm(createEmptyCreateForm())
     setActionFeedback(createEmptyFeedback())
+    setVerificationCode('')
+    setIsVerificationCodeSent(false)
+    setIsVerifyingEmail(false)
+    setIsEmailVerified(false)
   }
 
   const handleCloseCreateModal = () => {
     setIsCreateModalOpen(false)
+    setVerificationCode('')
+    setIsVerificationCodeSent(false)
+    setIsVerifyingEmail(false)
+    setIsEmailVerified(false)
   }
 
   const handleStartEdit = (user) => {
@@ -192,6 +209,8 @@ function useUsersPageState({
     setEditFieldErrors(createEmptyErrors())
     setEditValidatedFields(new Set())
     setActionFeedback(createEmptyFeedback())
+    setNewPassword('')
+    setConfirmNewPassword('')
     setIsConfirmCloseOpen(false)
     setPendingCloseAction(null)
     setIsSaveSuccess(false)
@@ -206,6 +225,8 @@ function useUsersPageState({
     setEditUserId('')
     setEditUserName('')
     setEditUserEmail('')
+    setNewPassword('')
+    setConfirmNewPassword('')
     setIsConfirmCloseOpen(false)
     setPendingCloseAction(null)
     setIsSaveSuccess(false)
@@ -217,6 +238,8 @@ function useUsersPageState({
       setEditUserId('')
       setEditUserName('')
       setEditUserEmail('')
+      setNewPassword('')
+      setConfirmNewPassword('')
       setPendingCloseAction(null)
       setIsSaveSuccess(false)
     }
@@ -280,11 +303,19 @@ function useUsersPageState({
       return
     }
 
+    if (isEmailVerified && result.uid) {
+      await handleMarkEmailVerified(result.uid)
+    }
+
     setActionFeedback({
       type: 'success',
       message: 'User account created successfully.',
     })
     setIsCreateModalOpen(false)
+    setVerificationCode('')
+    setIsVerificationCodeSent(false)
+    setIsVerifyingEmail(false)
+    setIsEmailVerified(false)
   }
 
   const handleEditSubmit = async (event) => {
@@ -343,7 +374,7 @@ function useUsersPageState({
     setPendingCloseAction(null)
   }
 
-  const handleSendPasswordReset = async () => {
+  const handleSetUserPassword = async () => {
     if (!editUserEmail) {
       setActionFeedback({
         type: 'error',
@@ -352,20 +383,43 @@ function useUsersPageState({
       return
     }
 
-    setActionFeedback(createEmptyFeedback())
-    const result = await sendPasswordReset(editUserEmail)
-    if (!result.ok) {
+    if (newPassword.length < 6) {
       setActionFeedback({
         type: 'error',
-        message: result.error,
+        message: 'Password must be at least 6 characters.',
       })
       return
     }
 
-    setActionFeedback({
-      type: 'success',
-      message: result.message || 'Password reset email sent successfully.',
-    })
+    if (newPassword !== confirmNewPassword) {
+      setActionFeedback({
+        type: 'error',
+        message: 'New password and confirm password do not match.',
+      })
+      return
+    }
+
+    setActionFeedback(createEmptyFeedback())
+    setIsUpdatingPassword(true)
+    try {
+      const result = await setUserPassword({ email: editUserEmail, newPassword })
+      if (!result.ok) {
+        setActionFeedback({
+          type: 'error',
+          message: result.error,
+        })
+        return
+      }
+
+      setActionFeedback({
+        type: 'success',
+        message: result.message || 'Password has been updated for the user.',
+      })
+      setNewPassword('')
+      setConfirmNewPassword('')
+    } finally {
+      setIsUpdatingPassword(false)
+    }
   }
 
   const handleSendVerificationEmail = async () => {
@@ -390,6 +444,93 @@ function useUsersPageState({
     setActionFeedback({
       type: 'success',
       message: result.message || 'Verification email sent successfully.',
+    })
+  }
+
+  const handleSendCreateVerificationCode = async () => {
+    const email = String(createForm.email || '').trim()
+    if (!email) {
+      setActionFeedback({
+        type: 'error',
+        message: 'Enter an email address first.',
+      })
+      return
+    }
+
+    setActionFeedback(createEmptyFeedback())
+    const result = await sendVerificationEmail(email)
+    if (!result.ok) {
+      setActionFeedback({
+        type: 'error',
+        message: result.error,
+      })
+      return
+    }
+
+    setIsVerificationCodeSent(true)
+    setActionFeedback({
+      type: 'success',
+      message: result.message || 'A 6-digit verification code has been sent to the email.',
+    })
+  }
+
+  const handleVerifyCreateEmailCode = async () => {
+    const email = String(createForm.email || '').trim()
+    if (!email) {
+      setActionFeedback({
+        type: 'error',
+        message: 'Enter an email address first.',
+      })
+      return
+    }
+
+    if (verificationCode.length !== 6) {
+      setActionFeedback({
+        type: 'error',
+        message: 'Enter the 6-digit verification code.',
+      })
+      return
+    }
+
+    setActionFeedback(createEmptyFeedback())
+    setIsVerifyingEmail(true)
+    try {
+      const result = await verifyEmailOtp({ email, code: verificationCode })
+      if (!result.ok) {
+        setActionFeedback({
+          type: 'error',
+          message: result.error,
+        })
+        return
+      }
+
+      setIsEmailVerified(true)
+      setActionFeedback({
+        type: 'success',
+        message: 'Email verified successfully.',
+      })
+    } finally {
+      setIsVerifyingEmail(false)
+    }
+  }
+
+  const handleMarkEmailVerified = async (userId) => {
+    if (!userId) {
+      return
+    }
+
+    const result = await markEmailVerified(userId)
+    if (!result.ok) {
+      setActionFeedback({
+        type: 'error',
+        message: result.error,
+      })
+      return
+    }
+
+    setActionFeedback({
+      type: 'success',
+      message: 'Email marked as verified.',
     })
   }
 
@@ -437,6 +578,20 @@ function useUsersPageState({
   }
 
   return {
+    newPassword,
+    setNewPassword,
+    confirmNewPassword,
+    setConfirmNewPassword,
+    isUpdatingPassword,
+    handleSetUserPassword,
+    verificationCode,
+    setVerificationCode,
+    isVerificationCodeSent,
+    isVerifyingEmail,
+    isEmailVerified,
+    handleSendCreateVerificationCode,
+    handleVerifyCreateEmailCode,
+    handleMarkEmailVerified,
     isCreateModalOpen,
     isEditModalOpen,
     isDetailsModalOpen,
@@ -472,7 +627,7 @@ function useUsersPageState({
     handleEditReset,
     handleCreateSubmit,
     handleEditSubmit,
-    handleSendPasswordReset,
+    handleSetUserPassword,
     handleSendVerificationEmail,
   }
 }

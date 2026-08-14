@@ -169,6 +169,66 @@ export const getUsersLoadErrorMessage = (error) => {
   return 'Unable to load users right now.'
 }
 
+export const setUserPasswordDirectly = async ({ email, newPassword }) => {
+  const normalizedEmail = String(email || '').trim()
+  const password = String(newPassword || '')
+
+  if (!normalizedEmail) {
+    return {
+      ok: false,
+      error: 'User email is missing.',
+    }
+  }
+
+  if (password.length < 6) {
+    return {
+      ok: false,
+      error: 'Password must be at least 6 characters.',
+    }
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      ok: false,
+      error: 'Supabase is not configured in the admin dashboard.',
+    }
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('direct-password-reset', {
+      body: {
+        email: normalizedEmail,
+        newPassword: password,
+      },
+    })
+
+    if (error) {
+      const message = error.message || 'Unable to set the password right now.'
+      return {
+        ok: false,
+        error: message,
+      }
+    }
+
+    if (data?.success === true) {
+      return {
+        ok: true,
+        message: 'Password has been updated for the user.',
+      }
+    }
+
+    return {
+      ok: false,
+      error: data?.error?.message || 'Unable to set the password right now.',
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Unable to set the password right now.',
+    }
+  }
+}
+
 export const sendPasswordResetEmailToUser = async (email) => {
   const normalizedEmail = String(email || '').trim()
   if (!normalizedEmail) {
@@ -217,6 +277,102 @@ export const sendPasswordResetEmailToUser = async (email) => {
     return {
       ok: false,
       error: error instanceof Error ? error.message : 'Unable to send password reset email right now.',
+    }
+  }
+}
+
+export const verifyEmailOtpCode = async ({ email, code }) => {
+  const normalizedEmail = String(email || '').trim()
+  const normalizedCode = String(code || '').replace(/\D/g, '').slice(0, 6)
+
+  if (!normalizedEmail) {
+    return {
+      ok: false,
+      error: 'User email is missing.',
+    }
+  }
+
+  if (normalizedCode.length !== 6) {
+    return {
+      ok: false,
+      error: 'A valid 6-digit code is required.',
+    }
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      ok: false,
+      error: 'Supabase is not configured in the admin dashboard.',
+    }
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('email-verification-otp', {
+      body: {
+        action: 'verify',
+        email: normalizedEmail,
+        code: normalizedCode,
+      },
+    })
+
+    if (error) {
+      const message = error.message || 'Unable to verify the email right now.'
+      return {
+        ok: false,
+        error: message,
+      }
+    }
+
+    if (data?.verified === true) {
+      return {
+        ok: true,
+        message: 'Email verified successfully.',
+      }
+    }
+
+    return {
+      ok: false,
+      error: data?.error?.message || 'Unable to verify the email right now.',
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Unable to verify the email right now.',
+    }
+  }
+}
+
+export const markUserEmailVerifiedInFirestore = async ({ id, users }) => {
+  if (!id) {
+    return {
+      ok: false,
+      error: 'Select a user first.',
+    }
+  }
+
+  const targetUser = users.find((user) => user.id === id)
+  const targetDocId = targetUser?.docId || id
+
+  try {
+    await updateDoc(doc(db, USERS_COLLECTION, targetDocId), {
+      emailVerified: true,
+      updatedAt: serverTimestamp(),
+    })
+
+    return {
+      ok: true,
+    }
+  } catch (error) {
+    if (error?.code === 'permission-denied') {
+      return {
+        ok: false,
+        error: 'Unable to update email verification: permission denied by Firestore rules.',
+      }
+    }
+
+    return {
+      ok: false,
+      error: 'Unable to update email verification right now.',
     }
   }
 }

@@ -14,16 +14,10 @@ function UserDetailsModal({ user, onClose }) {
         aria-modal="true"
         aria-labelledby="admin-users-details-modal-title"
       >
-        <div className="admin-users-details-modal-head">
-          <div>
-            <h2 id="admin-users-details-modal-title" className="admin-users-details-modal-title">
-              User Details
-            </h2>
-            <p className="admin-users-details-modal-subtitle mb-0">Review details for user {user.name}.</p>
-          </div>
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
-            Close
-          </button>
+        <div className="admin-mobile-profile-header">
+          <h2 id="admin-users-details-modal-title" className="admin-mobile-profile-header-title">
+            Profile
+          </h2>
         </div>
 
         <UserDetailsPanel user={user} />
@@ -33,4 +27,3 @@ function UserDetailsModal({ user, onClose }) {
 }
 
 export default UserDetailsModal
-

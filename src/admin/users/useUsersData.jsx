@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
+  import { useEffect, useMemo, useState } from 'react'
 import {
   createUserAccountInFirestore,
   deleteUserAccountInFirestore,
   getUsersLoadErrorMessage,
+  markUserEmailVerifiedInFirestore,
   sendEmailVerificationLinkToUser,
-  sendPasswordResetEmailToUser,
+  setUserPasswordDirectly,
   subscribeUsers,
   updateUserAccountInFirestore,
   updateUserStatusInFirestore,
+  verifyEmailOtpCode,
 } from './usersService.js'
 import { resolvePresenceStatus } from './presenceStatus.js'
 
@@ -172,12 +174,20 @@ function useUsersData(search) {
     }
   }
 
-  const sendPasswordReset = async (email) => {
-    return sendPasswordResetEmailToUser(email)
+  const setUserPassword = async ({ email, newPassword }) => {
+    return setUserPasswordDirectly({ email, newPassword })
   }
 
   const sendVerificationEmail = async (email) => {
     return sendEmailVerificationLinkToUser(email)
+  }
+
+  const verifyEmailOtp = async ({ email, code }) => {
+    return verifyEmailOtpCode({ email, code })
+  }
+
+  const markEmailVerified = async (id) => {
+    return markUserEmailVerifiedInFirestore({ id, users })
   }
 
   const createUserAccount = async (payload) => {
@@ -240,8 +250,10 @@ function useUsersData(search) {
     createUserAccount,
     updateUserAccount,
     updateUserStatus,
-    sendPasswordReset,
+    setUserPassword,
     sendVerificationEmail,
+    verifyEmailOtp,
+    markEmailVerified,
     deleteUserAccount,
     creatingUserEmail,
     savingUserId,

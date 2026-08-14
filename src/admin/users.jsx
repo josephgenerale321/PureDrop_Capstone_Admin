@@ -34,14 +34,30 @@ function AdminUsers({ onLogout }) {
     updateUserAccount,
     deleteUserAccount,
     updateUserStatus,
-    sendPasswordReset,
+    setUserPassword,
     sendVerificationEmail,
+    verifyEmailOtp,
+    markEmailVerified,
     creatingUserEmail,
     savingUserId,
     deletingUserId,
   } = useUsersData(search)
 
   const {
+    newPassword,
+    setNewPassword,
+    confirmNewPassword,
+    setConfirmNewPassword,
+    isUpdatingPassword,
+    handleSetUserPassword,
+    verificationCode,
+    setVerificationCode,
+    isVerificationCodeSent,
+    isVerifyingEmail,
+    isEmailVerified,
+    handleSendCreateVerificationCode,
+    handleVerifyCreateEmailCode,
+    handleMarkEmailVerified,
     isCreateModalOpen,
     isEditModalOpen,
     isDetailsModalOpen,
@@ -69,7 +85,6 @@ function AdminUsers({ onLogout }) {
     handleEditReset,
     handleCreateSubmit,
     handleEditSubmit,
-    handleSendPasswordReset,
     handleSendVerificationEmail,
     isDeleteModalOpen,
     deleteTarget,
@@ -84,8 +99,10 @@ function AdminUsers({ onLogout }) {
     deleteUserAccount,
     setSelectedUserId,
     updateUserStatus,
-    sendPasswordReset,
+    setUserPassword,
     sendVerificationEmail,
+    verifyEmailOtp,
+    markEmailVerified,
   })
 
   const handleViewUserDetails = (userId) => {
@@ -135,6 +152,13 @@ function AdminUsers({ onLogout }) {
             onSubmit={handleCreateSubmit}
             actionFeedback={actionFeedback}
             isSubmitting={Boolean(creatingUserEmail)}
+            verificationCode={verificationCode}
+            onChangeVerificationCode={setVerificationCode}
+            isVerificationCodeSent={isVerificationCodeSent}
+            isVerifyingEmail={isVerifyingEmail}
+            isEmailVerified={isEmailVerified}
+            onSendVerificationCode={handleSendCreateVerificationCode}
+            onVerifyEmailCode={handleVerifyCreateEmailCode}
           />
         )}
 
@@ -158,9 +182,14 @@ function AdminUsers({ onLogout }) {
             isConfirmCloseOpen={isConfirmCloseOpen}
             onConfirmDiscard={handleConfirmDiscard}
             onCancelDiscard={handleCancelDiscard}
-            onSendPasswordReset={handleSendPasswordReset}
+            onSendPasswordReset={handleSetUserPassword}
             onSendVerificationEmail={handleSendVerificationEmail}
             emailVerified={selectedUser?.emailVerified ?? false}
+            newPassword={newPassword}
+            confirmNewPassword={confirmNewPassword}
+            isUpdatingPassword={isUpdatingPassword}
+            onChangeNewPassword={setNewPassword}
+            onChangeConfirmNewPassword={setConfirmNewPassword}
           />
         )}
 
@@ -195,5 +224,3 @@ function AdminUsers({ onLogout }) {
 }
 
 export default AdminUsers
-
-
