@@ -53,148 +53,139 @@ function ReportDetailsPanel({
       {!isEmbedded && <h2 className="admin-reports-card-title mb-3">Report Details</h2>}
       {!report && <p className="text-muted mb-0">Select a report and click View Details.</p>}
       {report && (
-        <div className="admin-report-details">
-          <div className="admin-report-profile-head">
-            <DefaultAvatarImage src={report.reporterAvatarUrl} alt={`${report.reporterName} avatar`} className="admin-report-profile-image" />
-            <div className="admin-report-profile-info">
-              <strong className="admin-report-profile-name">{report.reporterName}</strong>
-              <p className="admin-report-details-meta mb-0">Report #{report.reportId}</p>
-            </div>
-            <span className={`badge-pill ${STATUS_BADGE_CLASS[String(report.status || '').toLowerCase()] || 'report-status-active'}`}>
-              {report.status}
-            </span>
-          </div>
+        <>
+          <div className="admin-report-details admin-report-mobile-card">
+            <h3 className="admin-report-mobile-heading">Problem Summary</h3>
 
-          <div className="admin-report-status-controls">
-            <label htmlFor="admin-report-status-select" className="admin-report-status-label">
-              Change Status
-            </label>
-            <div className="admin-report-status-row">
-              <select
-                id="admin-report-status-select"
-                className="form-select form-select-sm"
-                value={statusDraft}
-                onChange={(event) => onStatusDraftChange(event.target.value)}
-                disabled={isStatusUpdating}
-              >
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={onApplyStatusChange}
-                disabled={isStatusUpdating || isStatusUnchanged}
-              >
-                {isStatusUpdating ? 'Updating...' : 'Update'}
-              </button>
+            <div className="admin-report-mobile-status-panel">
+              <div className="admin-report-mobile-status-controls">
+                <label htmlFor="admin-report-status-select" className="admin-report-status-label">
+                  Change Status
+                </label>
+                <div className="admin-report-status-row">
+                  <select
+                    id="admin-report-status-select"
+                    className="form-select form-select-sm"
+                    value={statusDraft}
+                    onChange={(event) => onStatusDraftChange(event.target.value)}
+                    disabled={isStatusUpdating}
+                  >
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    onClick={onApplyStatusChange}
+                    disabled={isStatusUpdating || isStatusUnchanged}
+                  >
+                    {isStatusUpdating ? 'Updating...' : 'Update'}
+                  </button>
+                </div>
+                {!!statusUpdateError && <p className="admin-report-status-feedback is-error">{statusUpdateError}</p>}
+                {!statusUpdateError && !!statusUpdateSuccess && <p className="admin-report-status-feedback is-success">{statusUpdateSuccess}</p>}
+              </div>
             </div>
-            {!!statusUpdateError && <p className="admin-report-status-feedback is-error">{statusUpdateError}</p>}
-            {!statusUpdateError && !!statusUpdateSuccess && <p className="admin-report-status-feedback is-success">{statusUpdateSuccess}</p>}
-          </div>
 
-          <div className="admin-report-management-actions">
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-primary"
-              onClick={onOpenEditModal}
-              disabled={isStatusUpdating || isEditSubmitting || isDeleteSubmitting}
-            >
-              {isEditSubmitting ? 'Saving...' : 'Edit Report'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-danger"
-              onClick={onOpenDeleteModal}
-              disabled={isStatusUpdating || isEditSubmitting || isDeleteSubmitting}
-            >
-              {isDeleteSubmitting ? 'Deleting...' : 'Delete Report'}
-            </button>
-          </div>
-          {!!reportActionError && <p className="admin-report-management-feedback is-error">{reportActionError}</p>}
-          {!reportActionError && !!reportActionSuccess && <p className="admin-report-management-feedback is-success">{reportActionSuccess}</p>}
+            <div className="admin-report-mobile-avatar">
+              <DefaultAvatarImage src={report.reporterAvatarUrl} alt={`${report.reporterName} avatar`} className="admin-report-mobile-avatar-img" />
+            </div>
 
-          <dl className="admin-report-details-list">
-            <div>
-              <dt>Category</dt>
-              <dd>{report.category}</dd>
+            {!isEmbedded && (
+              <div className="admin-report-mobile-status-wrap">
+                <span className={`badge-pill ${STATUS_BADGE_CLASS[String(report.status || '').toLowerCase()] || 'report-status-active'}`}>
+                  {report.status}
+                </span>
+              </div>
+            )}
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">Category:</dt>
+              <dd className="admin-report-mobile-value">{report.category}</dd>
             </div>
-            <div>
-              <dt>Issue</dt>
-              <dd>{report.issue}</dd>
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">Name:</dt>
+              <dd className="admin-report-mobile-value">{report.reporterName || 'N/A'}</dd>
             </div>
-            <div>
-              <dt>Date Submitted</dt>
-              <dd>{report.submittedAt}</dd>
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">Location (Toledo City only):</dt>
+              <dd className="admin-report-mobile-value">{report.location || 'N/A'}</dd>
             </div>
-            <div>
-              <dt>User ID</dt>
-              <dd>{report.userId}</dd>
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">GPS Coordinates:</dt>
+              <dd className="admin-report-mobile-value">{report.gpsLocation || 'N/A'}</dd>
             </div>
-            <div>
-              <dt>Water Meter</dt>
-              <dd>{report.waterMeter}</dd>
+
+            <div className="admin-report-map-section">
+              <div className="admin-report-map-section-head">
+                <h3 className="admin-report-map-section-title">GPS Location Map</h3>
+                <span className="admin-report-map-section-coords">{report.gpsLocation}</span>
+              </div>
+              <AdminReportGpsMap gpsLocation={report.gpsLocation} />
             </div>
-            <div>
-              <dt>Address</dt>
-              <dd>{report.address}</dd>
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">Issue:</dt>
+              <dd className="admin-report-mobile-value">{report.issue || 'N/A'}</dd>
             </div>
-            <div>
-              <dt>Location</dt>
-              <dd>{report.location}</dd>
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">Water Meter:</dt>
+              <dd className="admin-report-mobile-value">{report.waterMeter || 'N/A'}</dd>
             </div>
-            <div>
-              <dt>Location Details</dt>
-              <dd>{report.locationDetails}</dd>
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">User ID:</dt>
+              <dd className="admin-report-mobile-value">{report.userId}</dd>
             </div>
-            <div>
-              <dt>GPS</dt>
-              <dd>{report.gpsLocation}</dd>
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">Date Submitted:</dt>
+              <dd className="admin-report-mobile-value">{report.submittedAt}</dd>
             </div>
-            <div>
-              <dt>Attachments</dt>
-              <dd>
+
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">Attachments:</dt>
+              <dd className="admin-report-mobile-value">
                 {!report.attachments.length && <span className="text-muted">No attachments</span>}
                 {!!report.attachments.length && (
-                  <div className="admin-report-attachments-grid">
+                  <div className="admin-report-mobile-attachments">
                     {report.attachments.map((url, index) => (
-                      <figure className="admin-report-attachment-thumb" key={url}>
-                        <div className="admin-report-attachment-thumb-media">
-                          <img
-                            src={url}
-                            alt={`Attachment ${index + 1}`}
-                            loading="lazy"
-                            onClick={() => openLightbox(url)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(event) => {
-                              if (event.key === 'Enter' || event.key === ' ') {
-                                event.preventDefault()
-                                openLightbox(url)
-                              }
-                            }}
-                          />
-                        </div>
-                        <figcaption>Attachment {index + 1}</figcaption>
-                      </figure>
+                      <img
+                        key={url}
+                        src={url}
+                        alt={`Attachment ${index + 1}`}
+                        loading="lazy"
+                        className="admin-report-mobile-attachment-img"
+                        onClick={() => openLightbox(url)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            openLightbox(url)
+                          }
+                        }}
+                      />
                     ))}
                   </div>
                 )}
               </dd>
             </div>
-          </dl>
 
-          <div className="admin-report-map-section">
-            <div className="admin-report-map-section-head">
-              <h3 className="admin-report-map-section-title">GPS Location Map</h3>
-              <span className="admin-report-map-section-coords">{report.gpsLocation}</span>
+            <div className="admin-report-mobile-field">
+              <dt className="admin-report-mobile-label">Status:</dt>
+              <dd className="admin-report-mobile-value">{report.status}</dd>
             </div>
-            <AdminReportGpsMap gpsLocation={report.gpsLocation} />
+
           </div>
-        </div>
+        </>
       )}
 
       {lightboxUrl && (

@@ -10,7 +10,6 @@ import GeneralConfigurationCard from './settings/GeneralConfigurationCard.jsx'
 import NotificationsCard from './settings/NotificationsCard.jsx'
 import QuickActionsCard from './settings/QuickActionsCard.jsx'
 import RecentActivityCard from './settings/RecentActivityCard.jsx'
-import RolesPermissionsCard from './settings/RolesPermissionsCard.jsx'
 import SecurityAccessCard from './settings/SecurityAccessCard.jsx'
 import AttachmentCleanupCard from './settings/AttachmentCleanupCard.jsx'
 import useAdminSettings from './settings/useAdminSettings.jsx'
@@ -39,14 +38,9 @@ function AdminSettings({ user, onLogout }) {
     toggleReportEmailType,
     setSystemHealthAlerts,
     setWeeklySummaryEmail,
-    setRoleName,
-    toggleRolePermission,
-    addRole,
-    deleteRole,
     saveSettings,
     restoreDefaults,
     exportSettings,
-    bulkEnableViewPermission,
   } = useAdminSettings(user)
 
   const runConfirmedAction = () => {
@@ -119,15 +113,6 @@ function AdminSettings({ user, onLogout }) {
                 onSystemHealthAlertsChange={setSystemHealthAlerts}
                 onWeeklySummaryEmailChange={setWeeklySummaryEmail}
               />
-              <RolesPermissionsCard
-                roles={settings.roles}
-                onRoleNameChange={setRoleName}
-                onTogglePermission={toggleRolePermission}
-                onAddRole={addRole}
-                onDeleteRole={deleteRole}
-                onSave={saveSettings}
-                isSaving={isSaving || isLoading}
-              />
               <AttachmentCleanupCard onRequestDelete={handleRequestDelete} />
             </div>
 
@@ -135,13 +120,6 @@ function AdminSettings({ user, onLogout }) {
               <RecentActivityCard items={recentActivity} />
               <QuickActionsCard
                 onExport={exportSettings}
-                onBulkUpdatePermissions={() =>
-                  setConfirmAction({
-                    title: 'Bulk Update User Permissions',
-                    message: 'This will enable view access for every role. Continue?',
-                    action: bulkEnableViewPermission,
-                  })
-                }
                 onRestoreDefaults={() =>
                   setConfirmAction({
                     title: 'Restore System Default Settings',

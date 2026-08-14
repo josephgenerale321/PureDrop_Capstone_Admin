@@ -400,6 +400,288 @@
   font-size: 0.92rem;
 }
 
+/* ===== Mobile-style Report Details Card (matching mobile app) ===== */
+.admin-report-mobile-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.05);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-report-mobile-heading {
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  color: #0f172a;
+  margin: 0 0 24px;
+}
+
+.admin-report-mobile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  align-self: flex-end;
+  margin-bottom: 12px;
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.admin-report-mobile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-report-mobile-status-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.admin-report-mobile-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+
+.admin-report-mobile-label {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 16px 0 6px;
+}
+
+.admin-report-mobile-value {
+  color: #0f172a;
+  font-size: 16px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 8px;
+  word-break: break-word;
+}
+
+.admin-report-mobile-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.admin-report-mobile-attachment-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.admin-report-mobile-status-panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  margin-bottom: 12px;
+}
+
+.admin-report-mobile-status-controls .admin-report-status-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.5px;
+  text-transform: none;
+  margin-bottom: 8px;
+}
+
+.admin-report-mobile-status-controls .admin-report-status-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.admin-report-mobile-status-controls .form-select {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 12px;
+}
+
+.admin-report-mobile-status-controls .form-select:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+}
+
+.admin-report-mobile-status-controls .btn-primary {
+  min-height: 40px;
+  border-radius: 10px;
+  background: #0ea5e9;
+  border: 0;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 0 16px;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.25);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-report-mobile-status-controls .btn-primary:hover {
+  background: #0284c7;
+  box-shadow: 0 6px 14px rgba(14, 165, 233, 0.3);
+}
+
+.admin-report-mobile-status-controls .admin-report-status-feedback {
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.admin-report-mobile-controls {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-report-mobile-controls .admin-report-status-controls {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.admin-report-mobile-controls .admin-report-status-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.5px;
+  text-transform: none;
+  margin-bottom: 8px;
+}
+
+.admin-report-mobile-controls .admin-report-status-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.admin-report-mobile-controls .form-select {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 12px;
+}
+
+.admin-report-mobile-controls .form-select:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+}
+
+.admin-report-mobile-controls .btn-primary {
+  min-height: 40px;
+  border-radius: 10px;
+  background: #0ea5e9;
+  border: 0;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 0 16px;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.25);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-report-mobile-controls .btn-primary:hover {
+  background: #0284c7;
+  box-shadow: 0 6px 14px rgba(14, 165, 233, 0.3);
+}
+
+.admin-report-mobile-controls .admin-report-management-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-report-mobile-controls .admin-report-management-actions .btn {
+  flex: 1;
+  min-height: 40px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.admin-report-mobile-controls .admin-report-management-actions .btn-outline-primary {
+  border: 1px solid #0ea5e9;
+  color: #0ea5e9;
+  background: #ffffff;
+}
+
+.admin-report-mobile-controls .admin-report-management-actions .btn-outline-primary:hover {
+  background: #f0f9ff;
+}
+
+.admin-report-mobile-controls .admin-report-management-actions .btn-outline-danger {
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  background: #ffffff;
+}
+
+.admin-report-mobile-controls .admin-report-management-actions .btn-outline-danger:hover {
+  background: #fef2f2;
+}
+
+.admin-report-mobile-controls .admin-report-status-feedback,
+.admin-report-mobile-controls .admin-report-management-feedback {
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.admin-report-mobile-controls .admin-report-map-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.admin-report-mobile-controls .admin-report-map-section-head {
+  margin-bottom: 12px;
+}
+
+.admin-report-mobile-controls .admin-report-map-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.admin-report-mobile-controls .admin-report-map-section-coords {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.admin-report-mobile-controls .admin-report-map {
+  height: 240px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
 .admin-report-attachments {
   margin: 0;
   padding-left: 1.1rem;
@@ -701,6 +983,21 @@
   width: min(780px, 100%);
 }
 
+.admin-report-mobile-modal-head {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 0 0.75rem;
+}
+
+.admin-report-mobile-modal-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
 .admin-reports-edit-modal {
   width: min(620px, 100%);
 }
@@ -949,6 +1246,136 @@
   color: #712525;
 }
 
+/* Delete report confirmation modal (matches logout modal design) */
+.admin-report-delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.admin-report-delete-modal {
+  width: min(360px, 100%);
+  background: #ffffff;
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-report-delete-icon-wrap {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fde3e3;
+  color: #dc2626;
+  margin-bottom: 0.25rem;
+}
+
+.admin-report-delete-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.admin-report-delete-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
+.admin-report-delete-message {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.admin-report-delete-warning {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.admin-report-delete-feedback {
+  margin: 0 0 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  text-align: center;
+  width: 100%;
+}
+
+.admin-report-delete-feedback.is-success {
+  background: #dcf5e3;
+  color: #0f4a1e;
+}
+
+.admin-report-delete-feedback.is-error {
+  background: #fde3e3;
+  color: #712525;
+}
+
+.admin-report-delete-actions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.admin-report-delete-confirm {
+  flex: 1;
+  height: 3rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-report-delete-confirm:hover {
+  background: #dc2626;
+}
+
+.admin-report-delete-cancel {
+  flex: 1;
+  height: 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-report-delete-cancel:hover {
+  background: #e2e8f0;
+}
+
+.admin-report-delete-confirm:disabled,
+.admin-report-delete-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .admin-reports-mobile-overlay {
   display: none;
 }
@@ -1060,6 +1487,22 @@
 
   .admin-reports-summary {
     width: 100%;
+  }
+
+  .admin-report-delete-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .admin-report-delete-modal {
+    width: 100%;
+    border-radius: 1.5rem 1.5rem 0 0;
+    border-bottom: 0;
+    padding: 2rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .admin-report-delete-actions {
+    flex-direction: column;
   }
 
   .admin-reports-modal-layer {

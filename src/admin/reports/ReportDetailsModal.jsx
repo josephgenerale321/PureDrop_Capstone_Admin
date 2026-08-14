@@ -29,16 +29,10 @@ function ReportDetailsModal({
         aria-modal="true"
         aria-labelledby="admin-reports-details-modal-title"
       >
-        <div className="admin-reports-modal-head">
-          <div>
-            <h2 id="admin-reports-details-modal-title" className="admin-reports-modal-title">
-              Report Details
-            </h2>
-            <p className="admin-reports-modal-subtitle mb-0">Review report REP-{report.reportId} from {report.reporterName}.</p>
-          </div>
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
-            Close
-          </button>
+        <div className="admin-report-mobile-modal-head">
+          <h2 id="admin-reports-details-modal-title" className="admin-report-mobile-modal-title">
+            Report Details
+          </h2>
         </div>
 
         <ReportDetailsPanel

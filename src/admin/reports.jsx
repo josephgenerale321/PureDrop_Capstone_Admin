@@ -82,6 +82,16 @@ function AdminReports({ onLogout }) {
     handleOpenDetailsModal()
   }
 
+  const handleEditReportFromTable = (reportKey) => {
+    setSelectedReportKey(reportKey)
+    handleOpenEditModal()
+  }
+
+  const handleDeleteReportFromTable = (reportKey) => {
+    setSelectedReportKey(reportKey)
+    handleOpenDeleteModal()
+  }
+
   return (
     <main className="admin-reports-page">
       <div className={`admin-reports-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
@@ -103,6 +113,10 @@ function AdminReports({ onLogout }) {
               loadError={loadError}
               selectedReportKey={selectedReportKey}
               onViewDetails={handleViewReportDetails}
+              onEditReport={handleEditReportFromTable}
+              onDeleteReport={handleDeleteReportFromTable}
+              savingReportKey={savingReportKey}
+              deletingReportKey={deletingReportKey}
             />
           </div>
         </section>

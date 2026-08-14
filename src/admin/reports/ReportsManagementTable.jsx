@@ -19,6 +19,10 @@ function ReportsManagementTable({
   loadError,
   selectedReportKey,
   onViewDetails,
+  onEditReport,
+  onDeleteReport,
+  savingReportKey = '',
+  deletingReportKey = '',
 }) {
   const [sortKey, setSortKey] = useState('')
   const [sortDirection, setSortDirection] = useState('asc')
@@ -126,9 +130,25 @@ function ReportsManagementTable({
                 <td data-label="Category">{report.category}</td>
                 <td data-label="Date Submitted">{report.dateSubmitted}</td>
                 <td data-label="Reported By">{report.reporterName}</td>
-                <td data-label="Actions">
+                <td data-label="Actions" className="d-flex gap-2 flex-wrap">
                   <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onViewDetails(report.key)}>
                     View Details
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => onEditReport(report.key)}
+                    disabled={savingReportKey === report.key || deletingReportKey === report.key}
+                  >
+                    {savingReportKey === report.key ? 'Saving...' : 'Edit'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => onDeleteReport(report.key)}
+                    disabled={savingReportKey === report.key || deletingReportKey === report.key}
+                  >
+                    {deletingReportKey === report.key ? 'Deleting...' : 'Delete'}
                   </button>
                 </td>
               </tr>
