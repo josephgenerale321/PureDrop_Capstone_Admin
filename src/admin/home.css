@@ -278,6 +278,11 @@
   margin-top: 0.1rem;
 }
 
+.dashboard-activity-type-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
 .dashboard-activity-item.is-status-update .dashboard-activity-type {
   background: #e8f1fd;
   color: #1f5da3;

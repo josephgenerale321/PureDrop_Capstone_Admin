@@ -5,7 +5,7 @@ import AdminSidebar from '../sidebar.jsx'
 import useAdminMobileNav from '../useAdminMobileNav.js'
 import useLogout from '../useLogout.js'
 import LogoutConfirmModal from '../LogoutConfirmModal.jsx'
-import { ProfileIcon, LogoutIcon } from '../AdminIcons.jsx'
+import { DocumentIcon, ProfileIcon, LogoutIcon } from '../AdminIcons.jsx'
 import PaginationControls from '../pagination/PaginationControls.jsx'
 
 const DEFAULT_PAGE_SIZE = 10
@@ -262,7 +262,7 @@ function AdminDashboardContent({
                           <li key={activity.id} className={`dashboard-activity-item is-${activity.type}`}>
                             <div className="dashboard-activity-head">
                               <span className="dashboard-activity-type" aria-hidden="true">
-                                {activity.type === 'status-update' ? '↻' : '＋'}
+                                <DocumentIcon className="dashboard-activity-type-icon" />
                               </span>
                               <strong className="dashboard-activity-label">
                                 {activity.type === 'status-update' ? (
