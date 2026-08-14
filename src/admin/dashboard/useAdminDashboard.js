@@ -63,16 +63,21 @@ const buildRecentActivity = (reports) =>
     .sort((left, right) => right.statusUpdatedAtMs - left.statusUpdatedAtMs)
     .slice(0, 6)
     .map((report) => {
-      const label =
-        report.statusUpdatedBy === 'admin'
-          ? `Status updated: REP-${report.reportId} is now ${report.status}`
-          : `Report submitted: REP-${report.reportId}`
+      const isStatusUpdate = report.statusUpdatedBy === 'admin'
+      const label = isStatusUpdate
+        ? `Status updated: REP-${report.reportId} is now ${report.status}`
+        : `Report submitted: REP-${report.reportId}`
 
       return {
         id: `${report.key}-activity`,
         label,
         meta: `${report.reporterName} - ${report.location}`,
         timeAgo: formatTimeAgo(report.statusUpdatedAtDate),
+        timeLabel: formatDateTime(report.statusUpdatedAtDate),
+        reportId: report.reportId,
+        status: report.status,
+        statusClass: report.statusClass,
+        type: isStatusUpdate ? 'status-update' : 'submission',
       }
     })
 

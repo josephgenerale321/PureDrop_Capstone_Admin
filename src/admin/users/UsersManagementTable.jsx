@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import UserPresenceBadge from './UserPresenceBadge.jsx'
+import PaginationControls from '../pagination/PaginationControls.jsx'
+
+const DEFAULT_PAGE_SIZE = 10
 
 const SORTABLE_COLUMNS = [
   { key: 'id', label: 'User ID', getValue: (user) => user.id },
@@ -26,6 +29,8 @@ function UsersManagementTable({
 }) {
   const [sortKey, setSortKey] = useState('')
   const [sortDirection, setSortDirection] = useState('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
   const sortedUsers = useMemo(() => {
     if (!sortKey) {
@@ -45,6 +50,27 @@ function UsersManagementTable({
       return sortDirection === 'asc' ? comparison : -comparison
     })
   }, [filteredUsers, sortKey, sortDirection])
+
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / pageSize))
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return sortedUsers.slice(start, start + pageSize)
+  }, [sortedUsers, currentPage, pageSize])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, sortKey, sortDirection])
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size)
+    setCurrentPage(1)
+  }
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -118,7 +144,7 @@ function UsersManagementTable({
               </tr>
             )}
 
-            {sortedUsers.map((user) => (
+            {paginatedUsers.map((user) => (
               <tr key={user.id} className={selectedUserId === user.id ? 'is-selected' : ''}>
                 <td data-label="User ID">{user.displayId || 'N/A'}</td>
                 <td data-label="Name">{user.name}</td>
@@ -164,6 +190,15 @@ function UsersManagementTable({
           </tbody>
         </table>
       </div>
+
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={sortedUsers.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </section>
   )
 }

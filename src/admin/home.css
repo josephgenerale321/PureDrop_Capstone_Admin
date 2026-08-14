@@ -246,26 +246,102 @@
   gap: 0.85rem;
 }
 
-.dashboard-activity-list li {
+.dashboard-activity-item {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.3rem;
   border-top: 1px solid #e5edf6;
   padding-top: 0.6rem;
 }
 
-.dashboard-activity-list li:first-child {
+.dashboard-activity-item:first-child {
   border-top: 0;
   padding-top: 0;
 }
 
-.dashboard-activity-list span {
-  color: #4b5f75;
-  font-size: 0.9rem;
+.dashboard-activity-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
-.dashboard-activity-list time {
+.dashboard-activity-type {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 0.1rem;
+}
+
+.dashboard-activity-item.is-status-update .dashboard-activity-type {
+  background: #e8f1fd;
+  color: #1f5da3;
+}
+
+.dashboard-activity-item.is-submission .dashboard-activity-type {
+  background: #e6f7ee;
+  color: #166534;
+}
+
+.dashboard-activity-label {
+  display: inline;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #24384d;
+  word-break: break-word;
+}
+
+.dashboard-activity-report-id {
+  font-weight: 700;
+  color: #1f5da3;
+}
+
+.dashboard-activity-label .badge-pill {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 0.15rem;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+}
+
+.dashboard-activity-meta {
+  color: #4b5f75;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-break: break-word;
+  padding-left: 1.85rem;
+}
+
+.dashboard-activity-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-left: 1.85rem;
+}
+
+.dashboard-activity-footer time {
   color: #6b7f95;
   font-size: 0.82rem;
+}
+
+.dashboard-activity-link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1f5da3;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dashboard-activity-link:hover,
+.dashboard-activity-link:focus {
+  text-decoration: underline;
+  color: #174a85;
 }
 
 .dashboard-details-list {
@@ -518,7 +594,7 @@
     min-height: 2.75rem;
   }
 
-  .dashboard-activity-list li {
+  .dashboard-activity-item {
     padding-top: 0.75rem;
   }
 

@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { downloadReportCsv } from './reportsExport.js'
+import PaginationControls from '../pagination/PaginationControls.jsx'
+
+const DEFAULT_PAGE_SIZE = 10
 
 const SORTABLE_COLUMNS = [
   { key: 'reportId', label: 'Report ID', getValue: (report) => report.reportId },
@@ -26,6 +29,8 @@ function ReportsManagementTable({
 }) {
   const [sortKey, setSortKey] = useState('')
   const [sortDirection, setSortDirection] = useState('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
   const sortedReports = useMemo(() => {
     if (!sortKey) {
@@ -45,6 +50,27 @@ function ReportsManagementTable({
       return sortDirection === 'asc' ? comparison : -comparison
     })
   }, [filteredReports, sortKey, sortDirection])
+
+  const totalPages = Math.max(1, Math.ceil(sortedReports.length / pageSize))
+  const paginatedReports = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return sortedReports.slice(start, start + pageSize)
+  }, [sortedReports, currentPage, pageSize])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, sortKey, sortDirection])
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size)
+    setCurrentPage(1)
+  }
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -120,7 +146,7 @@ function ReportsManagementTable({
                 </td>
               </tr>
             )}
-            {sortedReports.map((report) => (
+            {paginatedReports.map((report) => (
               <tr key={report.key} className={selectedReportKey === report.key ? 'is-selected' : ''}>
                 <td data-label="Report ID">REP-{report.reportId}</td>
                 <td data-label="Issue" className="admin-reports-issue-cell">{report.title}</td>
@@ -163,6 +189,15 @@ function ReportsManagementTable({
           </tbody>
         </table>
       </div>
+
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={sortedReports.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </section>
   )
 }

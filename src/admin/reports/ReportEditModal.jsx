@@ -198,7 +198,7 @@ function ReportEditModal({ report, form, onChangeField, onClose, onSubmit, actio
               Cancel
             </button>
             <button type="submit" className="admin-reports-edit-submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : '💾 Save Changes'}
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>

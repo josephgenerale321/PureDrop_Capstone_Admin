@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 import AdminSidebar from '../sidebar.jsx'
@@ -6,6 +6,9 @@ import useAdminMobileNav from '../useAdminMobileNav.js'
 import useLogout from '../useLogout.js'
 import LogoutConfirmModal from '../LogoutConfirmModal.jsx'
 import { ProfileIcon, LogoutIcon } from '../AdminIcons.jsx'
+import PaginationControls from '../pagination/PaginationControls.jsx'
+
+const DEFAULT_PAGE_SIZE = 10
 
 const SORTABLE_COLUMNS = [
   { key: 'reportId', label: 'Report ID', getValue: (report) => report.reportId },
@@ -35,6 +38,8 @@ function AdminDashboardContent({
   } = useLogout(onLogout)
   const [sortKey, setSortKey] = useState('')
   const [sortDirection, setSortDirection] = useState('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
   const sortedReports = useMemo(() => {
     if (!dashboard?.recentReports || !sortKey) {
@@ -54,6 +59,27 @@ function AdminDashboardContent({
       return sortDirection === 'asc' ? comparison : -comparison
     })
   }, [dashboard, sortKey, sortDirection])
+
+  const totalPages = Math.max(1, Math.ceil(sortedReports.length / pageSize))
+  const paginatedReports = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return sortedReports.slice(start, start + pageSize)
+  }, [sortedReports, currentPage, pageSize])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [sortKey, sortDirection])
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size)
+    setCurrentPage(1)
+  }
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -195,7 +221,7 @@ function AdminDashboardContent({
                             </td>
                           </tr>
                         )}
-                        {sortedReports.map((report) => (
+                        {paginatedReports.map((report) => (
                           <tr key={report.key}>
                             <td data-label="Report ID">REP-{report.reportId}</td>
                             <td data-label="Reporter">{report.reporterName}</td>
@@ -215,6 +241,15 @@ function AdminDashboardContent({
                       </tbody>
                     </table>
                   </div>
+
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={sortedReports.length}
+                    pageSize={pageSize}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={handlePageSizeChange}
+                  />
                 </section>
 
                 <aside className="admin-dashboard-side-panels">
@@ -224,10 +259,33 @@ function AdminDashboardContent({
                     {!!dashboard.recentActivity.length && (
                       <ul className="dashboard-activity-list">
                         {dashboard.recentActivity.map((activity) => (
-                          <li key={activity.id}>
-                            <strong>{activity.label}</strong>
-                            <span>{activity.meta}</span>
-                            <time>{activity.timeAgo}</time>
+                          <li key={activity.id} className={`dashboard-activity-item is-${activity.type}`}>
+                            <div className="dashboard-activity-head">
+                              <span className="dashboard-activity-type" aria-hidden="true">
+                                {activity.type === 'status-update' ? '↻' : '＋'}
+                              </span>
+                              <strong className="dashboard-activity-label">
+                                {activity.type === 'status-update' ? (
+                                  <>
+                                    Status updated: <span className="dashboard-activity-report-id">REP-{activity.reportId}</span> is now{' '}
+                                    <span className={`badge-pill report-status-${activity.statusClass}`}>{activity.status}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    Report submitted: <span className="dashboard-activity-report-id">REP-{activity.reportId}</span>
+                                  </>
+                                )}
+                              </strong>
+                            </div>
+                            <span className="dashboard-activity-meta">{activity.meta}</span>
+                            <div className="dashboard-activity-footer">
+                              <time dateTime={activity.timeLabel} title={activity.timeLabel}>
+                                {activity.timeAgo}
+                              </time>
+                              <Link to="/admin/reports" className="dashboard-activity-link">
+                                Manage
+                              </Link>
+                            </div>
                           </li>
                         ))}
                       </ul>

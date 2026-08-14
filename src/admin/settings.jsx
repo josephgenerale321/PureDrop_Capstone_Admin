@@ -8,8 +8,6 @@ import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 import { ProfileIcon, LogoutIcon } from './AdminIcons.jsx'
 import GeneralConfigurationCard from './settings/GeneralConfigurationCard.jsx'
 import NotificationsCard from './settings/NotificationsCard.jsx'
-import QuickActionsCard from './settings/QuickActionsCard.jsx'
-import RecentActivityCard from './settings/RecentActivityCard.jsx'
 import SecurityAccessCard from './settings/SecurityAccessCard.jsx'
 import AttachmentCleanupCard from './settings/AttachmentCleanupCard.jsx'
 import useAdminSettings from './settings/useAdminSettings.jsx'
@@ -28,7 +26,6 @@ function AdminSettings({ user, onLogout }) {
   const [confirmAction, setConfirmAction] = useState(null)
   const {
     settings,
-    recentActivity,
     isLoading,
     isSaving,
     saveStatus,
@@ -39,8 +36,6 @@ function AdminSettings({ user, onLogout }) {
     setSystemHealthAlerts,
     setWeeklySummaryEmail,
     saveSettings,
-    restoreDefaults,
-    exportSettings,
   } = useAdminSettings(user)
 
   const runConfirmedAction = () => {
@@ -116,19 +111,6 @@ function AdminSettings({ user, onLogout }) {
               <AttachmentCleanupCard onRequestDelete={handleRequestDelete} />
             </div>
 
-            <aside className="admin-settings-side">
-              <RecentActivityCard items={recentActivity} />
-              <QuickActionsCard
-                onExport={exportSettings}
-                onRestoreDefaults={() =>
-                  setConfirmAction({
-                    title: 'Restore System Default Settings',
-                    message: 'This will reset all settings to defaults (profile details kept). Continue?',
-                    action: restoreDefaults,
-                  })
-                }
-              />
-            </aside>
           </div>
 
           {confirmAction && (
