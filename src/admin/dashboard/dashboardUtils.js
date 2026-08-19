@@ -5,12 +5,15 @@ export const createInitialDashboard = () => ({
   totalReports: 0,
   openReports: 0,
   approvedReports: 0,
+  pendingReports: 0,
+  resolvingReports: 0,
   reportsToday: 0,
   lastReportAtLabel: 'N/A',
   systemStatusLabel: 'Healthy',
   systemStatusClass: 'healthy',
   recentReports: [],
   recentActivity: [],
+  allActivity: [],
 })
 
 export const toDateValue = (value) => {

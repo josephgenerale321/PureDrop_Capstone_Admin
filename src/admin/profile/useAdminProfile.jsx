@@ -5,17 +5,45 @@ import { auth, db } from '../../firebase.js'
 
 const ADMIN_PROFILE_COLLECTION = 'admin_user'
 
+const PASSWORD_MIN_LENGTH = 8
+
+function getPasswordStrength(password) {
+  if (!password) {
+    return { score: 0, label: '', color: '' }
+  }
+
+  let score = 0
+  if (password.length >= PASSWORD_MIN_LENGTH) score += 1
+  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1
+  if (/\d/.test(password)) score += 1
+  if (/[^A-Za-z0-9]/.test(password)) score += 1
+
+  if (score <= 1) return { score, label: 'Weak', color: '#dc2626' }
+  if (score === 2) return { score, label: 'Fair', color: '#d97706' }
+  if (score === 3) return { score, label: 'Good', color: '#16a34a' }
+  return { score, label: 'Strong', color: '#15803d' }
+}
+
 function useAdminProfile(user) {
   const [fullName, setFullName] = useState('')
   const [address, setAddress] = useState('')
   const [role, setRole] = useState('admin')
-  const [profileStatus, setProfileStatus] = useState('')
-  const [passwordStatus, setPasswordStatus] = useState('')
+  const [profileStatus, setProfileStatus] = useState({ type: '', message: '' })
+  const [passwordStatus, setPasswordStatus] = useState({ type: '', message: '' })
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [accountMeta, setAccountMeta] = useState({
+    createdAt: null,
+    lastSignInAt: null,
+  })
   const [successModal, setSuccessModal] = useState({ isOpen: false, title: 'Success', message: '' })
   const [errorModal, setErrorModal] = useState({ isOpen: false, title: 'Error', message: '' })
   const [isPasswordConfirmOpen, setIsPasswordConfirmOpen] = useState(false)
@@ -26,22 +54,38 @@ function useAdminProfile(user) {
 
     const loadProfile = async () => {
       if (!user?.uid) {
+        setIsLoadingProfile(false)
         return
       }
 
       try {
         const snap = await getDoc(doc(db, ADMIN_PROFILE_COLLECTION, user.uid))
-        if (!isMounted || !snap.exists()) {
+        if (!isMounted) {
           return
         }
 
-        const data = snap.data()
-        setFullName(data.fullName || '')
-        setAddress(data.address || data.location || '')
-        setRole(data.role || 'admin')
+        if (snap.exists()) {
+          const data = snap.data()
+          setFullName(data.fullName || '')
+          setAddress(data.address || data.location || '')
+          setRole(data.role || 'admin')
+          setAccountMeta({
+            createdAt: data.createdAt?.toDate?.() || null,
+            lastSignInAt: data.lastSignInAt?.toDate?.() || null,
+          })
+        } else {
+          setAccountMeta({
+            createdAt: user.metadata?.creationTime ? new Date(user.metadata.creationTime) : null,
+            lastSignInAt: user.metadata?.lastSignInTime ? new Date(user.metadata.lastSignInTime) : null,
+          })
+        }
       } catch {
         if (isMounted) {
-          setProfileStatus('Unable to load profile details right now.')
+          setProfileStatus({ type: 'error', message: 'Unable to load profile details right now.' })
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingProfile(false)
         }
       }
     }
@@ -51,16 +95,27 @@ function useAdminProfile(user) {
     return () => {
       isMounted = false
     }
-  }, [user?.uid])
+  }, [user?.uid, user?.metadata?.creationTime, user?.metadata?.lastSignInTime])
 
-  const initials = useMemo(() => {
-    const source = fullName || user?.email || 'A'
-    const parts = source.trim().split(/\s+/)
-    if (parts.length === 1) {
-      return parts[0].slice(0, 1).toUpperCase()
+  const isProfileDirty = useMemo(() => {
+    return fullName.trim() !== '' || address.trim() !== ''
+  }, [fullName, address])
+
+  const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword])
+
+  const validateProfile = () => {
+    const errors = {}
+    if (!fullName.trim()) {
+      errors.fullName = 'Full name is required.'
+    } else if (fullName.trim().length < 2) {
+      errors.fullName = 'Full name must be at least 2 characters.'
     }
-    return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase()
-  }, [fullName, user?.email])
+    if (!address.trim()) {
+      errors.address = 'Address is required.'
+    }
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   const handleSaveProfile = async (event) => {
     event.preventDefault()
@@ -68,8 +123,13 @@ function useAdminProfile(user) {
       return
     }
 
+    if (!validateProfile()) {
+      setProfileStatus({ type: 'error', message: 'Please fix the highlighted fields before saving.' })
+      return
+    }
+
     setIsSavingProfile(true)
-    setProfileStatus('')
+    setProfileStatus({ type: '', message: '' })
     try {
       await setDoc(
         doc(db, ADMIN_PROFILE_COLLECTION, user.uid),
@@ -83,7 +143,7 @@ function useAdminProfile(user) {
         },
         { merge: true },
       )
-      setProfileStatus('Profile updated successfully.')
+      setProfileStatus({ type: 'success', message: 'Profile updated successfully.' })
       setSuccessModal({
         isOpen: true,
         title: 'Profile Updated',
@@ -91,14 +151,21 @@ function useAdminProfile(user) {
       })
     } catch (error) {
       if (error?.code === 'permission-denied') {
-        setProfileStatus('Save failed: permission denied by Firestore rules.')
+        setProfileStatus({ type: 'error', message: 'Save failed: permission denied by Firestore rules.' })
         setErrorModal({
           isOpen: true,
           title: 'Save Failed',
           message: 'Unable to save profile changes: permission denied by Firestore rules.',
         })
+      } else if (error?.code?.startsWith('unavailable') || error?.code === 'network-request-failed') {
+        setProfileStatus({ type: 'error', message: 'Network error. Check your connection and try again.' })
+        setErrorModal({
+          isOpen: true,
+          title: 'Network Error',
+          message: 'Unable to reach the server. Please check your internet connection and try again.',
+        })
       } else {
-        setProfileStatus('Unable to save profile changes.')
+        setProfileStatus({ type: 'error', message: 'Unable to save profile changes.' })
         setErrorModal({
           isOpen: true,
           title: 'Save Failed',
@@ -112,11 +179,11 @@ function useAdminProfile(user) {
 
   const handleChangePassword = async (event) => {
     event.preventDefault()
-    setPasswordStatus('')
+    setPasswordStatus({ type: '', message: '' })
     setPasswordConfirmError('')
 
     if (!auth.currentUser || !auth.currentUser.email) {
-      setPasswordStatus('No active admin session.')
+      setPasswordStatus({ type: 'error', message: 'No active admin session.' })
       setErrorModal({
         isOpen: true,
         title: 'No Active Session',
@@ -124,17 +191,26 @@ function useAdminProfile(user) {
       })
       return
     }
-    if (newPassword.length < 6) {
-      setPasswordStatus('New password must be at least 6 characters.')
+    if (newPassword.length < PASSWORD_MIN_LENGTH) {
+      setPasswordStatus({ type: 'error', message: `New password must be at least ${PASSWORD_MIN_LENGTH} characters.` })
       setErrorModal({
         isOpen: true,
         title: 'Password Too Short',
-        message: 'New password must be at least 6 characters.',
+        message: `New password must be at least ${PASSWORD_MIN_LENGTH} characters.`,
+      })
+      return
+    }
+    if (passwordStrength.score < 2) {
+      setPasswordStatus({ type: 'error', message: 'Password is too weak. Use a mix of letters, numbers, and symbols.' })
+      setErrorModal({
+        isOpen: true,
+        title: 'Password Too Weak',
+        message: 'Password is too weak. Use a mix of uppercase, lowercase, numbers, and symbols.',
       })
       return
     }
     if (newPassword !== confirmPassword) {
-      setPasswordStatus('New password and confirmation do not match.')
+      setPasswordStatus({ type: 'error', message: 'New password and confirmation do not match.' })
       setErrorModal({
         isOpen: true,
         title: 'Passwords Do Not Match',
@@ -161,7 +237,7 @@ function useAdminProfile(user) {
       const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword)
       await reauthenticateWithCredential(auth.currentUser, credential)
       await updatePassword(auth.currentUser, newPassword)
-      setPasswordStatus('Password updated successfully.')
+      setPasswordStatus({ type: 'success', message: 'Password updated successfully.' })
       setSuccessModal({
         isOpen: true,
         title: 'Password Updated',
@@ -171,12 +247,36 @@ function useAdminProfile(user) {
       setNewPassword('')
       setConfirmPassword('')
       setIsPasswordConfirmOpen(false)
-    } catch {
-      setPasswordStatus('Unable to update password. Check current password and try again.')
-      setPasswordConfirmError('Unable to update password. Check your current password and try again.')
+    } catch (error) {
+      if (error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential') {
+        setPasswordStatus({ type: 'error', message: 'Current password is incorrect.' })
+        setPasswordConfirmError('The current password you entered is incorrect.')
+      } else if (error?.code === 'auth/weak-password') {
+        setPasswordStatus({ type: 'error', message: 'New password is too weak.' })
+        setPasswordConfirmError('The new password is too weak. Please choose a stronger password.')
+      } else if (error?.code === 'auth/requires-recent-login') {
+        setPasswordStatus({ type: 'error', message: 'Please sign in again before changing your password.' })
+        setPasswordConfirmError('For security, please sign in again before changing your password.')
+      } else {
+        setPasswordStatus({ type: 'error', message: 'Unable to update password. Please try again.' })
+        setPasswordConfirmError('Unable to update password. Please try again.')
+      }
     } finally {
       setIsUpdatingPassword(false)
     }
+  }
+
+  const formatDate = (date) => {
+    if (!date) {
+      return '—'
+    }
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date)
   }
 
   return {
@@ -189,13 +289,24 @@ function useAdminProfile(user) {
     passwordStatus,
     isSavingProfile,
     isUpdatingPassword,
+    isLoadingProfile,
     currentPassword,
     setCurrentPassword,
     newPassword,
     setNewPassword,
     confirmPassword,
     setConfirmPassword,
-    initials,
+    showCurrentPassword,
+    setShowCurrentPassword,
+    showNewPassword,
+    setShowNewPassword,
+    showConfirmPassword,
+    setShowConfirmPassword,
+    fieldErrors,
+    accountMeta,
+    formatDate,
+    isProfileDirty,
+    passwordStrength,
     successModal,
     errorModal,
     isPasswordConfirmOpen,

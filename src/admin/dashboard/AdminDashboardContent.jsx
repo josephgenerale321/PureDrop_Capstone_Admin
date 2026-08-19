@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import DefaultAvatarImage from '../DefaultAvatarImage.jsx'
 import AdminSidebar from '../sidebar.jsx'
 import useAdminMobileNav from '../useAdminMobileNav.js'
 import useLogout from '../useLogout.js'
 import LogoutConfirmModal from '../LogoutConfirmModal.jsx'
+import RecentActivityModal from './RecentActivityModal.jsx'
+import ActivityItem from './ActivityItem.jsx'
 import { DocumentIcon, ProfileIcon, LogoutIcon } from '../AdminIcons.jsx'
 import PaginationControls from '../pagination/PaginationControls.jsx'
 
@@ -25,6 +26,7 @@ function AdminDashboardContent({
   loadError,
   dashboard,
   adminName,
+  adminInitials,
   userEmail,
 }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
@@ -40,6 +42,7 @@ function AdminDashboardContent({
   const [sortDirection, setSortDirection] = useState('asc')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false)
 
   const sortedReports = useMemo(() => {
     if (!dashboard?.recentReports || !sortKey) {
@@ -254,41 +257,31 @@ function AdminDashboardContent({
 
                 <aside className="admin-dashboard-side-panels">
                   <section className="admin-dashboard-card">
-                    <h2 className="admin-dashboard-card-title mb-3">Recent Activity</h2>
+                    <div className="admin-dashboard-card-head">
+                      <div>
+                        <h2 className="admin-dashboard-card-title">Recent Activity</h2>
+                        <p className="admin-dashboard-card-subtitle">Latest report activity across all users.</p>
+                      </div>
+                    </div>
                     {!dashboard.recentActivity.length && <p className="text-muted mb-0">No activity yet.</p>}
                     {!!dashboard.recentActivity.length && (
                       <ul className="dashboard-activity-list">
                         {dashboard.recentActivity.map((activity) => (
-                          <li key={activity.id} className={`dashboard-activity-item is-${activity.type}`}>
-                            <div className="dashboard-activity-head">
-                              <span className="dashboard-activity-type" aria-hidden="true">
-                                <DocumentIcon className="dashboard-activity-type-icon" />
-                              </span>
-                              <strong className="dashboard-activity-label">
-                                {activity.type === 'status-update' ? (
-                                  <>
-                                    Status updated: <span className="dashboard-activity-report-id">REP-{activity.reportId}</span> is now{' '}
-                                    <span className={`badge-pill report-status-${activity.statusClass}`}>{activity.status}</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    Report submitted: <span className="dashboard-activity-report-id">REP-{activity.reportId}</span>
-                                  </>
-                                )}
-                              </strong>
-                            </div>
-                            <span className="dashboard-activity-meta">{activity.meta}</span>
-                            <div className="dashboard-activity-footer">
-                              <time dateTime={activity.timeLabel} title={activity.timeLabel}>
-                                {activity.timeAgo}
-                              </time>
-                              <Link to="/admin/reports" className="dashboard-activity-link">
-                                Manage
-                              </Link>
-                            </div>
-                          </li>
+                          <ActivityItem key={activity.id} activity={activity} showTimeAgo />
                         ))}
                       </ul>
+                    )}
+                    {dashboard.allActivity.length > 0 && (
+                      <div className="admin-activity-show-all">
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => setIsActivityModalOpen(true)}
+                        >
+                          Show All{' '}
+                          <span className="admin-activity-show-all-count">{dashboard.allActivity.length}</span>
+                        </button>
+                      </div>
                     )}
                   </section>
 
@@ -297,14 +290,39 @@ function AdminDashboardContent({
                     <dl className="dashboard-details-list">
                       <div>
                         <dt>Admin Account</dt>
-                        <dd>
-                          <DefaultAvatarImage alt="Default admin profile" className="admin-dashboard-avatar" />
-                          <span className="admin-dashboard-avatar-text">{adminName || userEmail || 'Administrator'}</span>
+                        <dd className="admin-dashboard-account">
+                          <span className="admin-dashboard-avatar-initials" aria-hidden="true">
+                            {adminInitials}
+                          </span>
+                          <span className="admin-dashboard-account-text">
+                            <span className="admin-dashboard-avatar-text">{adminName || userEmail || 'Administrator'}</span>
+                            {userEmail && <span className="admin-dashboard-avatar-email">{userEmail}</span>}
+                          </span>
                         </dd>
                       </div>
                       <div>
                         <dt>Reports Today</dt>
-                        <dd>{dashboard.reportsToday}</dd>
+                        <dd>
+                          <span className="admin-snapshot-badge is-today">{dashboard.reportsToday}</span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Pending Reports</dt>
+                        <dd>
+                          <span className="admin-snapshot-badge is-pending">{dashboard.pendingReports}</span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Resolving Reports</dt>
+                        <dd>
+                          <span className="admin-snapshot-badge is-resolving">{dashboard.resolvingReports}</span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Approved Reports</dt>
+                        <dd>
+                          <span className="admin-snapshot-badge is-approved">{dashboard.approvedReports}</span>
+                        </dd>
                       </div>
                       <div>
                         <dt>Latest Report Time</dt>
@@ -317,6 +335,17 @@ function AdminDashboardContent({
                         </dd>
                       </div>
                     </dl>
+                    <div className="admin-snapshot-actions">
+                      <Link to="/admin/reports" className="btn btn-sm btn-outline-secondary">
+                        View Reports
+                      </Link>
+                      <Link to="/admin/users" className="btn btn-sm btn-outline-secondary">
+                        Manage Users
+                      </Link>
+                      <Link to="/admin/profile" className="btn btn-sm btn-outline-secondary">
+                        View Profile
+                      </Link>
+                    </div>
                   </section>
                 </aside>
               </div>
@@ -340,6 +369,12 @@ function AdminDashboardContent({
         userEmail={userEmail}
         onConfirm={handleConfirmLogout}
         onClose={closeLogoutModal}
+      />
+
+      <RecentActivityModal
+        isOpen={isActivityModalOpen}
+        activities={dashboard.allActivity}
+        onClose={() => setIsActivityModalOpen(false)}
       />
     </main>
   )

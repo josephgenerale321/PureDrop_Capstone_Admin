@@ -61,7 +61,6 @@ const getSystemStatus = (openReports, totalReports) => {
 const buildRecentActivity = (reports) =>
   [...reports]
     .sort((left, right) => right.statusUpdatedAtMs - left.statusUpdatedAtMs)
-    .slice(0, 6)
     .map((report) => {
       const isStatusUpdate = report.statusUpdatedBy === 'admin'
       const label = isStatusUpdate
@@ -74,6 +73,7 @@ const buildRecentActivity = (reports) =>
         meta: `${report.reporterName} - ${report.location}`,
         timeAgo: formatTimeAgo(report.statusUpdatedAtDate),
         timeLabel: formatDateTime(report.statusUpdatedAtDate),
+        timeIso: report.statusUpdatedAtDate ? report.statusUpdatedAtDate.toISOString() : undefined,
         reportId: report.reportId,
         status: report.status,
         statusClass: report.statusClass,
@@ -135,20 +135,27 @@ function useAdminDashboard(user) {
         const totalUsers = usersSnap.size
         const openReports = mappedReports.filter((report) => report.status !== 'Approved').length
         const approvedReports = mappedReports.filter((report) => report.status === 'Approved').length
+        const pendingReports = mappedReports.filter((report) => report.status === 'Pending').length
+        const resolvingReports = mappedReports.filter((report) => report.status === 'Resolving').length
         const reportsToday = mappedReports.filter((report) => isSameDate(report.submittedAtDate, new Date())).length
         const { systemStatusLabel, systemStatusClass } = getSystemStatus(openReports, totalReports)
+
+        const allActivity = buildRecentActivity(mappedReports)
 
         setDashboard({
           totalUsers,
           totalReports,
           openReports,
           approvedReports,
+          pendingReports,
+          resolvingReports,
           reportsToday,
           lastReportAtLabel: mappedReports[0]?.submittedAtLabel || 'N/A',
           systemStatusLabel,
           systemStatusClass,
           recentReports: mappedReports.slice(0, 8),
-          recentActivity: buildRecentActivity(mappedReports),
+          recentActivity: allActivity.slice(0, 6),
+          allActivity,
         })
       } catch (error) {
         if (!isMounted) {

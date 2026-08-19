@@ -1614,8 +1614,8 @@
   .admin-reports-table tr {
     border: 1px solid #d3dde8;
     border-radius: 0.75rem;
-    margin-bottom: 0.75rem;
-    padding: 0.75rem;
+    margin-bottom: 0.65rem;
+    padding: 0.6rem 0.65rem;
     background: #ffffff;
   }
 
@@ -1652,6 +1652,77 @@
 
   .admin-reports-table td .btn {
     width: 100%;
+  }
+
+  /* ===== Compact report cards on mobile ===== */
+  .admin-reports-table td[data-label="Report ID"] {
+    display: none;
+  }
+
+  .admin-reports-table td[data-label="Issue"] {
+    display: block;
+    grid-template-columns: none;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #101928;
+    padding: 0.1rem 0;
+    border-bottom: 0;
+    line-height: 1.4;
+  }
+
+  .admin-reports-table td[data-label="Issue"]::before {
+    display: none;
+  }
+
+  .admin-reports-table td[data-label="Status"],
+  .admin-reports-table td[data-label="Category"] {
+    display: inline-flex;
+    grid-template-columns: none;
+    width: auto;
+    padding: 0.15rem 0.35rem 0 0;
+    border-bottom: 0;
+    vertical-align: middle;
+  }
+
+  .admin-reports-table td[data-label="Status"]::before,
+  .admin-reports-table td[data-label="Category"]::before {
+    display: none;
+  }
+
+  .admin-reports-table td[data-label="Date Submitted"],
+  .admin-reports-table td[data-label="Reported By"] {
+    display: block;
+    grid-template-columns: none;
+    font-size: 0.78rem;
+    color: #6b7f95;
+    padding: 0.1rem 0;
+    border-bottom: 0;
+  }
+
+  .admin-reports-table td[data-label="Date Submitted"]::before,
+  .admin-reports-table td[data-label="Reported By"]::before {
+    display: none;
+  }
+
+  .admin-reports-table td[data-label="Actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    grid-template-columns: none;
+    padding: 0.45rem 0 0.05rem;
+    border-bottom: 0;
+    border-top: 1px solid #eef2f7;
+    margin-top: 0.35rem;
+  }
+
+  .admin-reports-table td[data-label="Actions"]::before {
+    display: none;
+  }
+
+  .admin-reports-table td[data-label="Actions"] .btn {
+    width: auto;
+    min-height: 2.25rem;
+    white-space: nowrap;
   }
 }
 

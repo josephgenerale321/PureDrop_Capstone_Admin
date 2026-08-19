@@ -1318,8 +1318,8 @@
   .admin-users-table tr {
     border: 1px solid #d3dde8;
     border-radius: 0.75rem;
-    margin-bottom: 0.75rem;
-    padding: 0.75rem;
+    margin-bottom: 0.65rem;
+    padding: 0.6rem 0.65rem;
     background: #ffffff;
   }
 
@@ -1356,6 +1356,90 @@
 
   .admin-users-table td .btn {
     width: 100%;
+  }
+
+  /* ===== Compact user cards on mobile ===== */
+  .admin-users-table td[data-label="User ID"] {
+    display: none;
+  }
+
+  .admin-users-table td[data-label="Name"] {
+    display: block;
+    grid-template-columns: none;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #101928;
+    padding: 0.1rem 0;
+    border-bottom: 0;
+  }
+
+  .admin-users-table td[data-label="Name"]::before {
+    display: none;
+  }
+
+  .admin-users-table td[data-label="Email"] {
+    display: block;
+    grid-template-columns: none;
+    font-size: 0.85rem;
+    color: #4b5f75;
+    padding: 0.1rem 0;
+    border-bottom: 0;
+    word-break: break-word;
+  }
+
+  .admin-users-table td[data-label="Email"]::before {
+    display: none;
+  }
+
+  .admin-users-table td[data-label="Role"],
+  .admin-users-table td[data-label="Status"],
+  .admin-users-table td[data-label="Email Verified"] {
+    display: inline-flex;
+    grid-template-columns: none;
+    width: auto;
+    padding: 0.15rem 0.35rem 0 0;
+    border-bottom: 0;
+    vertical-align: middle;
+  }
+
+  .admin-users-table td[data-label="Role"]::before,
+  .admin-users-table td[data-label="Status"]::before,
+  .admin-users-table td[data-label="Email Verified"]::before {
+    display: none;
+  }
+
+  .admin-users-table td[data-label="Date Joined"] {
+    display: block;
+    grid-template-columns: none;
+    font-size: 0.78rem;
+    color: #6b7f95;
+    padding: 0.15rem 0 0.2rem;
+    border-bottom: 0;
+  }
+
+  .admin-users-table td[data-label="Date Joined"]::before {
+    display: none;
+  }
+
+  .admin-users-table td[data-label="Actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    grid-template-columns: none;
+    padding: 0.45rem 0 0.05rem;
+    border-bottom: 0;
+    border-top: 1px solid #eef2f7;
+    margin-top: 0.35rem;
+  }
+
+  .admin-users-table td[data-label="Actions"]::before {
+    display: none;
+  }
+
+  .admin-users-table td[data-label="Actions"] .btn {
+    width: auto;
+    min-height: 2.25rem;
+    white-space: nowrap;
   }
 
   .admin-user-profile-head {
