@@ -598,6 +598,11 @@
   border-color: #c3d2e2;
 }
 
+.admin-activity-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .admin-activity-modal-list {
   list-style: none;
   margin: 0;
@@ -1107,6 +1112,15 @@
 
   .admin-activity-group-title {
     font-size: 0.75rem;
+  }
+
+  .admin-activity-modal-footer {
+    justify-content: stretch;
+  }
+
+  .admin-activity-modal-footer .btn {
+    flex: 1;
+    min-height: 2.75rem;
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   collection,
   doc,
@@ -132,12 +132,13 @@ function useAdminSettings(user) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState({ type: '', message: '' })
+  const [retryCounter, setRetryCounter] = useState(0)
 
   const pushActivity = (title) => {
     setRecentActivity((current) => [{ id: `${Date.now()}-${Math.random()}`, title, timeAgo: 'Just now' }, ...current].slice(0, 8))
   }
 
-  const loadActivity = async () => {
+  const loadActivity = useCallback(async () => {
     if (!user?.uid) return
     try {
       const activityQuery = query(
@@ -160,9 +161,9 @@ function useAdminSettings(user) {
     } catch {
       // Activity is non-critical; keep whatever is in state.
     }
-  }
+  }, [user?.uid])
 
-  const recordActivity = async (title) => {
+  const recordActivity = async (action, title) => {
     pushActivity(title)
     if (!user?.uid) return
     try {
@@ -250,7 +251,12 @@ function useAdminSettings(user) {
     return () => {
       isMounted = false
     }
-  }, [user?.uid, user?.email])
+  }, [user?.uid, user?.email, loadActivity, retryCounter])
+
+  const retrySettings = useCallback(() => {
+    setRetryCounter((current) => current + 1)
+    setSaveStatus({ type: '', message: '' })
+  }, [])
 
   const setGeneralField = (field, value) => {
     setSettings((current) => ({
@@ -374,7 +380,7 @@ function useAdminSettings(user) {
     })
 
     setSaveStatus({ type: 'success', message: `Role "${trimmedName}" added.` })
-    recordActivity(`Role "${trimmedName}" added`)
+    recordActivity('settings.role_added', `Role "${trimmedName}" added`)
   }
 
   const deleteRole = (roleId) => {
@@ -392,7 +398,7 @@ function useAdminSettings(user) {
         return current
       }
 
-      recordActivity(`Role "${role.name}" deleted`)
+      recordActivity('settings.role_deleted', `Role "${role.name}" deleted`)
       setSaveStatus({ type: 'success', message: `Role "${role.name}" deleted.` })
       return {
         ...current,
@@ -451,7 +457,7 @@ function useAdminSettings(user) {
       )
 
       setSaveStatus({ type: 'success', message: 'Settings saved successfully.' })
-      recordActivity('Settings saved')
+      recordActivity('settings.updated', 'Settings saved')
       return true
     } catch (error) {
       if (error?.code === 'permission-denied') {
@@ -475,7 +481,7 @@ function useAdminSettings(user) {
     }))
     setFieldErrors({})
     setSaveStatus({ type: 'success', message: 'Default settings restored (profile details kept).' })
-    recordActivity('Restored system default settings')
+    recordActivity('settings.default_restored', 'Restored system default settings')
   }
 
   const exportSettings = () => {
@@ -504,7 +510,7 @@ function useAdminSettings(user) {
       })),
     }))
     setSaveStatus({ type: 'success', message: 'Bulk permission update applied (view access enabled).' })
-    recordActivity('Bulk user permissions updated')
+    recordActivity('settings.permissions_bulk', 'Bulk user permissions updated')
   }
 
   return {
@@ -514,6 +520,7 @@ function useAdminSettings(user) {
     isSaving,
     saveStatus,
     fieldErrors,
+    retrySettings,
     setGeneralField,
     setSecurityField,
     toggleReportEmailType,

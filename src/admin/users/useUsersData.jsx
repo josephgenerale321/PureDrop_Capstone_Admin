@@ -1,4 +1,4 @@
-  import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   createUserAccountInFirestore,
   deleteUserAccountInFirestore,
@@ -24,6 +24,7 @@ function useUsersData(search) {
   const [deletingUserId, setDeletingUserId] = useState('')
   const [creatingUserEmail, setCreatingUserEmail] = useState('')
   const [presenceNowMs, setPresenceNowMs] = useState(() => Date.now())
+  const [retryCounter, setRetryCounter] = useState(0)
 
   useEffect(() => {
     setIsLoading(true)
@@ -48,6 +49,10 @@ function useUsersData(search) {
     })
 
     return () => unsubscribe()
+  }, [retryCounter])
+
+  const retry = useCallback(() => {
+    setRetryCounter((current) => current + 1)
   }, [])
 
   useEffect(() => {
@@ -246,6 +251,7 @@ function useUsersData(search) {
     selectedUser,
     selectedUserId,
     setSelectedUserId,
+    retry,
     toggleStatus,
     createUserAccount,
     updateUserAccount,

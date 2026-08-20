@@ -6,15 +6,9 @@ function ReportDetailsModal({
   statusDraft,
   onStatusDraftChange,
   onApplyStatusChange,
-  onOpenEditModal,
-  onOpenDeleteModal,
   isStatusUpdating,
-  isEditSubmitting,
-  isDeleteSubmitting,
   statusUpdateError,
   statusUpdateSuccess,
-  reportActionError,
-  reportActionSuccess,
 }) {
   if (!report) {
     return null
@@ -40,15 +34,9 @@ function ReportDetailsModal({
           statusDraft={statusDraft}
           onStatusDraftChange={onStatusDraftChange}
           onApplyStatusChange={onApplyStatusChange}
-          onOpenEditModal={onOpenEditModal}
-          onOpenDeleteModal={onOpenDeleteModal}
           isStatusUpdating={isStatusUpdating}
-          isEditSubmitting={isEditSubmitting}
-          isDeleteSubmitting={isDeleteSubmitting}
           statusUpdateError={statusUpdateError}
           statusUpdateSuccess={statusUpdateSuccess}
-          reportActionError={reportActionError}
-          reportActionSuccess={reportActionSuccess}
           isEmbedded
         />
       </section>

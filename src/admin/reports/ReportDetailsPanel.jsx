@@ -16,15 +16,9 @@ function ReportDetailsPanel({
   statusDraft,
   onStatusDraftChange,
   onApplyStatusChange,
-  onOpenEditModal,
-  onOpenDeleteModal,
   isStatusUpdating = false,
-  isEditSubmitting = false,
-  isDeleteSubmitting = false,
   statusUpdateError = '',
   statusUpdateSuccess = '',
-  reportActionError = '',
-  reportActionSuccess = '',
   isEmbedded = false,
 }) {
   const [lightboxUrl, setLightboxUrl] = useState('')

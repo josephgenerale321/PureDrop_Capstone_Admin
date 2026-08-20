@@ -33,13 +33,6 @@ function RecentActivityModal({ isOpen, activities = [], onClose }) {
   const lastFocusedRef = useRef(null)
 
   useEffect(() => {
-    if (isOpen) {
-      setFilter('all')
-      setVisibleCount(PAGE_SIZE)
-    }
-  }, [isOpen])
-
-  useEffect(() => {
     if (!isOpen) return
     lastFocusedRef.current = document.activeElement
     closeButtonRef.current?.focus()
@@ -93,6 +86,21 @@ function RecentActivityModal({ isOpen, activities = [], onClose }) {
     if (filter === 'all') return activities
     return activities.filter((activity) => activity.type === filter)
   }, [activities, filter])
+
+  const filterCounts = useMemo(() => {
+    return activities.reduce(
+      (counts, activity) => {
+        counts.all += 1
+        if (activity.type === 'submission') {
+          counts.submission += 1
+        } else if (activity.type === 'status-update') {
+          counts['status-update'] += 1
+        }
+        return counts
+      },
+      { all: 0, submission: 0, 'status-update': 0 },
+    )
+  }, [activities])
 
   const groupedActivities = useMemo(() => {
     const groups = new Map()
@@ -155,23 +163,26 @@ function RecentActivityModal({ isOpen, activities = [], onClose }) {
 
         {!!activities.length && (
           <div className="admin-activity-modal-filters" role="group" aria-label="Filter activities">
-            {FILTERS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={`admin-activity-filter-btn${filter === item.key ? ' is-active' : ''}`}
-                onClick={() => {
-                  setFilter(item.key)
-                  setVisibleCount(PAGE_SIZE)
-                }}
-                aria-pressed={filter === item.key}
-              >
-                {item.label}
-                {item.key === 'all' && (
-                  <span className="admin-activity-filter-count">{' '}{activities.length}</span>
-                )}
-              </button>
-            ))}
+            {FILTERS.map((item) => {
+              const count = filterCounts[item.key]
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`admin-activity-filter-btn${filter === item.key ? ' is-active' : ''}`}
+                  onClick={() => {
+                    setFilter(item.key)
+                    setVisibleCount(PAGE_SIZE)
+                  }}
+                  aria-pressed={filter === item.key}
+                >
+                  {item.label}
+                  {count > 0 && (
+                    <span className="admin-activity-filter-count">{' '}{count}</span>
+                  )}
+                </button>
+              )
+            })}
           </div>
         )}
 
@@ -225,12 +236,9 @@ function RecentActivityModal({ isOpen, activities = [], onClose }) {
         )}
 
         <div className="admin-activity-modal-footer">
-          <Link to="/admin/reports" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
+          <Link to="/admin/reports" className="btn btn-sm btn-success" onClick={onClose}>
             View All Reports
           </Link>
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

@@ -173,10 +173,11 @@ export function useAdminSavedLogin() {
     window.addEventListener('storage', handleStorage)
 
     // Session expiry: if the saved session has been inactive too long,
-    // sign the admin out automatically.
+    // sign the admin out automatically. Defer the state update out of the
+    // synchronous effect body to avoid cascading renders.
     if (hasSessionExpired() && readSavedSession()) {
       firebaseSignOut(auth).catch(() => {})
-      clearSession()
+      queueMicrotask(() => clearSession())
     }
 
     // Track user activity so the session timeout can be enforced.

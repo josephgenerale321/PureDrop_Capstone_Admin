@@ -627,7 +627,6 @@ function useUsersPageState({
     handleEditReset,
     handleCreateSubmit,
     handleEditSubmit,
-    handleSetUserPassword,
     handleSendVerificationEmail,
   }
 }

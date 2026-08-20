@@ -3,7 +3,6 @@ import AddressSelect from './AddressSelect.jsx'
 function UserFormModal({
   mode,
   userId,
-  userName = '',
   userEmail = '',
   form,
   onChangeField,
@@ -38,11 +37,6 @@ function UserFormModal({
   const isCreateMode = mode === 'create'
   const idPrefix = isCreateMode ? 'create-user' : 'edit-user'
   const title = isCreateMode ? 'Add New User' : 'Edit User'
-  const subtitle = isCreateMode
-    ? 'Create a regular user account with email and password.'
-    : userName && userEmail
-      ? `Editing ${userName} (${userEmail})`
-      : 'Update account details for this user.'
   const modalTitleId = isCreateMode ? 'admin-users-add-modal-title' : 'admin-users-edit-modal-title'
   const backdropAriaLabel = isCreateMode ? 'Close add user modal' : 'Close edit user modal'
   const submitLabel = isCreateMode ? 'Create User' : 'Save Changes'

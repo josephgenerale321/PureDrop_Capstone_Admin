@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminSidebar from '../sidebar.jsx'
 import useAdminMobileNav from '../useAdminMobileNav.js'
@@ -8,6 +8,7 @@ import RecentActivityModal from './RecentActivityModal.jsx'
 import ActivityItem from './ActivityItem.jsx'
 import { DocumentIcon, ProfileIcon, LogoutIcon } from '../AdminIcons.jsx'
 import PaginationControls from '../pagination/PaginationControls.jsx'
+import AdminErrorState from '../AdminErrorState.jsx'
 
 const DEFAULT_PAGE_SIZE = 10
 
@@ -28,6 +29,7 @@ function AdminDashboardContent({
   adminName,
   adminInitials,
   userEmail,
+  onRetryDashboard,
 }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
   const {
@@ -64,20 +66,11 @@ function AdminDashboardContent({
   }, [dashboard, sortKey, sortDirection])
 
   const totalPages = Math.max(1, Math.ceil(sortedReports.length / pageSize))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
   const paginatedReports = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
+    const start = (safeCurrentPage - 1) * pageSize
     return sortedReports.slice(start, start + pageSize)
-  }, [sortedReports, currentPage, pageSize])
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [sortKey, sortDirection])
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages)
-    }
-  }, [currentPage, totalPages])
+  }, [sortedReports, safeCurrentPage, pageSize])
 
   const handlePageSizeChange = (size) => {
     setPageSize(size)
@@ -85,6 +78,7 @@ function AdminDashboardContent({
   }
 
   const handleSort = (key) => {
+    setCurrentPage(1)
     if (sortKey === key) {
       setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
     } else {
@@ -152,8 +146,14 @@ function AdminDashboardContent({
 
           {isAccessDenied && (
             <section className="admin-dashboard-card">
-              <h2 className="admin-dashboard-card-title">Access Restricted</h2>
-              <p className="admin-dashboard-inline-error mb-0">{loadError || 'Admin access is required.'}</p>
+              <AdminErrorState
+                title="Access Restricted"
+                message={loadError || 'Admin access is required.'}
+                tips={[
+                  'Verify you are signed in with an admin account',
+                  'Contact your system administrator',
+                ]}
+              />
             </section>
           )}
 
@@ -246,7 +246,7 @@ function AdminDashboardContent({
                   </div>
 
                   <PaginationControls
-                    currentPage={currentPage}
+                    currentPage={safeCurrentPage}
                     totalPages={totalPages}
                     totalItems={sortedReports.length}
                     pageSize={pageSize}
@@ -352,7 +352,19 @@ function AdminDashboardContent({
             </>
           )}
 
-          {!isAccessDenied && loadError && <p className="admin-dashboard-inline-error mb-0">{loadError}</p>}
+          {!isAccessDenied && loadError && (
+            <section className="admin-dashboard-card">
+              <AdminErrorState
+                title="Dashboard unavailable"
+                message={loadError}
+                onRetry={onRetryDashboard}
+                tips={[
+                  'Check your network connection',
+                  'Try again in a few moments',
+                ]}
+              />
+            </section>
+          )}
         </section>
         <button
           type="button"
@@ -372,6 +384,7 @@ function AdminDashboardContent({
       />
 
       <RecentActivityModal
+        key={isActivityModalOpen ? 'open' : 'closed'}
         isOpen={isActivityModalOpen}
         activities={dashboard.allActivity}
         onClose={() => setIsActivityModalOpen(false)}

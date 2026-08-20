@@ -1,0 +1,145 @@
+/* ===== Admin Error State ===== */
+.admin-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1.5rem;
+  min-height: 220px;
+}
+
+.admin-error-state.is-compact {
+  padding: 1.5rem 1rem;
+  min-height: 160px;
+}
+
+.admin-error-icon-wrap {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #ef4444;
+  margin-bottom: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.admin-error-icon {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-error-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
+.admin-error-message {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #475569;
+  text-align: center;
+  line-height: 1.5;
+  max-width: 420px;
+}
+
+.admin-error-tips {
+  margin-top: 0.75rem;
+  align-self: stretch;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.75rem 1rem;
+  background: #f1f5f9;
+  border-radius: 0.75rem;
+  text-align: left;
+}
+
+.admin-error-tip {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #334155;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.admin-error-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  background: #0ea5e9;
+  color: #ffffff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 2.75rem;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-error-retry-btn:hover,
+.admin-error-retry-btn:focus {
+  background: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.3);
+}
+
+.admin-error-retry-btn:active {
+  transform: translateY(0);
+}
+
+.admin-error-retry-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ===== Admin Loading State ===== */
+.admin-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  min-height: 200px;
+}
+
+.admin-loading-state.is-compact {
+  padding: 1.5rem 1rem;
+  min-height: 140px;
+}
+
+.admin-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #0ea5e9;
+  border-radius: 50%;
+  animation: admin-spin 0.8s linear infinite;
+}
+
+.admin-loading-label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+@keyframes admin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

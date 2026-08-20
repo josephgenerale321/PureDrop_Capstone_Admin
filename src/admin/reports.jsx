@@ -1,4 +1,5 @@
 import './reports.css'
+import './admin-states.css'
 import ReportDeleteModal from './reports/ReportDeleteModal.jsx'
 import ReportDetailsModal from './reports/ReportDetailsModal.jsx'
 import ReportEditModal from './reports/ReportEditModal.jsx'
@@ -72,10 +73,6 @@ function AdminReports({ onLogout }) {
     statusUpdateResult.key === selectedReport?.key && statusUpdateResult.type === 'error' ? statusUpdateResult.message : ''
   const selectedReportStatusSuccess =
     statusUpdateResult.key === selectedReport?.key && statusUpdateResult.type === 'success' ? statusUpdateResult.message : ''
-  const selectedReportActionError =
-    reportActionResult.key === selectedReport?.key && reportActionResult.type === 'error' ? reportActionResult.message : ''
-  const selectedReportActionSuccess =
-    reportActionResult.key === selectedReport?.key && reportActionResult.type === 'success' ? reportActionResult.message : ''
 
   const handleViewReportDetails = (reportKey) => {
     setSelectedReportKey(reportKey)
@@ -134,15 +131,9 @@ function AdminReports({ onLogout }) {
             statusDraft={selectedStatusDraft}
             onStatusDraftChange={handleStatusDraftChange}
             onApplyStatusChange={handleApplyStatusChange}
-            onOpenEditModal={handleOpenEditModal}
-            onOpenDeleteModal={handleOpenDeleteModal}
             isStatusUpdating={updatingReportKey === selectedReport?.key}
-            isEditSubmitting={savingReportKey === selectedReport?.key}
-            isDeleteSubmitting={deletingReportKey === selectedReport?.key}
             statusUpdateError={selectedReportStatusError}
             statusUpdateSuccess={selectedReportStatusSuccess}
-            reportActionError={selectedReportActionError}
-            reportActionSuccess={selectedReportActionSuccess}
           />
         )}
 

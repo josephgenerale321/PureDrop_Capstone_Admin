@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './NoInternetScreen.css'
 import logo from '../assets/logo.png'
 
@@ -38,11 +38,12 @@ export default function NoInternetScreen({ children }) {
 
   useEffect(() => {
     if (offline) {
-      setVisible(true)
-    } else {
-      const timer = setTimeout(() => setVisible(false), 350)
+      // Defer the synchronous state update out of the effect body.
+      const timer = setTimeout(() => setVisible(true), 0)
       return () => clearTimeout(timer)
     }
+    const timer = setTimeout(() => setVisible(false), 350)
+    return () => clearTimeout(timer)
   }, [offline])
 
   const handleRetry = () => {

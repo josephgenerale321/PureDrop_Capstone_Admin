@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { auth, db } from '../../firebase.js'
@@ -48,6 +48,7 @@ function useAdminProfile(user) {
   const [errorModal, setErrorModal] = useState({ isOpen: false, title: 'Error', message: '' })
   const [isPasswordConfirmOpen, setIsPasswordConfirmOpen] = useState(false)
   const [passwordConfirmError, setPasswordConfirmError] = useState('')
+  const [retryCounter, setRetryCounter] = useState(0)
 
   useEffect(() => {
     let isMounted = true
@@ -95,7 +96,13 @@ function useAdminProfile(user) {
     return () => {
       isMounted = false
     }
-  }, [user?.uid, user?.metadata?.creationTime, user?.metadata?.lastSignInTime])
+  }, [user?.uid, user?.metadata?.creationTime, user?.metadata?.lastSignInTime, retryCounter])
+
+  const retryProfile = useCallback(() => {
+    setRetryCounter((current) => current + 1)
+    setProfileStatus({ type: '', message: '' })
+    setIsLoadingProfile(true)
+  }, [])
 
   const isProfileDirty = useMemo(() => {
     return fullName.trim() !== '' || address.trim() !== ''
@@ -311,6 +318,7 @@ function useAdminProfile(user) {
     errorModal,
     isPasswordConfirmOpen,
     passwordConfirmError,
+    retryProfile,
     handleSaveProfile,
     handleChangePassword,
     closePasswordConfirm,

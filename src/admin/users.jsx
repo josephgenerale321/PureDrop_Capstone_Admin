@@ -1,4 +1,5 @@
 import './users.css'
+import './admin-states.css'
 import { useState } from 'react'
 import UserFormModal from './users/UserFormModal.jsx'
 import UserDetailsModal from './users/UserDetailsModal.jsx'
@@ -30,6 +31,7 @@ function AdminUsers({ onLogout }) {
     selectedUser,
     selectedUserId,
     setSelectedUserId,
+    retry,
     createUserAccount,
     updateUserAccount,
     deleteUserAccount,
@@ -57,7 +59,6 @@ function AdminUsers({ onLogout }) {
     isEmailVerified,
     handleSendCreateVerificationCode,
     handleVerifyCreateEmailCode,
-    handleMarkEmailVerified,
     isCreateModalOpen,
     isEditModalOpen,
     isDetailsModalOpen,
@@ -133,6 +134,7 @@ function AdminUsers({ onLogout }) {
               onStartEdit={handleStartEdit}
               onDeleteUser={handleOpenDeleteModal}
               deletingUserId={deletingUserId}
+              onRetry={retry}
             />
           </div>
         </section>

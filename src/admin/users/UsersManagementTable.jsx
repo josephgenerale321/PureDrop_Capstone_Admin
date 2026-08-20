@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import UserPresenceBadge from './UserPresenceBadge.jsx'
 import PaginationControls from '../pagination/PaginationControls.jsx'
+import AdminErrorState from '../AdminErrorState.jsx'
+import AdminLoadingState from '../AdminLoadingState.jsx'
 
 const DEFAULT_PAGE_SIZE = 10
 
@@ -26,6 +28,7 @@ function UsersManagementTable({
   onStartEdit,
   onDeleteUser,
   deletingUserId,
+  onRetry,
 }) {
   const [sortKey, setSortKey] = useState('')
   const [sortDirection, setSortDirection] = useState('asc')
@@ -52,20 +55,16 @@ function UsersManagementTable({
   }, [filteredUsers, sortKey, sortDirection])
 
   const totalPages = Math.max(1, Math.ceil(sortedUsers.length / pageSize))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
   const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
+    const start = (safeCurrentPage - 1) * pageSize
     return sortedUsers.slice(start, start + pageSize)
-  }, [sortedUsers, currentPage, pageSize])
+  }, [sortedUsers, safeCurrentPage, pageSize])
 
-  useEffect(() => {
+  const handleSearchChange = (value) => {
     setCurrentPage(1)
-  }, [search, sortKey, sortDirection])
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages)
-    }
-  }, [currentPage, totalPages])
+    onSearchChange(value)
+  }
 
   const handlePageSizeChange = (size) => {
     setPageSize(size)
@@ -73,6 +72,7 @@ function UsersManagementTable({
   }
 
   const handleSort = (key) => {
+    setCurrentPage(1)
     if (sortKey === key) {
       setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
     } else {
@@ -109,96 +109,107 @@ function UsersManagementTable({
           <p className="admin-users-card-subtitle">View organized data table of all user accounts.</p>
         </div>
         <div className="admin-users-card-tools">
-          <input className="form-control" placeholder="Search" value={search} onChange={(event) => onSearchChange(event.target.value)} />
+          <input className="form-control" placeholder="Search" value={search} onChange={(event) => handleSearchChange(event.target.value)} />
           <button type="button" className="btn btn-primary" onClick={onOpenCreateModal}>
             + Add New User
           </button>
         </div>
       </div>
 
-      <div className="table-responsive">
-        <table className="table table-sm align-middle admin-users-table">
-          <thead>
-            <tr>
-              {SORTABLE_COLUMNS.map((column) => (
-                <th key={column.key}>
-                  <button
-                    type="button"
-                    className={`admin-sort-header${sortKey === column.key ? ' is-active' : ''}`}
-                    onClick={() => handleSort(column.key)}
-                  >
-                    {column.label}
-                    {renderSortIcon(column.key)}
-                  </button>
-                </th>
+      {isLoading && <AdminLoadingState label="Loading users..." compact />}
+
+      {!isLoading && loadError && (
+        <AdminErrorState
+          title="Unable to load users"
+          message={loadError}
+          onRetry={onRetry}
+          tips={[
+            'Check your network connection',
+            'Verify your admin permissions',
+            'Try again in a few moments',
+          ]}
+        />
+      )}
+
+      {!isLoading && !loadError && (
+        <div className="table-responsive">
+          <table className="table table-sm align-middle admin-users-table">
+            <thead>
+              <tr>
+                {SORTABLE_COLUMNS.map((column) => (
+                  <th key={column.key}>
+                    <button
+                      type="button"
+                      className={`admin-sort-header${sortKey === column.key ? ' is-active' : ''}`}
+                      onClick={() => handleSort(column.key)}
+                    >
+                      {column.label}
+                      {renderSortIcon(column.key)}
+                    </button>
+                  </th>
+                ))}
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!sortedUsers.length && (
+                <tr>
+                  <td colSpan={8} className="text-center text-muted py-4">
+                    No users found.
+                  </td>
+                </tr>
+              )}
+
+              {paginatedUsers.map((user) => (
+                <tr key={user.id} className={selectedUserId === user.id ? 'is-selected' : ''}>
+                  <td data-label="User ID">{user.displayId || 'N/A'}</td>
+                  <td data-label="Name">{user.name}</td>
+                  <td data-label="Email">{user.email}</td>
+                  <td data-label="Role">
+                    <span className={`badge-pill role-${user.roleClass}`}>{user.role}</span>
+                  </td>
+                  <td data-label="Status">
+                    <UserPresenceBadge status={user.status} />
+                  </td>
+                  <td data-label="Email Verified">
+                    <span className={`badge-pill ${user.emailVerified ? 'email-verified' : 'email-unverified'}`}>
+                      {user.emailVerified ? '✓ Verified' : '✗ Unverified'}
+                    </span>
+                  </td>
+                  <td data-label="Date Joined">{user.dateJoined}</td>
+                  <td data-label="Actions" className="d-flex gap-2 flex-wrap">
+                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onViewDetails(user.id)}>
+                      View Details
+                    </button>
+                    <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => onStartEdit(user)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => onDeleteUser(user)}
+                      disabled={deletingUserId === user.id}
+                    >
+                      {deletingUserId === user.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </td>
+                </tr>
               ))}
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!isLoading && !sortedUsers.length && (
-              <tr>
-                <td colSpan={8} className="text-center text-muted py-4">
-                  {loadError || 'No users found.'}
-                </td>
-              </tr>
-            )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-            {paginatedUsers.map((user) => (
-              <tr key={user.id} className={selectedUserId === user.id ? 'is-selected' : ''}>
-                <td data-label="User ID">{user.displayId || 'N/A'}</td>
-                <td data-label="Name">{user.name}</td>
-                <td data-label="Email">{user.email}</td>
-                <td data-label="Role">
-                  <span className={`badge-pill role-${user.roleClass}`}>{user.role}</span>
-                </td>
-                <td data-label="Status">
-                  <UserPresenceBadge status={user.status} />
-                </td>
-                <td data-label="Email Verified">
-                  <span className={`badge-pill ${user.emailVerified ? 'email-verified' : 'email-unverified'}`}>
-                    {user.emailVerified ? '✓ Verified' : '✗ Unverified'}
-                  </span>
-                </td>
-                <td data-label="Date Joined">{user.dateJoined}</td>
-                <td data-label="Actions" className="d-flex gap-2 flex-wrap">
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onViewDetails(user.id)}>
-                    View Details
-                  </button>
-                  <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => onStartEdit(user)}>
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => onDeleteUser(user)}
-                    disabled={deletingUserId === user.id}
-                  >
-                    {deletingUserId === user.id ? 'Deleting...' : 'Delete'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {isLoading && (
-              <tr>
-                <td colSpan={8} className="text-center text-muted py-4">
-                  Loading users...
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={sortedUsers.length}
-        pageSize={pageSize}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      {!isLoading && !loadError && (
+        <PaginationControls
+          currentPage={safeCurrentPage}
+          totalPages={totalPages}
+          totalItems={sortedUsers.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
     </section>
   )
 }

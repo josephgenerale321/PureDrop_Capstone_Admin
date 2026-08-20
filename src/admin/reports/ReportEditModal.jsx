@@ -13,24 +13,15 @@ const STATUS_BADGE_CLASS = {
 }
 
 function ReportEditModal({ report, form, onChangeField, onClose, onSubmit, actionFeedback, isSubmitting }) {
-  const [isAddressOpen, setIsAddressOpen] = useState(false)
-  const [addressQuery, setAddressQuery] = useState('')
   const [selectedAddress, setSelectedAddress] = useState(form.address || '')
 
   if (!report) {
     return null
   }
 
-  const handleCloseAddress = () => {
-    setIsAddressOpen(false)
-    setAddressQuery('')
-  }
-
   const handleAddressChange = (value) => {
     setSelectedAddress(value)
     onChangeField('address', value)
-    setIsAddressOpen(false)
-    setAddressQuery('')
   }
 
   return (
@@ -124,7 +115,6 @@ function ReportEditModal({ report, form, onChangeField, onClose, onSubmit, actio
               id="edit-report-address"
               value={selectedAddress}
               onChange={handleAddressChange}
-              onBlur={handleCloseAddress}
               placeholder="Select barangay in Toledo City"
             />
 

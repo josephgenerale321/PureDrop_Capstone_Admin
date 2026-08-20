@@ -32,9 +32,11 @@ function App() {
   }
 
   return (
-    <NoInternetScreen>
+    <>
       {!adminUser ? (
-        <AdminLogin rememberedEmail={rememberedEmail} onClearRememberedEmail={clearRememberedEmail} />
+        <NoInternetScreen>
+          <AdminLogin rememberedEmail={rememberedEmail} onClearRememberedEmail={clearRememberedEmail} />
+        </NoInternetScreen>
       ) : (
         <Routes>
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
@@ -46,7 +48,7 @@ function App() {
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>
       )}
-    </NoInternetScreen>
+    </>
   )
 }
 

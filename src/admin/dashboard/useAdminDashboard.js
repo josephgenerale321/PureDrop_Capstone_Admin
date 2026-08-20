@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { collection, collectionGroup, doc, getDoc, getDocs } from 'firebase/firestore'
 import { auth, db } from '../../firebase.js'
 import {
@@ -87,6 +87,7 @@ function useAdminDashboard(user) {
   const [isAccessDenied, setIsAccessDenied] = useState(false)
   const [adminName, setAdminName] = useState('')
   const [dashboard, setDashboard] = useState(createInitialDashboard)
+  const [retryCounter, setRetryCounter] = useState(0)
 
   useEffect(() => {
     let isMounted = true
@@ -179,7 +180,11 @@ function useAdminDashboard(user) {
     return () => {
       isMounted = false
     }
-  }, [user?.uid, user?.email])
+  }, [user?.uid, user?.email, retryCounter])
+
+  const retry = useCallback(() => {
+    setRetryCounter((current) => current + 1)
+  }, [])
 
   const adminInitials = useMemo(() => getInitials(adminName || user?.email || 'Administrator'), [adminName, user?.email])
 
@@ -190,6 +195,7 @@ function useAdminDashboard(user) {
     adminName,
     adminInitials,
     dashboard,
+    retry,
   }
 }
 

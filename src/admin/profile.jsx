@@ -1,4 +1,5 @@
 import './profile.css'
+import './admin-states.css'
 import DefaultAvatarImage from './DefaultAvatarImage.jsx'
 import useAdminProfile from './profile/useAdminProfile.jsx'
 import AdminSidebar from './sidebar.jsx'
@@ -7,6 +8,8 @@ import useLogout from './useLogout.js'
 import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 import SuccessAlertModal from './SuccessAlertModal.jsx'
 import ConfirmPasswordChangeModal from './ConfirmPasswordChangeModal.jsx'
+import AdminLoadingState from './AdminLoadingState.jsx'
+import AdminErrorState from './AdminErrorState.jsx'
 import { LogoutIcon } from './AdminIcons.jsx'
 
 function AdminProfile({ user, onLogout }) {
@@ -57,6 +60,7 @@ function AdminProfile({ user, onLogout }) {
     performPasswordChange,
     handleCloseSuccessModal,
     handleCloseErrorModal,
+    retryProfile,
   } = useAdminProfile(user)
 
   return (
@@ -92,8 +96,20 @@ function AdminProfile({ user, onLogout }) {
 
           {isLoadingProfile ? (
             <div className="admin-profile-loading" role="status" aria-live="polite">
-              <div className="admin-profile-loading-spinner" aria-hidden="true" />
-              <p>Loading profile...</p>
+              <AdminLoadingState label="Loading profile..." compact />
+            </div>
+          ) : profileStatus.type === 'error' && profileStatus.message.includes('Unable to load') ? (
+            <div className="admin-profile-loading">
+              <AdminErrorState
+                title="Unable to load profile"
+                message={profileStatus.message}
+                onRetry={retryProfile}
+                tips={[
+                  'Check your network connection',
+                  'Verify your admin permissions',
+                  'Try again in a few moments',
+                ]}
+              />
             </div>
           ) : (
             <div className="admin-profile-layout">

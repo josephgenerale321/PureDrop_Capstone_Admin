@@ -393,7 +393,12 @@ export const updateReportDetailsInFirestore = async ({ reportKey, draft }) => {
 
   try {
     const reportRef = doc(db, reportKey)
-    await updateDoc(reportRef, payloadResult.payload)
+    const adminUid = auth.currentUser?.uid || null
+    await updateDoc(reportRef, {
+      ...payloadResult.payload,
+      editedBy: 'admin',
+      editedByUid: adminUid,
+    })
 
     return {
       ok: true,
@@ -621,6 +626,7 @@ export const deleteReportInFirestore = async ({ reportKey, attachments, userId, 
     }
 
     await deleteDoc(doc(db, reportKey))
+
     return { ok: true }
   } catch (error) {
     if (error?.code === 'permission-denied') {

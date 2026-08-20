@@ -1,4 +1,5 @@
 import './settings.css'
+import './admin-states.css'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminSidebar from './sidebar.jsx'
@@ -10,6 +11,9 @@ import GeneralConfigurationCard from './settings/GeneralConfigurationCard.jsx'
 import NotificationsCard from './settings/NotificationsCard.jsx'
 import SecurityAccessCard from './settings/SecurityAccessCard.jsx'
 import AttachmentCleanupCard from './settings/AttachmentCleanupCard.jsx'
+import AdminLoadingState from './AdminLoadingState.jsx'
+import AdminErrorState from './AdminErrorState.jsx'
+
 import useAdminSettings from './settings/useAdminSettings.jsx'
 import ConfirmActionModal from './settings/ConfirmActionModal.jsx'
 
@@ -27,15 +31,14 @@ function AdminSettings({ user, onLogout }) {
   const {
     settings,
     isLoading,
-    isSaving,
     saveStatus,
     fieldErrors,
+    retrySettings,
     setGeneralField,
     setSecurityField,
     toggleReportEmailType,
     setSystemHealthAlerts,
     setWeeklySummaryEmail,
-    saveSettings,
   } = useAdminSettings(user)
 
   const runConfirmedAction = () => {
@@ -95,23 +98,37 @@ function AdminSettings({ user, onLogout }) {
           {saveStatus.message && (
             <p className={`admin-settings-inline-status ${saveStatus.type === 'error' ? 'is-error' : ''}`}>{saveStatus.message}</p>
           )}
-          {isLoading && <p className="admin-settings-inline-status">Loading settings...</p>}
+          {isLoading && <AdminLoadingState label="Loading settings..." compact />}
+          {!isLoading && saveStatus.type === 'error' && saveStatus.message.includes('Unable to load') && (
+            <AdminErrorState
+              title="Unable to load settings"
+              message={saveStatus.message}
+              onRetry={retrySettings}
+              tips={[
+                'Check your network connection',
+                'Verify your admin permissions',
+                'Try again in a few moments',
+              ]}
+            />
+          )}
 
-          <div className="admin-settings-grid">
-            <div className="admin-settings-main">
-              <GeneralConfigurationCard general={settings.general} fieldErrors={fieldErrors} onChange={setGeneralField} />
-              <SecurityAccessCard security={settings.security} fieldErrors={fieldErrors} onChange={setSecurityField} />
-              <NotificationsCard
-                notifications={settings.notifications}
-                fieldErrors={fieldErrors}
-                onToggleReportEmailType={toggleReportEmailType}
-                onSystemHealthAlertsChange={setSystemHealthAlerts}
-                onWeeklySummaryEmailChange={setWeeklySummaryEmail}
-              />
-              <AttachmentCleanupCard onRequestDelete={handleRequestDelete} />
+          {!isLoading && (
+            <div className="admin-settings-grid">
+              <div className="admin-settings-main">
+                <GeneralConfigurationCard general={settings.general} fieldErrors={fieldErrors} onChange={setGeneralField} />
+                <SecurityAccessCard security={settings.security} fieldErrors={fieldErrors} onChange={setSecurityField} />
+                <NotificationsCard
+                  notifications={settings.notifications}
+                  fieldErrors={fieldErrors}
+                  onToggleReportEmailType={toggleReportEmailType}
+                  onSystemHealthAlertsChange={setSystemHealthAlerts}
+                  onWeeklySummaryEmailChange={setWeeklySummaryEmail}
+                />
+                <AttachmentCleanupCard onRequestDelete={handleRequestDelete} />
+              </div>
+
             </div>
-
-          </div>
+          )}
 
           {confirmAction && (
             <ConfirmActionModal
