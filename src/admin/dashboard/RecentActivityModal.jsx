@@ -31,6 +31,7 @@ function RecentActivityModal({ isOpen, activities = [], onClose }) {
   const modalRef = useRef(null)
   const closeButtonRef = useRef(null)
   const lastFocusedRef = useRef(null)
+  const mouseDownInsideRef = useRef(false)
 
   useEffect(() => {
     if (!isOpen) return
@@ -131,7 +132,14 @@ function RecentActivityModal({ isOpen, activities = [], onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="admin-activity-overlay" role="presentation" onClick={onClose}>
+    <div
+      className="admin-activity-overlay"
+      role="presentation"
+      onClick={() => {
+        if (!mouseDownInsideRef.current) onClose()
+        mouseDownInsideRef.current = false
+      }}
+    >
       <div
         ref={modalRef}
         className="admin-activity-modal"
@@ -139,7 +147,13 @@ function RecentActivityModal({ isOpen, activities = [], onClose }) {
         aria-modal="true"
         aria-labelledby="recentActivityModalTitle"
         aria-describedby="recentActivityModalDesc"
-        onClick={(event) => event.stopPropagation()}
+        onMouseDown={() => {
+          mouseDownInsideRef.current = true
+        }}
+        onClick={(event) => {
+          event.stopPropagation()
+          mouseDownInsideRef.current = false
+        }}
       >
         <div className="admin-activity-modal-head">
           <div>

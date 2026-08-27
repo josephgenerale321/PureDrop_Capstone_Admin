@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs'
+import logoBase64 from '../../assets/logo.png?base64'
 
 const BRAND_BLUE = '1F5DA3'
 const BRAND_BLUE_LIGHT = 'DCE8F5'
@@ -73,7 +74,7 @@ export const downloadReportXlsx = async (reports) => {
   workbook.created = new Date()
 
   const sheet = workbook.addWorksheet('Reports', {
-    views: [{ state: 'frozen', ySplit: 1 }],
+    views: [{ state: 'frozen', ySplit: 4 }],
   })
 
   sheet.columns = COLUMNS.map((column) => ({
@@ -82,8 +83,50 @@ export const downloadReportXlsx = async (reports) => {
     width: column.width,
   }))
 
-  // Style the header row.
-  const headerRow = sheet.getRow(1)
+  const lastColumnLetter = sheet.getColumn(COLUMNS.length).letter
+
+  // Row 1: Logo + title + generated timestamp.
+  const titleRow = sheet.getRow(1)
+  titleRow.height = 60
+  sheet.mergeCells(`A1:${lastColumnLetter}1`)
+  const titleCell = titleRow.getCell(1)
+  titleCell.value = 'PureDrop Reports'
+  titleCell.font = { bold: true, size: 20, color: { argb: BRAND_BLUE } }
+  titleCell.alignment = { vertical: 'middle', horizontal: 'left' }
+
+  const generatedCell = titleRow.getCell(COLUMNS.length)
+  generatedCell.value = `Generated: ${formatExportTimestamp(new Date())}`
+  generatedCell.font = { size: 10, color: { argb: '6B7280' } }
+  generatedCell.alignment = { vertical: 'middle', horizontal: 'right' }
+
+  // Add the logo image to the top-left of the title row.
+  try {
+    const rawBase64 = String(logoBase64 || '').replace(/^data:[^;]+;base64,/, '')
+    if (rawBase64) {
+      const logoId = workbook.addImage({ base64: rawBase64, extension: 'png' })
+      sheet.addImage(logoId, { tl: { col: 0, row: 0 }, ext: { width: 50, height: 50 } })
+    }
+  } catch (error) {
+    console.warn('Failed to embed logo in Excel export:', error)
+  }
+
+  // Row 2: Brand divider line.
+  const dividerRow = sheet.getRow(2)
+  dividerRow.height = 4
+  sheet.mergeCells(`A2:${lastColumnLetter}2`)
+  const dividerCell = dividerRow.getCell(1)
+  dividerCell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: BRAND_BLUE },
+  }
+
+  // Row 3: Blank spacer.
+  const spacerRow = sheet.getRow(3)
+  spacerRow.height = 8
+
+  // Row 4: Column headers.
+  const headerRow = sheet.getRow(4)
   headerRow.height = 24
   headerRow.eachCell((cell) => createHeaderCell(cell))
 
