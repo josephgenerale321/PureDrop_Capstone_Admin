@@ -2,6 +2,11 @@ import { useMemo, useState } from 'react'
 import PaginationControls from '../pagination/PaginationControls.jsx'
 import AdminErrorState from '../AdminErrorState.jsx'
 import AdminLoadingState from '../AdminLoadingState.jsx'
+// Static import so the Excel export is bundled into the main app.
+// A lazy import() creates a separate chunk that must be fetched at click
+// time, which fails on some free hosts (e.g. InfinityFree) when the chunk
+// request returns HTML from the SPA fallback instead of JavaScript.
+import { downloadReportXlsx } from './reportsExport.js'
 
 const DEFAULT_PAGE_SIZE = 10
 
@@ -87,15 +92,18 @@ function ReportsManagementTable({
     }
 
     try {
-      const { downloadReportXlsx } = await import('./reportsExport.js')
       const result = await downloadReportXlsx(sortedReports)
       if (result?.exported) {
         setExportStatus({ type: 'success', message: `Exported ${result.exported} report(s) to Excel.` })
       } else {
         setExportStatus({ type: 'error', message: 'Unable to export reports right now.' })
       }
-    } catch {
-      setExportStatus({ type: 'error', message: 'Unable to export reports right now.' })
+    } catch (error) {
+      console.error('Excel export failed:', error)
+      setExportStatus({
+        type: 'error',
+        message: `Excel export failed${error?.message ? `: ${error.message}` : '.'}`,
+      })
     }
   }
 

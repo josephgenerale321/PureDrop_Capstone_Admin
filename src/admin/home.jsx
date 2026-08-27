@@ -39,6 +39,7 @@ function AdminHome({ user, onLogout }) {
 
   return (
     <AdminDashboardContent
+      user={user}
       onLogout={onLogout}
       isAccessDenied={isAccessDenied}
       loadError={loadError}

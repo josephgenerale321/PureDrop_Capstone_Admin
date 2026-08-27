@@ -1,12 +1,18 @@
+// Static import so the Excel export is bundled into the main app.
+// A lazy import() creates a separate chunk that must be fetched at click
+// time, which fails on some free hosts (e.g. InfinityFree) when the chunk
+// request returns HTML from the SPA fallback instead of JavaScript.
+import { downloadReportXlsx } from './reportsExport.js'
+
 function ReportsQuickActionsCard({ reports }) {
   const handleExport = async () => {
     if (!reports?.length) {
       return
     }
     try {
-      const { downloadReportXlsx } = await import('./reportsExport.js')
       await downloadReportXlsx(reports)
-    } catch {
+    } catch (error) {
+      console.error('Excel export failed:', error)
       // Best-effort export; failures are surfaced in the main table's status message.
     }
   }

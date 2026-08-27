@@ -1,12 +1,10 @@
 import './settings.css'
 import './admin-states.css'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
 import useLogout from './useLogout.js'
 import LogoutConfirmModal from './LogoutConfirmModal.jsx'
-import { ProfileIcon, LogoutIcon } from './AdminIcons.jsx'
 import GeneralConfigurationCard from './settings/GeneralConfigurationCard.jsx'
 import NotificationsCard from './settings/NotificationsCard.jsx'
 import SecurityAccessCard from './settings/SecurityAccessCard.jsx'
@@ -62,7 +60,12 @@ function AdminSettings({ user, onLogout }) {
     <main className="admin-settings-page">
       <div className={`admin-settings-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-settings-sidebar" className="admin-settings-sidebar-wrap">
-          <AdminSidebar activeItem="settings" onClose={closeMobileNav} />
+          <AdminSidebar
+            activeItem="settings"
+            user={user}
+            onLogout={confirmLogout}
+            onClose={closeMobileNav}
+          />
         </div>
 
         <section className="admin-settings-content">
@@ -82,16 +85,6 @@ function AdminSettings({ user, onLogout }) {
               </button>
               <h1 className="admin-settings-title">Settings</h1>
               <p className="admin-settings-subtitle">Configure admin profile and PureDrop application preferences.</p>
-            </div>
-            <div className="admin-settings-top-actions">
-              <Link to="/admin/profile" className="btn btn-outline-secondary admin-header-icon-btn" title="Admin Profile">
-                <ProfileIcon className="admin-header-icon" />
-                <span>Profile</span>
-              </Link>
-              <button type="button" className="btn btn-outline-secondary admin-header-icon-btn admin-header-icon-btn-danger" onClick={confirmLogout} title="Logout">
-                <LogoutIcon className="admin-header-icon" />
-                <span>Logout</span>
-              </button>
             </div>
           </header>
 

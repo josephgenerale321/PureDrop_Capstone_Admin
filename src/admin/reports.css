@@ -47,11 +47,6 @@
   color: #4b5f75;
 }
 
-.admin-reports-top-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .admin-reports-summary {
   justify-self: start;
   align-self: start;
@@ -1447,16 +1442,6 @@
   .admin-reports-header {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .admin-reports-top-actions {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .admin-reports-top-actions .btn {
-    flex: 1 1 calc(50% - 0.25rem);
-    min-height: 2.75rem;
   }
 
   .admin-reports-mobile-toggle .admin-reports-toggle-icon {

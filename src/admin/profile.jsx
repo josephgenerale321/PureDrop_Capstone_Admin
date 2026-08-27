@@ -10,7 +10,6 @@ import SuccessAlertModal from './SuccessAlertModal.jsx'
 import ConfirmPasswordChangeModal from './ConfirmPasswordChangeModal.jsx'
 import AdminLoadingState from './AdminLoadingState.jsx'
 import AdminErrorState from './AdminErrorState.jsx'
-import { LogoutIcon } from './AdminIcons.jsx'
 
 function AdminProfile({ user, onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
@@ -67,7 +66,12 @@ function AdminProfile({ user, onLogout }) {
     <main className="admin-home-page admin-profile-page">
       <div className={`admin-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-profile-sidebar" className="admin-sidebar-wrap">
-          <AdminSidebar activeItem="profile" includeProfile onClose={closeMobileNav} />
+          <AdminSidebar
+            activeItem="profile"
+            user={user}
+            onLogout={confirmLogout}
+            onClose={closeMobileNav}
+          />
         </div>
 
         <section className="admin-content">
@@ -88,10 +92,6 @@ function AdminProfile({ user, onLogout }) {
               <h1 className="admin-page-title">Admin Profile</h1>
               <p className="admin-page-subtitle">Manage your personal account and security details.</p>
             </div>
-            <button type="button" className="btn btn-outline-secondary admin-header-icon-btn admin-header-icon-btn-danger" onClick={confirmLogout} title="Logout">
-              <LogoutIcon className="admin-header-icon" />
-              <span>Logout</span>
-            </button>
           </header>
 
           {isLoadingProfile ? (

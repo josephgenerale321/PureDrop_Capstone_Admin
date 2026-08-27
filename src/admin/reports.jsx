@@ -13,7 +13,7 @@ import useAdminMobileNav from './useAdminMobileNav.js'
 import useLogout from './useLogout.js'
 import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 
-function AdminReports({ onLogout }) {
+function AdminReports({ user, onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
   const {
     isLogoutModalOpen,
@@ -93,11 +93,16 @@ function AdminReports({ onLogout }) {
     <main className="admin-reports-page">
       <div className={`admin-reports-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-reports-sidebar" className="admin-reports-sidebar-wrap">
-          <AdminSidebar activeItem="reports" onClose={closeMobileNav} />
+          <AdminSidebar
+            activeItem="reports"
+            user={user}
+            onLogout={confirmLogout}
+            onClose={closeMobileNav}
+          />
         </div>
 
         <section className="admin-reports-content">
-          <ReportsHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} onLogout={confirmLogout} />
+          <ReportsHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} />
           <ReportsSummary totalReports={reports.length} summary={summary} />
 
           <div className="admin-reports-grid">

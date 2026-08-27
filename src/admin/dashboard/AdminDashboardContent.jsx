@@ -6,7 +6,7 @@ import useLogout from '../useLogout.js'
 import LogoutConfirmModal from '../LogoutConfirmModal.jsx'
 import RecentActivityModal from './RecentActivityModal.jsx'
 import ActivityItem from './ActivityItem.jsx'
-import { DocumentIcon, ProfileIcon, LogoutIcon } from '../AdminIcons.jsx'
+import { DocumentIcon } from '../AdminIcons.jsx'
 import PaginationControls from '../pagination/PaginationControls.jsx'
 import AdminErrorState from '../AdminErrorState.jsx'
 
@@ -22,6 +22,7 @@ const SORTABLE_COLUMNS = [
 ]
 
 function AdminDashboardContent({
+  user,
   onLogout,
   isAccessDenied,
   loadError,
@@ -111,7 +112,12 @@ function AdminDashboardContent({
     <main className="admin-dashboard-page">
       <div className={`admin-dashboard-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-dashboard-sidebar" className="admin-dashboard-sidebar-wrap">
-          <AdminSidebar activeItem="dashboard" onClose={closeMobileNav} />
+          <AdminSidebar
+            activeItem="dashboard"
+            user={user}
+            onLogout={confirmLogout}
+            onClose={closeMobileNav}
+          />
         </div>
 
         <section className="admin-dashboard-content">
@@ -131,16 +137,6 @@ function AdminDashboardContent({
               </button>
               <h1 className="admin-dashboard-title">Administrator</h1>
               <p className="admin-dashboard-subtitle">Manage users, reports, and system updates.</p>
-            </div>
-            <div className="admin-dashboard-top-actions">
-              <Link to="/admin/profile" className="btn btn-outline-secondary admin-header-icon-btn" title="Admin Profile">
-                <ProfileIcon className="admin-header-icon" />
-                <span>Profile</span>
-              </Link>
-              <button type="button" className="btn btn-outline-secondary admin-header-icon-btn admin-header-icon-btn-danger" onClick={confirmLogout} title="Logout">
-                <LogoutIcon className="admin-header-icon" />
-                <span>Logout</span>
-              </button>
             </div>
           </header>
 

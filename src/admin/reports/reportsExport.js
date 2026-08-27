@@ -1,5 +1,9 @@
 import ExcelJS from 'exceljs'
-import logoBase64 from '../../assets/logo.png?base64'
+// Standard Vite asset import -> hashed static URL for the logo.
+// NOTE: '?base64' is NOT supported by Vite (it's a webpack feature);
+// Vite returns the URL string instead of base64 data, which caused
+// "Invalid base64 input" when ExcelJS tried to decode it.
+import logoUrl from '../../assets/logo.png'
 
 const BRAND_BLUE = '1F5DA3'
 const BRAND_BLUE_LIGHT = 'DCE8F5'
@@ -100,12 +104,15 @@ export const downloadReportXlsx = async (reports) => {
   generatedCell.alignment = { vertical: 'middle', horizontal: 'right' }
 
   // Add the logo image to the top-left of the title row.
+  // Fetch the static logo bytes at runtime; ExcelJS accepts an ArrayBuffer.
   try {
-    const rawBase64 = String(logoBase64 || '').replace(/^data:[^;]+;base64,/, '')
-    if (rawBase64) {
-      const logoId = workbook.addImage({ base64: rawBase64, extension: 'png' })
-      sheet.addImage(logoId, { tl: { col: 0, row: 0 }, ext: { width: 50, height: 50 } })
+    const response = await fetch(logoUrl)
+    if (!response.ok) {
+      throw new Error(`Logo request failed with status ${response.status}`)
     }
+    const logoBuffer = await response.arrayBuffer()
+    const logoId = workbook.addImage({ buffer: logoBuffer, extension: 'png' })
+    sheet.addImage(logoId, { tl: { col: 0, row: 0 }, ext: { width: 50, height: 50 } })
   } catch (error) {
     console.warn('Failed to embed logo in Excel export:', error)
   }

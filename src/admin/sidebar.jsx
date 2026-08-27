@@ -19,17 +19,6 @@ const NAV_ITEMS = [
     ),
   },
   {
-    key: 'profile',
-    label: 'Admin Profile',
-    to: '/admin/profile',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
-  {
     key: 'users',
     label: 'Users',
     to: '/admin/users',
@@ -70,19 +59,12 @@ const NAV_ITEMS = [
 
 function AdminSidebar({
   activeItem,
-  includeProfile = false,
   disabledItems = [],
   badges = {},
   user = null,
   onLogout,
   onClose,
 }) {
-  const navItems = NAV_ITEMS.filter((item) => {
-    if (item.key === 'profile' && !includeProfile) {
-      return false
-    }
-    return true
-  })
 
   return (
     <aside className="admin-sidebar">
@@ -96,7 +78,7 @@ function AdminSidebar({
       </div>
 
       <nav className="admin-sidebar-nav">
-        {navItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isDisabled = disabledItems.includes(item.key)
           const badge = badges[item.key]
 
@@ -129,13 +111,18 @@ function AdminSidebar({
       {(user || onLogout) && (
         <div className="admin-sidebar-footer">
           {user && (
-            <div className="admin-sidebar-user">
+            <NavLink
+              to="/admin/profile"
+              className="admin-sidebar-user"
+              onClick={onClose}
+              title="Open Admin Profile"
+            >
               <DefaultAvatarImage alt="Admin avatar" className="admin-sidebar-user-avatar" />
               <div className="admin-sidebar-user-info">
                 <span className="admin-sidebar-user-name">{user.name || user.email || 'Administrator'}</span>
                 <span className="admin-sidebar-user-role">{user.role || 'Administrator'}</span>
               </div>
-            </div>
+            </NavLink>
           )}
           {onLogout && (
             <button type="button" className="admin-sidebar-logout" onClick={onLogout}>

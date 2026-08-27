@@ -13,7 +13,7 @@ import useAdminMobileNav from './useAdminMobileNav.js'
 import useLogout from './useLogout.js'
 import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 
-function AdminUsers({ onLogout }) {
+function AdminUsers({ user, onLogout }) {
   const [search, setSearch] = useState('')
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
   const {
@@ -115,11 +115,16 @@ function AdminUsers({ onLogout }) {
     <main className="admin-users-page">
       <div className={`admin-users-shell${isMobileNavOpen ? ' is-nav-open' : ''}`}>
         <div id="admin-users-sidebar" className="admin-users-sidebar-wrap">
-          <AdminSidebar activeItem="users" onClose={closeMobileNav} />
+          <AdminSidebar
+            activeItem="users"
+            user={user}
+            onLogout={confirmLogout}
+            onClose={closeMobileNav}
+          />
         </div>
 
         <section className="admin-users-content">
-          <UsersHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} onLogout={confirmLogout} />
+          <UsersHeader isMobileNavOpen={isMobileNavOpen} onToggleMobileNav={toggleMobileNav} />
 
           <div className="admin-users-grid">
             <UsersManagementTable
