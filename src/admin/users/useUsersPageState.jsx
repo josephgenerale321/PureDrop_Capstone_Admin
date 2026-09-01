@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { buildAccountUpdateDetails, fireUserAccountEmail } from './EmailFunction.jsx'
 
 const EMPTY_CREATE_FORM = {
   fullName: '',
@@ -365,6 +366,16 @@ function useUsersPageState({
 
     const updatedReference = { ...editForm }
     setEditReference(updatedReference)
+
+    // Best-effort Brevo email so the user is notified about the account
+    // change. Fire-and-forget: failures are logged, never surfaced to the UI.
+    fireUserAccountEmail({
+      email: editForm.email || editUserEmail,
+      fullName: editForm.fullName || editUserName,
+      changeType: statusChanged ? 'status' : 'profile',
+      details: buildAccountUpdateDetails(editForm, editReference),
+    })
+
     setActionFeedback(createEmptyFeedback())
     setIsSaveSuccess(true)
     setEditUserId('')
@@ -415,6 +426,15 @@ function useUsersPageState({
         type: 'success',
         message: result.message || 'Password has been updated for the user.',
       })
+
+      // Best-effort Brevo email notifying the user that an admin changed
+      // their password. Fire-and-forget; never contains the password itself.
+      fireUserAccountEmail({
+        email: editUserEmail,
+        fullName: editUserName,
+        changeType: 'password',
+      })
+
       setNewPassword('')
       setConfirmNewPassword('')
     } finally {

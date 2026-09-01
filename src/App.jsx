@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminHome from './admin/home.jsx'
 import AdminProfile from './admin/profile.jsx'
 import AdminReports from './admin/reports.jsx'
+import AdminVerification from './admin/verification.jsx'
 import AdminSettings from './admin/settings.jsx'
 import AdminUsers from './admin/users.jsx'
 import AdminLogin from './login/adminlogin.jsx'
@@ -43,6 +44,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminHome user={adminUser} onLogout={signOut} />} />
           <Route path="/admin/profile" element={<AdminProfile user={adminUser} onLogout={signOut} />} />
           <Route path="/admin/users" element={<AdminUsers user={adminUser} onLogout={signOut} />} />
+          <Route path="/admin/verification" element={<AdminVerification user={adminUser} onLogout={signOut} />} />
           <Route path="/admin/reports" element={<AdminReports user={adminUser} onLogout={signOut} />} />
           <Route path="/admin/settings" element={<AdminSettings user={adminUser} onLogout={signOut} />} />
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />

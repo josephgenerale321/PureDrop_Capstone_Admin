@@ -124,11 +124,15 @@
 
 /* Shared Admin Sidebar Styles */
 .admin-sidebar {
+  /* Stick to the viewport so the footer (avatar + logout) never drifts
+     out of view on long pages; only the nav list scrolls internally. */
+  position: sticky;
+  top: 0;
   display: flex;
   flex-direction: column;
   border-right: 1px solid #d8e0ea;
   background: #ffffff;
-  height: 100%;
+  height: 100vh;
 }
 
 .admin-sidebar-brand {
@@ -177,6 +181,26 @@
   display: grid;
   gap: 0.35rem;
   padding: 1rem 0.75rem;
+  /* Take remaining space between brand and footer; scroll alone when tall.
+     align-content: start keeps the menu rows compact instead of letting
+     the grid stretch every item to fill the free height. */
+  align-content: start;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-thumb {
+  background: #c7d3e0;
+  border-radius: 999px;
 }
 
 .admin-sidebar-nav-item {
@@ -247,16 +271,15 @@
   padding: 0.75rem;
   border-top: 1px solid #d8e0ea;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .admin-sidebar-user {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 0.5rem 0.85rem;
-  border-radius: 0.75rem;
+  gap: 0.6rem;
+  padding: 0.5rem 0.4rem;
+  border-radius: 0.65rem;
   background: #f1f4f8;
   text-decoration: none;
   color: inherit;
@@ -269,21 +292,19 @@
 }
 
 .admin-sidebar-user-avatar {
-  width: 60px;
-  height: 60px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #d3dde8;
+  border: 1px solid #d3dde8;
   background: #eef3f8;
-  flex: 0 0 60px;
+  flex: 0 0 36px;
 }
 
 .admin-sidebar-user-info {
   min-width: 0;
-  width: 100%;
   display: grid;
-  gap: 0.15rem;
-  text-align: center;
+  gap: 0.1rem;
 }
 
 .admin-sidebar-user-name {
@@ -336,7 +357,7 @@
 @media (max-width: 991.98px) {
   .admin-sidebar {
     height: 100dvh;
-    overflow-y: auto;
+    overflow: hidden;
     border-right: 1px solid #d8e0ea;
     border-bottom: 0;
     box-shadow: 0 8px 30px rgba(16, 25, 40, 0.2);
@@ -390,13 +411,13 @@
   }
 
   .admin-sidebar-user {
-    padding: 0.85rem 0.45rem 0.75rem;
+    padding: 0.4rem 0.35rem;
   }
 
   .admin-sidebar-user-avatar {
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
   }
 
   .admin-sidebar-user-name {
@@ -437,13 +458,13 @@
   }
 
   .admin-sidebar-user {
-    padding: 0.9rem 0.5rem 0.8rem;
+    padding: 0.45rem 0.4rem;
   }
 
   .admin-sidebar-user-avatar {
-    width: 52px;
-    height: 52px;
-    flex: 0 0 52px;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
   }
 
   .admin-sidebar-user-name {

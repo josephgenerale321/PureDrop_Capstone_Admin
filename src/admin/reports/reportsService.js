@@ -1,6 +1,7 @@
 import { collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { auth, db } from '../../firebase.js'
 import { isSupabaseConfigured, supabase } from '../../supabase.js'
+import { fireReportStatusEmail } from './EmailFunction.jsx'
 
 const USERS_COLLECTION = 'regular_user'
 const REPORTS_COLLECTION = 'reports'
@@ -266,6 +267,11 @@ export const updateReportStatusInFirestore = async ({ reportKey, nextStatus, use
     // Fire-and-forget push notification through the Supabase Edge Function.
     // Push failures must never block or break the status update in Firestore.
     fireReportStatusPush({ userId, reportId, status: normalizedStatus, documentId })
+
+    // Fire-and-forget Brevo email through the `send-report-status-email` Edge
+    // Function so the reporter is also notified by email. Same best-effort
+    // contract: email failures are logged, never surfaced to the admin UI.
+    fireReportStatusEmail({ userId, reportId, status: normalizedStatus, documentId })
 
     return {
       ok: true,
