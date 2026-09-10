@@ -11,10 +11,13 @@ import useReportsPageState from './reports/useReportsPageState.jsx'
 import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
 import useLogout from './useLogout.js'
+import usePendingVerificationBadge from './verification/usePendingVerificationBadge.js'
 import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 
 function AdminReports({ user, onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
+  // Live pending verification count for the sidebar badge (same as the Verification page).
+  const pendingVerificationCount = usePendingVerificationBadge()
   const {
     isLogoutModalOpen,
     isSigningOut,
@@ -95,6 +98,7 @@ function AdminReports({ user, onLogout }) {
         <div id="admin-reports-sidebar" className="admin-reports-sidebar-wrap">
           <AdminSidebar
             activeItem="reports"
+            badges={{ verification: pendingVerificationCount }}
             user={user}
             onLogout={confirmLogout}
             onClose={closeMobileNav}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import AdminSidebar from '../sidebar.jsx'
 import useAdminMobileNav from '../useAdminMobileNav.js'
 import useLogout from '../useLogout.js'
+import usePendingVerificationBadge from '../verification/usePendingVerificationBadge.js'
 import LogoutConfirmModal from '../LogoutConfirmModal.jsx'
 import RecentActivityModal from './RecentActivityModal.jsx'
 import ActivityItem from './ActivityItem.jsx'
@@ -41,6 +42,8 @@ function AdminDashboardContent({
     closeLogoutModal,
     handleConfirmLogout,
   } = useLogout(onLogout)
+  // Live pending verification count for the sidebar badge (same as the Verification page).
+  const pendingVerificationCount = usePendingVerificationBadge()
   const [sortKey, setSortKey] = useState('')
   const [sortDirection, setSortDirection] = useState('asc')
   const [currentPage, setCurrentPage] = useState(1)
@@ -114,6 +117,7 @@ function AdminDashboardContent({
         <div id="admin-dashboard-sidebar" className="admin-dashboard-sidebar-wrap">
           <AdminSidebar
             activeItem="dashboard"
+            badges={{ verification: pendingVerificationCount }}
             user={user}
             onLogout={confirmLogout}
             onClose={closeMobileNav}

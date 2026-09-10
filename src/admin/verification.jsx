@@ -8,7 +8,13 @@ import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 import VerificationReviewModal from './verification/VerificationReviewModal.jsx'
 import VerificationSummary from './verification/VerificationSummary.jsx'
 import VerificationTable from './verification/VerificationTable.jsx'
-import { MOCK_VERIFICATIONS } from './verification/mockVerifications.js'
+import usePendingVerificationBadge from './verification/usePendingVerificationBadge.js'
+import PaginationControls from './pagination/PaginationControls.jsx'
+import {
+  decideVerificationInFirestore,
+  getVerificationsLoadErrorMessage,
+  subscribeVerifications,
+} from './verification/verificationService.js'
 
 function AdminVerification({ user, onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
@@ -21,26 +27,50 @@ function AdminVerification({ user, onLogout }) {
     handleConfirmLogout,
   } = useLogout(onLogout)
 
-  // DESIGN PHASE: local state only. Phase 2 replaces this with
-  // a verificationService.js Firestore subscription.
-  const [verifications, setVerifications] = useState(MOCK_VERIFICATIONS)
+  // REAL Firestore data — a live onSnapshot subscription over the
+  // `regular_user` collection (see verificationService.js). The table updates
+  // automatically as users submit face scans / IDs and as decisions land.
+  const [verifications, setVerifications] = useState([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedKey, setSelectedKey] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
+  const [retryCounter, setRetryCounter] = useState(0)
+  // Feedback for the last approve/reject decision (shown under the header).
+  const [decisionFeedback, setDecisionFeedback] = useState(null)
+  const [isDeciding, setIsDeciding] = useState(false)
 
-  // DESIGN PHASE: simulated fetch delay so the loading state mirrors the
-  // Reports page. Phase 2 replaces this with the real Firestore subscription.
+  // Live pending count for the sidebar badge (its own lightweight subscription).
+  const pendingVerificationCount = usePendingVerificationBadge()
+
+  // Table pagination over the filtered verification list.
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 900)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const refreshVerifications = () => {
     setIsLoading(true)
     setLoadError('')
-    setTimeout(() => setIsLoading(false), 900)
+
+    const unsubscribe = subscribeVerifications({
+      onVerifications: (mappedVerifications) => {
+        setVerifications(mappedVerifications)
+        setIsLoading(false)
+      },
+      onError: (error) => {
+        setLoadError(getVerificationsLoadErrorMessage(error))
+        setVerifications([])
+        setIsLoading(false)
+      },
+    })
+
+    return () => unsubscribe()
+  }, [retryCounter])
+
+  // Re-subscribe (fresh snapshot + loading state) — wired to the Refresh button.
+  const refreshVerifications = () => {
+    setDecisionFeedback(null)
+    setRetryCounter((current) => current + 1)
   }
 
   const summary = useMemo(() => {
@@ -67,26 +97,66 @@ function AdminVerification({ user, onLogout }) {
       return (
         item.fullName.toLowerCase().includes(query) ||
         item.email.toLowerCase().includes(query) ||
-        item.idType.toLowerCase().includes(query)
+        (item.idType || '').toLowerCase().includes(query)
       )
     })
   }, [verifications, search, statusFilter])
 
-  const selectedVerification = verifications.find((item) => item.key === selectedKey) || null
+  // Reset to the first page whenever the query, filter, or page size changes,
+  // and keep the page in range when filters shrink the list.
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, statusFilter, pageSize])
 
-  const handleDecision = (key, decision, rejectionReason = '') => {
-    setVerifications((previous) =>
-      previous.map((item) =>
-        item.key === key
-          ? {
-              ...item,
-              verificationStatus: decision === 'approve' ? 'verified' : 'rejected',
-              rejectionReason: decision === 'reject' ? rejectionReason : null,
-            }
-          : item,
-      ),
-    )
-    setSelectedKey(null)
+  const totalPageCount = Math.max(1, Math.ceil(filteredVerifications.length / pageSize))
+
+  useEffect(() => {
+    setCurrentPage((current) => Math.min(current, totalPageCount))
+  }, [totalPageCount])
+
+  const paginatedVerifications = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredVerifications.slice(start, start + pageSize)
+  }, [filteredVerifications, currentPage, pageSize])
+
+  const selectedVerification = verifications.find((item) => item.key === selectedKey) || null
+  const selectedQueueIndex = filteredVerifications.findIndex((item) => item.key === selectedKey)
+  const selectedPosition =
+    selectedQueueIndex >= 0 ? { index: selectedQueueIndex, total: filteredVerifications.length } : null
+
+  // Move through the review queue (Prev/Next buttons or arrow keys).
+  const navigateReview = (direction) => {
+    const nextIndex = selectedQueueIndex + direction
+    if (selectedQueueIndex < 0 || nextIndex < 0 || nextIndex >= filteredVerifications.length) {
+      return
+    }
+    setSelectedKey(filteredVerifications[nextIndex].key)
+  }
+
+  // REAL decision — writes verificationStatus / verifiedAt / rejectionReason
+  // plus an audit-trail entry (who decided, when, and the reason) to the
+  // user's `regular_user` document. The live subscription reflects the
+  // change in the table instantly; the modal closes on success.
+  const handleDecision = async (key, decision, rejectionReason = '') => {
+    setIsDeciding(true)
+    try {
+      const result = await decideVerificationInFirestore({
+        uid: key,
+        decision,
+        rejectionReason,
+        actor: { email: user?.email || '', name: user?.name || '' },
+      })
+
+      if (!result.ok) {
+        setDecisionFeedback({ type: 'error', message: result.error })
+        return
+      }
+
+      setDecisionFeedback({ type: 'success', message: result.message })
+      setSelectedKey(null)
+    } finally {
+      setIsDeciding(false)
+    }
   }
 
   return (
@@ -95,6 +165,7 @@ function AdminVerification({ user, onLogout }) {
         <div id="admin-verification-sidebar" className="admin-verification-sidebar-wrap">
           <AdminSidebar
             activeItem="verification"
+            badges={{ verification: pendingVerificationCount }}
             user={user}
             onLogout={confirmLogout}
             onClose={closeMobileNav}
@@ -123,6 +194,16 @@ function AdminVerification({ user, onLogout }) {
             </div>
           </header>
 
+          {decisionFeedback && (
+            <div
+              className={`admin-verification-notice${decisionFeedback.type === 'error' ? ' is-error' : ''}`}
+              role="status"
+            >
+              <strong>{decisionFeedback.type === 'error' ? 'Decision failed.' : 'Decision saved.'}</strong>{' '}
+              {decisionFeedback.message}
+            </div>
+          )}
+
           <VerificationSummary summary={summary} />
 
           <VerificationTable
@@ -130,11 +211,20 @@ function AdminVerification({ user, onLogout }) {
             onSearchChange={setSearch}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
-            filteredVerifications={filteredVerifications}
+            filteredVerifications={paginatedVerifications}
             onViewReview={setSelectedKey}
             isLoading={isLoading}
             loadError={loadError}
             onRefresh={refreshVerifications}
+          />
+
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPageCount}
+            totalItems={filteredVerifications.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => setPageSize(size)}
           />
         </section>
 
@@ -147,9 +237,13 @@ function AdminVerification({ user, onLogout }) {
 
         {selectedVerification && (
           <VerificationReviewModal
+            key={selectedVerification.key}
             verification={selectedVerification}
+            isDeciding={isDeciding}
+            position={selectedPosition}
             onClose={() => setSelectedKey(null)}
             onDecision={handleDecision}
+            onNavigate={selectedPosition ? navigateReview : null}
           />
         )}
       </div>

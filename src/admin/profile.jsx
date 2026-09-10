@@ -5,6 +5,7 @@ import useAdminProfile from './profile/useAdminProfile.jsx'
 import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
 import useLogout from './useLogout.js'
+import usePendingVerificationBadge from './verification/usePendingVerificationBadge.js'
 import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 import SuccessAlertModal from './SuccessAlertModal.jsx'
 import ConfirmPasswordChangeModal from './ConfirmPasswordChangeModal.jsx'
@@ -13,6 +14,8 @@ import AdminErrorState from './AdminErrorState.jsx'
 
 function AdminProfile({ user, onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
+  // Live pending verification count for the sidebar badge (same as the Verification page).
+  const pendingVerificationCount = usePendingVerificationBadge()
   const {
     isLogoutModalOpen,
     isSigningOut,
@@ -68,6 +71,7 @@ function AdminProfile({ user, onLogout }) {
         <div id="admin-profile-sidebar" className="admin-sidebar-wrap">
           <AdminSidebar
             activeItem="profile"
+            badges={{ verification: pendingVerificationCount }}
             user={user}
             onLogout={confirmLogout}
             onClose={closeMobileNav}

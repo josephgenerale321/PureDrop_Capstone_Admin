@@ -301,6 +301,25 @@
   color: #64201f;
 }
 
+/* Neutral liveness badge — the account has not uploaded a face scan yet, so
+   there is no liveness result to show (never render it as "Failed"). */
+.verification-liveness-pending {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+/* Rejection counter badge — amber normally, red once the user reaches the
+   3-rejection final-warning stage of the mobile flow. */
+.verification-rejections {
+  background: #fde6b1;
+  color: #6d4c06;
+}
+
+.verification-rejections.is-final {
+  background: #f8d7da;
+  color: #842029;
+}
+
 /* ===== Review modal ===== */
 .admin-verification-modal-layer {
   position: fixed;
@@ -409,6 +428,13 @@
   color: #0a386f;
   padding: 0.65rem 0.75rem;
   font-size: 0.9rem;
+}
+
+/* Error variant of the notice — used for failed approve/reject writes. */
+.admin-verification-notice.is-error {
+  border-color: #f1b0b0;
+  background: #fdeaea;
+  color: #8a1f1f;
 }
 
 .admin-verification-image {
@@ -566,3 +592,278 @@
     border-radius: 0.9rem 0.9rem 0 0;
   }
 }
+/* ===== Review queue navigation (modal) ===== */
+.admin-verification-queue-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: -0.25rem 0 0.9rem;
+}
+
+.admin-verification-queue-counter {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4b5f75;
+}
+
+.admin-verification-queue-nav {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.admin-verification-queue-nav .btn {
+  white-space: nowrap;
+}
+
+/* ===== Clickable (zoomable) image tiles ===== */
+.admin-verification-image-zoom-btn {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.admin-verification-image-zoom-btn:focus-visible {
+  outline: 2px solid #1f5da3;
+  outline-offset: 2px;
+}
+
+/* ===== Fullscreen image lightbox ===== */
+.admin-verification-lightbox-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.admin-verification-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(9, 14, 22, 0.88);
+  cursor: zoom-out;
+}
+
+.admin-verification-lightbox {
+  position: relative;
+  margin: 0;
+  max-width: min(920px, 100%);
+  display: grid;
+  gap: 0.6rem;
+}
+
+.admin-verification-lightbox-image {
+  max-width: 100%;
+  max-height: 78dvh;
+  object-fit: contain;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.admin-verification-lightbox-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.admin-verification-lightbox-counter {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.admin-verification-lightbox-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-verification-lightbox-close:hover,
+.admin-verification-lightbox-close:focus {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.admin-verification-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.admin-verification-lightbox-nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.admin-verification-lightbox-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.admin-verification-lightbox-prev {
+  left: 0.5rem;
+}
+
+.admin-verification-lightbox-next {
+  right: 0.5rem;
+}
+
+/* ===== Rejection reason preset chips ===== */
+.admin-verification-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-verification-preset-chip {
+  border: 1px solid #d3dde8;
+  background: #ffffff;
+  color: #24384d;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-verification-preset-chip:hover,
+.admin-verification-preset-chip:focus {
+  border-color: #1f5da3;
+  background: #eaf3fc;
+  color: #1f5da3;
+}
+
+.admin-verification-preset-chip.is-active {
+  background: #1f5da3;
+  border-color: #1f5da3;
+  color: #ffffff;
+}
+
+/* ===== Approve confirmation box ===== */
+.admin-verification-approve-box {
+  margin-bottom: 0.9rem;
+  border: 1px solid #9fd4b4;
+  border-radius: 0.6rem;
+  padding: 0.7rem;
+  background: #eefaf3;
+  color: #104624;
+  font-size: 0.9rem;
+}
+
+/* ===== Decision history (audit trail) ===== */
+.admin-verification-history {
+  margin-bottom: 0.9rem;
+  border: 1px solid #e6edf5;
+  border-radius: 0.6rem;
+  background: #fafcff;
+  padding: 0.7rem 0.8rem;
+}
+
+.admin-verification-history-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #24384d;
+}
+
+.admin-verification-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.admin-verification-history-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.86rem;
+  color: #4b5f75;
+}
+
+.admin-verification-history-action {
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.admin-verification-history-item.is-approved .admin-verification-history-action {
+  background: #bfe5cb;
+  color: #104624;
+}
+
+.admin-verification-history-item.is-rejected .admin-verification-history-action {
+  background: #f8d7da;
+  color: #842029;
+}
+
+/* ===== Aging chip on pending rows ===== */
+.admin-verification-age-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.4rem;
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #fde6b1;
+  color: #6d4c06;
+  white-space: nowrap;
+}
+
+.admin-verification-age-chip.is-stale {
+  background: #f8d7da;
+  color: #842029;
+}
+
+/* Breathing room between the table card and the pagination row. */
+.admin-verification-card + .admin-pagination-wrap {
+  margin-top: -0.25rem;
+}
+
+@media (max-width: 767.98px) {
+  .admin-verification-lightbox-layer {
+    padding: 0.75rem;
+  }
+
+  .admin-verification-lightbox-nav {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+}
+

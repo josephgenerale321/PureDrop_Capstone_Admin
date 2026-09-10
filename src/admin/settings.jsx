@@ -4,6 +4,7 @@ import { useState } from 'react'
 import AdminSidebar from './sidebar.jsx'
 import useAdminMobileNav from './useAdminMobileNav.js'
 import useLogout from './useLogout.js'
+import usePendingVerificationBadge from './verification/usePendingVerificationBadge.js'
 import LogoutConfirmModal from './LogoutConfirmModal.jsx'
 import GeneralConfigurationCard from './settings/GeneralConfigurationCard.jsx'
 import NotificationsCard from './settings/NotificationsCard.jsx'
@@ -17,6 +18,8 @@ import ConfirmActionModal from './settings/ConfirmActionModal.jsx'
 
 function AdminSettings({ user, onLogout }) {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useAdminMobileNav()
+  // Live pending verification count for the sidebar badge (same as the Verification page).
+  const pendingVerificationCount = usePendingVerificationBadge()
   const {
     isLogoutModalOpen,
     isSigningOut,
@@ -62,6 +65,7 @@ function AdminSettings({ user, onLogout }) {
         <div id="admin-settings-sidebar" className="admin-settings-sidebar-wrap">
           <AdminSidebar
             activeItem="settings"
+            badges={{ verification: pendingVerificationCount }}
             user={user}
             onLogout={confirmLogout}
             onClose={closeMobileNav}

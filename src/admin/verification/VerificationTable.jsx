@@ -82,6 +82,7 @@ function VerificationTable({
               <th>Applicant</th>
               <th>ID Type</th>
               <th>Liveness</th>
+              <th>Rejections</th>
               <th>Submitted</th>
               <th>Status</th>
               <th className="text-end">Action</th>
@@ -90,7 +91,7 @@ function VerificationTable({
           <tbody>
             {filteredVerifications.length === 0 ? (
               <tr>
-                <td colSpan={6} className="admin-verification-empty">
+                <td colSpan={7} className="admin-verification-empty">
                   No verification requests found.
                 </td>
               </tr>
@@ -110,16 +111,54 @@ function VerificationTable({
                   </td>
                   <td>{item.idType || <span className="admin-verification-not-submitted">—</span>}</td>
                   <td>
-                    <span
-                      className={`badge-pill ${
-                        item.livenessPassed ? 'verification-liveness-passed' : 'verification-liveness-failed'
-                      }`}
-                    >
-                      {item.livenessPassed ? '✓ Passed' : '✕ Failed'}
-                    </span>
+                    {item.livenessPassed === null ? (
+                      <span className="badge-pill verification-liveness-pending">
+                        Not submitted
+                      </span>
+                    ) : (
+                      <span
+                        className={`badge-pill ${
+                          item.livenessPassed ? 'verification-liveness-passed' : 'verification-liveness-failed'
+                        }`}
+                      >
+                        {item.livenessPassed ? '✓ Passed' : '✕ Failed'}
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {item.rejectionCount > 0 ? (
+                      <span
+                        className={`badge-pill verification-rejections${item.rejectionCount >= 3 ? ' is-final' : ''}`}
+                        title={
+                          item.rejectionCount >= 3
+                            ? 'Final warning — the user has been rejected 3 times.'
+                            : 'Number of times this verification was rejected.'
+                        }
+                      >
+                        {item.rejectionCount}
+                      </span>
+                    ) : (
+                      <span className="admin-verification-not-submitted">0</span>
+                    )}
                   </td>
                   <td className="admin-verification-date">
-                    {item.submittedAt || (
+                    {item.submittedAt ? (
+                      <>
+                        {item.submittedAt}
+                        {item.verificationStatus === 'pending' && item.waitingDays >= 1 && (
+                          <span
+                            className={`admin-verification-age-chip${item.waitingDays >= 3 ? ' is-stale' : ''}`}
+                            title={
+                              item.waitingDays >= 3
+                                ? `Waiting ${item.waitingDays} days — review this request soon.`
+                                : `Waiting ${item.waitingDays} ${item.waitingDays === 1 ? 'day' : 'days'}.`
+                            }
+                          >
+                            {item.waitingDays}d
+                          </span>
+                        )}
+                      </>
+                    ) : (
                       <span className="admin-verification-not-submitted">Not submitted yet</span>
                     )}
                   </td>
