@@ -286,9 +286,26 @@
   color: #104624;
 }
 
+/* Mobile-parity status icons — mirrors the green check / red X the user sees
+   on the verification hub in the app: an approved request gets a check, a
+   rejected one a cross, so reviewers can scan the table at a glance. The
+   badge-pill is inline-flex, so the glyph gets a small margin instead of a
+   trailing space. */
+.verification-status-verified::before {
+  content: "✓";
+  margin-right: 0.35rem;
+  font-weight: 700;
+}
+
 .verification-status-rejected {
   background: #f8d7da;
   color: #842029;
+}
+
+.verification-status-rejected::before {
+  content: "✕";
+  margin-right: 0.35rem;
+  font-weight: 700;
 }
 
 .verification-liveness-passed {

@@ -137,13 +137,14 @@ function AdminVerification({ user, onLogout }) {
   // plus an audit-trail entry (who decided, when, and the reason) to the
   // user's `regular_user` document. The live subscription reflects the
   // change in the table instantly; the modal closes on success.
-  const handleDecision = async (key, decision, rejectionReason = '') => {
+  const handleDecision = async (key, decision, rejectionReason = '', rejectionTarget = 'both') => {
     setIsDeciding(true)
     try {
       const result = await decideVerificationInFirestore({
         uid: key,
         decision,
         rejectionReason,
+        rejectionTarget,
         actor: { email: user?.email || '', name: user?.name || '' },
       })
 

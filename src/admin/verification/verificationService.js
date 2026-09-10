@@ -82,12 +82,28 @@ const nonEmptyString = (value) => {
   return typeof value === 'string' && value.length > 0 ? value : null
 }
 
+// Which part of the submission an admin rejection applies to — chosen in the
+// review modal ("Valid ID" / "Face Scan" / "Both") and stored on the user's
+// document so the mobile hub can mark only the rejected part with its red ✕.
+const REJECTION_TARGETS = new Set(['valid_id', 'face_scan', 'both'])
+
+// Human-readable labels for the stored target values.
+const REJECTION_TARGET_LABELS = {
+  valid_id: 'Valid ID',
+  face_scan: 'Face Scan',
+  both: 'Valid ID + Face Scan',
+}
+
+export const rejectionTargetLabel = (target) =>
+  REJECTION_TARGETS.has(target) ? REJECTION_TARGET_LABELS[target] : null
+
 // Normalizes one decision-audit entry written by decideVerificationInFirestore.
 const mapHistoryEntry = (entry) => {
   const atDate = toDateValue(entry?.at)
   return {
     action: entry?.action === 'approved' ? 'approved' : 'rejected',
     reason: nonEmptyString(entry?.reason),
+    target: nonEmptyString(entry?.target),
     adminEmail: nonEmptyString(entry?.adminEmail) || 'Unknown admin',
     at: atDate ? formatTimestamp(atDate) : 'N/A',
     atMs: atDate ? atDate.getTime() : 0,
@@ -132,6 +148,9 @@ const mapVerificationDoc = (docSnap) => {
       loginSelfie: null,
     },
     rejectionReason: nonEmptyString(data.rejectionReason),
+    rejectionTarget: REJECTION_TARGETS.has(data.rejectionTarget)
+      ? data.rejectionTarget
+      : null,
     rejectionCount: Number(data.verificationRejectionCount) || 0,
     // Decision audit trail (newest first) — written by the admin approve /
     // reject actions below. Older documents may not have it yet.
@@ -208,7 +227,7 @@ export const getVerificationsLoadErrorMessage = (error) => {
  * The live subscription updates the table automatically — no local state
  * mutation needed.
  */
-export const decideVerificationInFirestore = async ({ uid, decision, rejectionReason = '', actor = null }) => {
+export const decideVerificationInFirestore = async ({ uid, decision, rejectionReason = '', rejectionTarget = '', actor = null }) => {
   if (!uid) {
     return {
       ok: false,
@@ -231,12 +250,19 @@ export const decideVerificationInFirestore = async ({ uid, decision, rejectionRe
     }
   }
 
+  // Which submission part this rejection applies to — defaults to "both" so
+  // legacy callers and older rows behave exactly as before.
+  const normalizedTarget = REJECTION_TARGETS.has(rejectionTarget)
+    ? rejectionTarget
+    : 'both'
+
   // Audit entry for this decision. Uses a client-side Timestamp because
   // serverTimestamp() sentinels cannot be nested inside array elements; the
   // document-level updatedAt / verifiedAt fields remain server-stamped.
   const historyEntry = {
     action: decision === 'approve' ? 'approved' : 'rejected',
     reason: decision === 'reject' ? trimmedReason : '',
+    target: decision === 'reject' ? normalizedTarget : '',
     adminEmail: nonEmptyString(actor?.email) || 'unknown-admin',
     at: Timestamp.fromDate(new Date()),
   }
@@ -247,6 +273,7 @@ export const decideVerificationInFirestore = async ({ uid, decision, rejectionRe
           verificationStatus: 'verified',
           verifiedAt: serverTimestamp(),
           rejectionReason: null,
+          rejectionTarget: null,
           // Clean slate: a newly approved account starts counting
           // rejections from zero again.
           verificationRejectionCount: 0,
@@ -256,6 +283,7 @@ export const decideVerificationInFirestore = async ({ uid, decision, rejectionRe
       : {
           verificationStatus: 'rejected',
           rejectionReason: trimmedReason,
+          rejectionTarget: normalizedTarget,
           verifiedAt: null,
           // Bump the rejection counter — the mobile app compares this
           // against rejectedNoticeSeenCount to decide whether the

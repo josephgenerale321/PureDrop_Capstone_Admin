@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import VerificationImageLightbox from './VerificationImageLightbox.jsx'
+import { rejectionTargetLabel } from './verificationService.js'
 
 // Quick-pick reasons for the rejection flow — clicking a chip fills the
 // (still editable) reason textarea so feedback stays consistent across admins.
@@ -22,19 +23,29 @@ function VerificationReviewModal({
   // Approve and Reject both reveal a confirmation step before writing to
   // Firestore, so a stray click can never decide an account. While a decision
   // is being written, the action buttons are disabled.
-  const [isRejecting, setIsRejecting] = useState(false)
-  const [isConfirmingApprove, setIsConfirmingApprove] = useState(false)
-  const [rejectionReason, setRejectionReason] = useState('')
-  const [zoomedImageIndex, setZoomedImageIndex] = useState(null)
-
+  //
   // Awaiting-ID accounts only have the enrollment selfie. The full review
   // (ID front/back + login selfie) unlocks after the user submits their ID
   // from the login gate. `submittedAt` guards against a rejected account
-  // that never submitted an ID.
+  // that never submitted an ID. Computed before the state initializers so
+  // the rejection-target default can key off it.
   const hasSubmittedId =
     Boolean(verification) &&
     verification.verificationStatus !== 'awaiting_id' &&
     Boolean(verification.submittedAt)
+
+  const [isRejecting, setIsRejecting] = useState(false)
+  const [isConfirmingApprove, setIsConfirmingApprove] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState('')
+  // Which part this rejection applies to ("valid_id" / "face_scan" / "both")
+  // — stored on the user's document so the mobile hub marks only the
+  // rejected part with its red ✕. An account without a submitted ID can
+  // only have its face scan rejected, so the Valid ID / Both options are
+  // hidden there.
+  const [rejectionTarget, setRejectionTarget] = useState(
+    hasSubmittedId ? 'both' : 'face_scan',
+  )
+  const [zoomedImageIndex, setZoomedImageIndex] = useState(null)
 
   // Flat list of every submitted image, in review order (ID front, ID back,
   // enrollment selfie, login selfie) — drives the zoom lightbox, where
@@ -119,7 +130,12 @@ function VerificationReviewModal({
   }
 
   const handleConfirmReject = () => {
-    onDecision(verification.key, 'reject', rejectionReason.trim() || 'Verification rejected by admin.')
+    onDecision(
+      verification.key,
+      'reject',
+      rejectionReason.trim() || 'Verification rejected by admin.',
+      rejectionTarget,
+    )
   }
 
   const handleConfirmApprove = () => {
@@ -322,7 +338,9 @@ function VerificationReviewModal({
                     {entry.action === 'approved' ? 'Approved' : 'Rejected'}
                   </span>
                   <span className="admin-verification-history-detail">
-                    {entry.reason ? `${entry.reason} — ` : ''}
+                    {entry.reason ? `${entry.reason}` : ''}
+                    {entry.target ? ` (${rejectionTargetLabel(entry.target)})` : ''}
+                    {entry.reason || entry.target ? ' — ' : ''}
                     by {entry.adminEmail} · {entry.at}
                   </span>
                 </li>
@@ -341,12 +359,56 @@ function VerificationReviewModal({
 
         {verification.verificationStatus === 'rejected' && (
           <p className="admin-verification-existing-rejection">
-            <strong>Rejected:</strong> {verification.rejectionReason}
+            <strong>
+              Rejected
+              {verification.rejectionTarget
+                ? ` (${rejectionTargetLabel(verification.rejectionTarget)})`
+                : ''}
+              :
+            </strong>{' '}
+            {verification.rejectionReason}
           </p>
         )}
 
         {isRejecting && (
           <div className="admin-verification-reject-box">
+            {/* Rejection target — the admin picks which submission part this
+                rejection applies to; the mobile hub uses it to mark only the
+                rejected part with its red ✕. */}
+            <span className="admin-verification-reject-label">
+              What are you rejecting?
+            </span>
+            <div className="admin-verification-preset-row" role="group" aria-label="Rejection target">
+              {hasSubmittedId && (
+                <button
+                  type="button"
+                  className={`admin-verification-preset-chip${rejectionTarget === 'valid_id' ? ' is-active' : ''}`}
+                  onClick={() => setRejectionTarget('valid_id')}
+                  title="Reject the submitted Valid ID only"
+                >
+                  Valid ID
+                </button>
+              )}
+              <button
+                type="button"
+                className={`admin-verification-preset-chip${rejectionTarget === 'face_scan' ? ' is-active' : ''}`}
+                onClick={() => setRejectionTarget('face_scan')}
+                title="Reject the face scan only"
+              >
+                Face Scan
+              </button>
+              {hasSubmittedId && (
+                <button
+                  type="button"
+                  className={`admin-verification-preset-chip${rejectionTarget === 'both' ? ' is-active' : ''}`}
+                  onClick={() => setRejectionTarget('both')}
+                  title="Reject both the Valid ID and the face scan"
+                >
+                  Both
+                </button>
+              )}
+            </div>
+
             <label className="admin-verification-reject-label" htmlFor="admin-verification-reject-reason">
               Rejection reason (shown to the user)
             </label>
