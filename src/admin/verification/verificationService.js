@@ -38,8 +38,9 @@ const DATE_TIME_FORMAT_OPTIONS = {
 const VERIFICATION_STATUSES = new Set(['awaiting_id', 'pending', 'verified', 'rejected'])
 
 // Audit-trail cap: the user document keeps at most this many decision entries
-// so repeated re-submissions cannot grow the document unbounded.
-const VERIFICATION_HISTORY_LIMIT = 20
+// so repeated re-submissions cannot grow the document unbounded. 100 entries
+// at ~200 bytes each is ~20 KB — safely under the 1 MiB Firestore doc limit.
+const VERIFICATION_HISTORY_LIMIT = 100
 
 const DAY_MS = 24 * 60 * 60 * 1000
 

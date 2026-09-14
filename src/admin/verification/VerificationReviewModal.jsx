@@ -12,6 +12,12 @@ const REJECTION_PRESETS = [
   { label: 'Possible tampering', reason: 'The submitted ID appears to be altered or tampered with. Please resubmit a genuine document.' },
 ]
 
+// Paged decision-history: show this many newest entries at first, then reveal
+// 10 more per "Show more" click. Newest-first is preserved, so the visible
+// slice is always the most recent decisions. Paging (not a one-shot expand)
+// keeps the modal short even when the trail grows to 30 / 40 / 100+ entries.
+const DECISION_HISTORY_PAGE_SIZE = 10
+
 function VerificationReviewModal({
   verification,
   isDeciding = false,
@@ -46,6 +52,12 @@ function VerificationReviewModal({
     hasSubmittedId ? 'both' : 'face_scan',
   )
   const [zoomedImageIndex, setZoomedImageIndex] = useState(null)
+  // Collapsed by default: show the 10 most recent decisions, then reveal 10
+  // more per "Show more" click. A count (not a boolean) so 30 / 40 / 100+
+  // entries page out instead of dumping everything at once. No reset effect
+  // needed — the parent remounts this modal with a `key` per request, so
+  // each account starts collapsed again.
+  const [visibleHistoryCount, setVisibleHistoryCount] = useState(DECISION_HISTORY_PAGE_SIZE)
 
   // Flat list of every submitted image, in review order (ID front, ID back,
   // enrollment selfie, login selfie) — drives the zoom lightbox, where
@@ -141,6 +153,18 @@ function VerificationReviewModal({
   const handleConfirmApprove = () => {
     onDecision(verification.key, 'approve')
   }
+
+  // Decision-history paging (newest-first is preserved — the slice always
+  // keeps the most recent entries; each "Show more" reveals 10 older ones).
+  // Scales to any size: 13 → 10 + 3, 30 → 10 + 10 + 10, 40 → 10 × 4, etc.
+  const historyEntryCount = verification.history?.length || 0
+  const visibleHistory = (verification.history || []).slice(
+    0,
+    Math.max(visibleHistoryCount, DECISION_HISTORY_PAGE_SIZE),
+  )
+  const hiddenHistoryCount = Math.max(0, historyEntryCount - visibleHistory.length)
+  const hasLongHistory = historyEntryCount > DECISION_HISTORY_PAGE_SIZE
+  const isHistoryFullyExpanded = hiddenHistoryCount === 0
 
   // Lightbox indices are resolved from the flat image list so each tile opens
   // the right image regardless of which payloads the account submitted.
@@ -327,9 +351,16 @@ function VerificationReviewModal({
 
         {verification.history && verification.history.length > 0 && (
           <section className="admin-verification-history" aria-label="Decision history">
-            <h3 className="admin-verification-history-title">Decision History</h3>
+            <h3 className="admin-verification-history-title">
+              Decision History
+              {hasLongHistory && !isHistoryFullyExpanded && (
+                <span className="admin-verification-history-count">
+                  {' '}· Showing {visibleHistory.length} of {historyEntryCount}
+                </span>
+              )}
+            </h3>
             <ul className="admin-verification-history-list">
-              {verification.history.map((entry, index) => (
+              {visibleHistory.map((entry, index) => (
                 <li
                   key={`${entry.atMs}-${index}`}
                   className={`admin-verification-history-item is-${entry.action}`}
@@ -346,6 +377,28 @@ function VerificationReviewModal({
                 </li>
               ))}
             </ul>
+            {hiddenHistoryCount > 0 && (
+              <button
+                type="button"
+                className="admin-verification-history-toggle"
+                aria-expanded={false}
+                onClick={() =>
+                  setVisibleHistoryCount((count) => count + DECISION_HISTORY_PAGE_SIZE)
+                }
+              >
+                {`Show more (${Math.min(hiddenHistoryCount, DECISION_HISTORY_PAGE_SIZE)} of ${hiddenHistoryCount} more)`}
+              </button>
+            )}
+            {hasLongHistory && isHistoryFullyExpanded && visibleHistory.length > DECISION_HISTORY_PAGE_SIZE && (
+              <button
+                type="button"
+                className="admin-verification-history-toggle"
+                aria-expanded={true}
+                onClick={() => setVisibleHistoryCount(DECISION_HISTORY_PAGE_SIZE)}
+              >
+                Show less
+              </button>
+            )}
           </section>
         )}
 
