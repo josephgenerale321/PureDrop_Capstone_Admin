@@ -37,7 +37,9 @@ function DeleteUserConfirmModal({
         {userEmail && <p className="admin-users-delete-email">{userEmail}</p>}
 
         <p className="admin-users-delete-message">
-          This will permanently remove the user's profile, report documents, and Firebase login. This action cannot be undone.
+          This will permanently remove the user's profile, report documents, Firebase login, and their
+          uploaded identity-verification photos (face selfie and Valid ID images). This action cannot be
+          undone.
         </p>
 
         {error && <p className="admin-users-delete-error">{error}</p>}

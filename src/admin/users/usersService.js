@@ -1,9 +1,9 @@
 import { deleteApp, initializeApp } from 'firebase/app'
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth'
-import { collection, deleteDoc, doc, getDocs, getFirestore, limit, onSnapshot, orderBy, query, runTransaction, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, limit, onSnapshot, orderBy, query, runTransaction, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { auth, db, functionsClient } from '../../firebase.js'
-import { isSupabaseConfigured, supabase } from '../../supabase.js'
+import { VERIFICATION_BUCKET, isSupabaseConfigured, supabase } from '../../supabase.js'
 import { resolvePresenceStatus } from './presenceStatus.js'
 
 const USERS_COLLECTION = 'regular_user'
@@ -791,6 +791,159 @@ export const createUserAccountInFirestore = async (payload) => {
   }
 }
 
+// Identity-verification attachments (face selfie + Valid ID photos) live in the
+// public Supabase `verification_id` bucket, NOT in Firestore. The mobile app
+// writes them under `verification/{userId}/` using the Firebase Auth uid
+// (components/verification/faceselfie_comp/backend/verificationUpload.ts and
+// components/verification/validid/backend/validIdBackend.ts):
+//
+//   verification/{uid}/selfie.jpg
+//   verification/{uid}/valid-id-front.jpg
+//   verification/{uid}/valid-id-back.jpg
+//   verification/{uid}/valid-id-passport.jpg
+//
+// Deleting the Firestore documents alone therefore orphans a face photo and an
+// ID copy of a deleted person's biometric data in a PUBLIC bucket — and leaves a
+// working URL that still resolves. These must be removed too.
+//
+// The folder is keyed by the AUTH UID, but the admin table is keyed by the
+// sequential public id, so both are collected and the union is removed. Anything
+// already gone is not an error: `remove()` is idempotent for missing objects.
+const VERIFICATION_FOLDER_ROOT = 'verification'
+const VERIFICATION_PHOTO_FILENAMES = [
+  'selfie.jpg',
+  'valid-id-front.jpg',
+  'valid-id-back.jpg',
+  'valid-id-passport.jpg',
+]
+
+const normalizeStoragePath = (value) => String(value || '').trim().replace(/^\/+|\/+$/g, '')
+
+const listVerificationPhotoPaths = async (folder) => {
+  const { data, error } = await supabase.storage
+    .from(VERIFICATION_BUCKET)
+    .list(folder, { limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } })
+  if (error) {
+    throw error
+  }
+  return (data || [])
+    .filter((item) => item && item.id !== null)
+    // Only ever delete files this feature is known to write. Guards against
+    // sweeping up an unrelated object that happens to share the folder.
+    .filter((item) => VERIFICATION_PHOTO_FILENAMES.includes(item.name))
+    .map((item) => `${folder}/${item.name}`)
+}
+
+// Collects the uid-keyed folder prefixes to sweep for one deleted account. The
+// `uid` field of the user document is authoritative when present; the sequential
+// public id and the document id are added as fallbacks so accounts created
+// before the storage path was keyed by uid are still reachable.
+const collectVerificationFolderKeys = ({ id, targetUser, docData }) => {
+  const keys = new Set()
+  const add = (value) => {
+    const normalized = normalizeStoragePath(value)
+    if (normalized) {
+      keys.add(normalized)
+    }
+  }
+
+  // The Auth uid recorded on the document is the folder key the mobile app used.
+  add(docData?.uid)
+  add(targetUser?.uid)
+  // Legacy fallbacks: accounts whose folder predates the uid layout, or whose
+  // document is keyed by the sequential public id.
+  add(targetUser?.id)
+  add(id)
+  add(targetUser?.docId)
+
+  return [...keys]
+}
+
+// Reads the authoritative Firestore document for the account about to be
+// deleted. The in-memory `users` rows come from mapUserDoc(), which does NOT
+// carry faceScanPath / validId*Path, so the recorded storage paths have to be
+// read straight from Firestore. Resolves to the first document that exists,
+// searching the same candidates as deleteUserFirestoreData.
+const readUserDocForCleanup = async ({ id, targetUser }) => {
+  const docIds = []
+  const addDocId = (value) => {
+    if (typeof value === 'string' && value.trim() && !docIds.includes(value.trim())) {
+      docIds.push(value.trim())
+    }
+  }
+
+  addDocId(targetUser?.docId)
+  addDocId(id)
+  addDocId(targetUser?.uid)
+
+  for (const docId of docIds) {
+    try {
+      const userDocSnap = await getDoc(doc(db, USERS_COLLECTION, docId))
+      if (userDocSnap.exists()) {
+        return { docId, data: userDocSnap.data() || {} }
+      }
+    } catch {
+      // Fall through to the next candidate; storage cleanup is best-effort.
+    }
+  }
+
+  return null
+}
+
+const removeVerificationAttachmentsFromSupabase = async ({ id, targetUser, userDoc }) => {
+  if (!isSupabaseConfigured || !supabase) {
+    // Not a blocker: the profile, reports and Firebase login are still deleted.
+    return { ok: true, removed: 0, warning: 'Supabase is not configured, so identity-verification photos (face selfie / Valid ID) were NOT deleted from storage.' }
+  }
+
+  const docData = userDoc?.data || {}
+
+  const folderKeys = collectVerificationFolderKeys({
+    id,
+    targetUser,
+    docData,
+  })
+  if (!folderKeys.length) {
+    return { ok: true, removed: 0 }
+  }
+
+  // Paths recorded on the document win: they are the exact objects uploaded for
+  // this account, and they catch any upload written before the uid folder layout.
+  const recordedPaths = [
+    docData.faceScanPath,
+    docData.validIdFrontPath,
+    docData.validIdBackPath,
+  ]
+    .map(normalizeStoragePath)
+    .filter((path) => path && path.startsWith(`${VERIFICATION_FOLDER_ROOT}/`))
+
+  const listedPaths = []
+  for (const folder of folderKeys) {
+    const prefix = `${VERIFICATION_FOLDER_ROOT}/${folder}`
+    try {
+      listedPaths.push(...(await listVerificationPhotoPaths(prefix)))
+    } catch {
+      // Listing is a best-effort sweep for orphans; the recorded paths above
+      // still guarantee the known attachments are removed.
+    }
+  }
+
+  const uniquePaths = [...new Set([...recordedPaths, ...listedPaths])]
+  if (!uniquePaths.length) {
+    return { ok: true, removed: 0 }
+  }
+
+  const { error } = await supabase.storage.from(VERIFICATION_BUCKET).remove(uniquePaths)
+  if (error) {
+    return {
+      ok: false,
+      error: 'Unable to delete the identity-verification photos (face selfie / Valid ID) from Supabase storage. The user documents were not deleted — please try again.',
+    }
+  }
+
+  return { ok: true, removed: uniquePaths.length }
+}
+
 const deleteUserFirestoreData = async ({ id, users }) => {
   const targetUser = users.find((user) => user.id === id)
   const userDocRefsById = new Map()
@@ -838,6 +991,27 @@ export const deleteUserAccountInFirestore = async ({ id, users }) => {
     }
   }
 
+  const targetUser = users.find((user) => user.id === id)
+
+  // Delete the identity-verification photos FIRST. The Firestore document is the
+  // only record of where they live, so once it is gone a retry can no longer find
+  // the objects — and a public-bucket face photo + ID copy of a deleted person
+  // would survive with a still-working URL. If this step fails we abort before
+  // touching Firestore, so the account stays intact and the admin can retry.
+  const userDocForCleanup = await readUserDocForCleanup({ id, targetUser })
+  const attachmentsResult = await removeVerificationAttachmentsFromSupabase({
+    id,
+    targetUser,
+    userDoc: userDocForCleanup,
+  })
+
+  if (!attachmentsResult.ok) {
+    return {
+      ok: false,
+      error: attachmentsResult.error,
+    }
+  }
+
   try {
     await deleteUserFirestoreData({ id, users })
   } catch (error) {
@@ -857,6 +1031,23 @@ export const deleteUserAccountInFirestore = async ({ id, users }) => {
 
   try {
     await deleteRegularUserAccountCallable({ uid: id })
+
+    // Report the storage outcome honestly rather than claiming a clean delete
+    // when the biometric photos were left behind (e.g. Supabase env missing).
+    if (attachmentsResult.warning) {
+      return {
+        ok: true,
+        message: attachmentsResult.warning,
+      }
+    }
+
+    if (attachmentsResult.removed > 0) {
+      return {
+        ok: true,
+        message: `User account, Firebase login and ${attachmentsResult.removed} verification photo${attachmentsResult.removed === 1 ? '' : 's'} deleted successfully.`,
+      }
+    }
+
     return {
       ok: true,
       message: 'User account and Firebase login deleted successfully.',
