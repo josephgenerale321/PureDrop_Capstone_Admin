@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import AddressSelect from './AddressSelect.jsx'
+import AddressSelectBlbn from './AddressSelectBlbn.jsx'
 
 function UserFormModal({
   mode,
@@ -42,6 +44,15 @@ function UserFormModal({
   const submitLabel = isCreateMode ? 'Create User' : 'Save Changes'
   const submittingLabel = isCreateMode ? 'Creating...' : 'Saving...'
   const isSubmitDisabled = isCreateMode ? Boolean(isSubmitting) : !userId || Boolean(isSubmitting) || !isDirty
+
+  const detectCity = (address) => {
+    if (String(address || '').toLowerCase().includes('balamban')) {
+      return 'Balamban'
+    }
+    return 'Toledo'
+  }
+
+  const [addressCity, setAddressCity] = useState(() => detectCity(form.address))
 
   const getFieldError = (field) => {
     if (!validatedFields.has(field)) {
@@ -262,16 +273,43 @@ function UserFormModal({
             <label className="admin-users-edit-label" htmlFor={`${idPrefix}-address`}>
               Address
             </label>
-            <AddressSelect
-              id={`${idPrefix}-address`}
-              value={form.address}
-              onChange={(value) => onChangeField('address', value)}
-              onBlur={() => onFieldBlur && onFieldBlur('address')}
-              hasError={Boolean(getFieldError('address'))}
-              placeholder={isCreateMode ? 'Select barangay (optional)' : 'Select barangay (Toledo City only)'}
-            />
+            <div className="btn-group btn-group-sm mb-2" role="group" aria-label="Select city">
+              <button
+                type="button"
+                className={`btn ${addressCity === 'Toledo' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setAddressCity('Toledo')}
+              >
+                Toledo City
+              </button>
+              <button
+                type="button"
+                className={`btn ${addressCity === 'Balamban' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setAddressCity('Balamban')}
+              >
+                Balamban, Cebu
+              </button>
+            </div>
+            {addressCity === 'Balamban' ? (
+              <AddressSelectBlbn
+                id={`${idPrefix}-address`}
+                value={form.address}
+                onChange={(value) => onChangeField('address', value)}
+                onBlur={() => onFieldBlur && onFieldBlur('address')}
+                hasError={Boolean(getFieldError('address'))}
+                placeholder={isCreateMode ? 'Select barangay (optional)' : 'Select barangay in Balamban, Cebu'}
+              />
+            ) : (
+              <AddressSelect
+                id={`${idPrefix}-address`}
+                value={form.address}
+                onChange={(value) => onChangeField('address', value)}
+                onBlur={() => onFieldBlur && onFieldBlur('address')}
+                hasError={Boolean(getFieldError('address'))}
+                placeholder={isCreateMode ? 'Select barangay (optional)' : 'Select barangay in Toledo City'}
+              />
+            )}
             {renderFieldError('address')}
-            {isCreateMode && <small className="admin-users-field-note">If missing, this app automatically appends ", Toledo City".</small>}
+            {isCreateMode && <small className="admin-users-field-note">If missing, this app automatically appends &quot;, Toledo City&quot; or &quot;, Balamban, Cebu&quot;.</small>}
           </div>
 
           <div className="admin-users-edit-field">

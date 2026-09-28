@@ -1,5 +1,6 @@
 import { collection, doc, getDoc, increment, onSnapshot, serverTimestamp, Timestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../../firebase.js'
+import { isSupabaseConfigured, supabase } from '../../supabase.js'
 
 // REAL Firestore-backed verification service.
 //
@@ -97,6 +98,50 @@ const REJECTION_TARGET_LABELS = {
 
 export const rejectionTargetLabel = (target) =>
   REJECTION_TARGETS.has(target) ? REJECTION_TARGET_LABELS[target] : null
+
+/**
+ * Sends an Expo push notification via the Supabase `send-report-push` Edge
+ * Function after the admin approves / rejects an identity verification.
+ * Best-effort and non-blocking: failures are swallowed and only logged to
+ * the console. Mirrors fireReportStatusPush in reportsService.js — the edge
+ * function routes `kind: 'verification'` to the verified / rejected payload
+ * on the same `report-updates` Android channel (no app rebuild needed).
+ */
+const fireVerificationStatusPush = ({ uid, decision, rejectionTarget = '', wasReapproved = false }) => {
+  const normalizedUid = typeof uid === 'string' ? uid.trim() : ''
+  const verificationStatus = decision === 'approve' ? 'verified' : decision === 'reject' ? 'rejected' : ''
+  const normalizedTarget = REJECTION_TARGETS.has(rejectionTarget) ? rejectionTarget : 'both'
+
+  if (!normalizedUid || !verificationStatus) {
+    return
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    console.warn('Verification push skipped: Supabase is not configured in the admin dashboard.')
+    return
+  }
+
+  supabase.functions
+    .invoke('send-report-push', {
+      body: {
+        userId: normalizedUid,
+        kind: 'verification',
+        verificationStatus,
+        rejectionTarget: normalizedTarget,
+        // Explicit re-approval marker: the edge function swaps the approved
+        // wording to "verified again / welcome back" when this is true.
+        wasReapproved: wasReapproved === true,
+      },
+    })
+    .then(({ error }) => {
+      if (error) {
+        console.warn('Verification push notification skipped:', error.message || error)
+      }
+    })
+    .catch((error) => {
+      console.warn('Verification push notification skipped:', error instanceof Error ? error.message : String(error))
+    })
+}
 
 // Normalizes one decision-audit entry written by decideVerificationInFirestore.
 const mapHistoryEntry = (entry) => {
@@ -286,6 +331,8 @@ export const decideVerificationInFirestore = async ({ uid, decision, rejectionRe
           rejectionReason: trimmedReason,
           rejectionTarget: normalizedTarget,
           verifiedAt: null,
+          // Clear the re-approval marker — the next approve recomputes it.
+          wasReapproved: false,
           // Bump the rejection counter — the mobile app compares this
           // against rejectedNoticeSeenCount to decide whether the
           // rejection notice screen should pop up once more (with the
@@ -299,12 +346,47 @@ export const decideVerificationInFirestore = async ({ uid, decision, rejectionRe
 
     // Cap the audit trail to the most recent entries before writing.
     const snapshot = await getDoc(docRef)
-    const existingHistory = Array.isArray(snapshot.data()?.verificationHistory)
-      ? snapshot.data().verificationHistory
+    const previousData = snapshot.data() || {}
+    const existingHistory = Array.isArray(previousData?.verificationHistory)
+      ? previousData.verificationHistory
       : []
     const verificationHistory = [...existingHistory, historyEntry].slice(-VERIFICATION_HISTORY_LIMIT)
 
-    await updateDoc(docRef, { ...updates, verificationHistory })
+    // Explicit re-approval marker — derived from the snapshot above, so it
+    // costs ZERO extra reads. The mobile app (notif_func.tsx /
+    // verificationPushSync.tsx) and both push senders use it to swap the
+    // approved wording to "verified again / welcome back" instead of the
+    // first-approval "Welcome to PureDrop!" text.
+    //
+    // `reapprovalCycle` is a persisted, monotonically increasing counter so
+    // EVERY re-approval stays distinct: the approve below resets
+    // verificationRejectionCount to 0, so consecutive re-approvals would
+    // otherwise produce the identical mobile seenKey (status:count:target) and
+    // the later "verified again" notice would be suppressed as "already seen".
+    const previousRejectionCount = Number(previousData?.verificationRejectionCount) || 0
+    const wasPreviouslyRejected =
+      previousRejectionCount > 0 ||
+      existingHistory.some((entry) => entry?.action === 'rejected')
+    const wasReapproved = decision === 'approve' && wasPreviouslyRejected
+    const previousReapprovalCycle = Number(previousData?.reapprovalCycle) || 0
+    const reapprovalCycle = wasReapproved ? previousReapprovalCycle + 1 : previousReapprovalCycle
+
+    await updateDoc(docRef, {
+      ...updates,
+      verificationHistory,
+      ...(decision === 'approve' ? { wasReapproved, reapprovalCycle } : {}),
+    })
+
+    // Best-effort outside-app push (lock-screen / banner when the app is
+    // closed). The Firestore write above is the source of truth — the Cloud
+    // Function `sendVerificationStatusPush` covers the same decision, so this
+    // admin-side invoke is just the low-latency path for the same payload.
+    fireVerificationStatusPush({
+      uid,
+      decision,
+      rejectionTarget: normalizedTarget,
+      wasReapproved,
+    })
 
     return {
       ok: true,

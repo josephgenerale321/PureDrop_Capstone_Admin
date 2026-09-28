@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  claimSequentialUserId,
   createUserAccountInFirestore,
   deleteUserAccountInFirestore,
   getUsersLoadErrorMessage,
@@ -12,8 +13,34 @@ import {
   verifyEmailOtpCode,
 } from './usersService.js'
 import { resolvePresenceStatus } from './presenceStatus.js'
+import { db } from '../../firebase.js'
 
 const PRESENCE_REFRESH_INTERVAL_MS = 60 * 1000
+
+// Self-heal for legacy accounts (docs created before sequential IDs
+// existed): when the Users table receives rows without a stored
+// sequentialId, claim one per doc in the background so the next snapshot —
+// and every other screen — shows permanent 1, 2, 3... numbers.
+// Display uses a continuation fallback meanwhile (see usersService.js), and
+// claim failures are silently ignored (retried on the next snapshot).
+const useSequentialIdSelfHeal = (users) => {
+  const healAttemptedRef = useRef(new Set())
+
+  useEffect(() => {
+    users.forEach((user) => {
+      const uid = user?.uid
+      if (!uid || user.displayId !== null || healAttemptedRef.current.has(uid)) {
+        return
+      }
+      healAttemptedRef.current.add(uid)
+      void Promise.resolve()
+        .then(() => claimSequentialUserId(db, uid))
+        .catch(() => {
+          healAttemptedRef.current.delete(uid)
+        })
+    })
+  }, [users])
+}
 
 function useUsersData(search) {
   const [users, setUsers] = useState([])
@@ -25,6 +52,8 @@ function useUsersData(search) {
   const [creatingUserEmail, setCreatingUserEmail] = useState('')
   const [presenceNowMs, setPresenceNowMs] = useState(() => Date.now())
   const [retryCounter, setRetryCounter] = useState(0)
+
+  useSequentialIdSelfHeal(users)
 
   useEffect(() => {
     setIsLoading(true)

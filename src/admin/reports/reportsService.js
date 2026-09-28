@@ -95,6 +95,13 @@ const getReportUserId = (docSnap, data) => {
   return normalizeString(docSnap.ref.parent?.parent?.id)
 }
 
+const readStoredSequentialId = (data) => {
+  const value = data?.sequentialId
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1
+    ? String(value)
+    : null
+}
+
 const fetchUserProfilesByIds = async (userIds) => {
   const uniqueUserIds = [...new Set(userIds.filter(Boolean))]
   const profilesById = new Map()
@@ -112,6 +119,11 @@ const fetchUserProfilesByIds = async (userIds) => {
         profilesById.set(userId, {
           fullName: normalizeString(userData.fullName),
           profileImageUrl: normalizeString(userData.profileImageUrl),
+          // Permanent sequential display ID (1, 2, 3...) — same number the
+          // user sees on their mobile profile. Null when the doc has none
+          // yet (legacy doc awaiting self-heal); buildUidToDisplayIdMap
+          // backfills a display-only continuation number in that case.
+          displayId: readStoredSequentialId(userData),
         })
       } catch {
         profilesById.set(userId, {})
@@ -122,23 +134,67 @@ const fetchUserProfilesByIds = async (userIds) => {
   return profilesById
 }
 
-const buildUidToDisplayIdMap = async (additionalUids = []) => {
-  let uids = []
+const buildUidToDisplayIdMap = async (additionalUids = [], profilesById = new Map()) => {
+  let usersSnap = null
 
   try {
-    const usersSnap = await getDocs(collection(db, USERS_COLLECTION))
-    uids = usersSnap.docs
-      .map((docSnap) => docSnap.data().uid || docSnap.id)
-      .filter(Boolean)
+    usersSnap = await getDocs(collection(db, USERS_COLLECTION))
   } catch {
-    // Fall through: still build the map from the report user IDs below.
+    usersSnap = null
   }
 
-  const allUids = [...new Set([...uids, ...additionalUids.filter(Boolean)])]
-  const sortedUids = allUids.sort((a, b) => String(a).localeCompare(String(b)))
+  // Display numbers come from the permanent per-user sequentialId —
+  // the SAME number shown on the mobile profile. Users without one yet
+  // (legacy docs awaiting self-heal) get a display-only continuation
+  // number after the highest stored ID, so visible numbers stay
+  // contiguous (1, 2, 3...) and never jump around.
+  const storedByUid = new Map()
+  if (usersSnap) {
+    usersSnap.docs.forEach((docSnap) => {
+      const uid = docSnap.data().uid || docSnap.id
+      const stored = readStoredSequentialId(docSnap.data())
+      if (uid && stored !== null && !storedByUid.has(uid)) {
+        storedByUid.set(uid, stored)
+      }
+    })
+  }
+  profilesById.forEach((profile, uid) => {
+    if (uid && profile?.displayId && !storedByUid.has(uid)) {
+      storedByUid.set(uid, profile.displayId)
+    }
+  })
+
+  const allUids = [...new Set([
+    ...storedByUid.keys(),
+    ...additionalUids.filter(Boolean).map((uid) => String(uid)),
+  ])]
+  const withStored = []
+  const withoutStored = []
+  allUids.forEach((uid) => {
+    if (storedByUid.has(uid)) {
+      withStored.push(uid)
+    } else {
+      withoutStored.push(uid)
+    }
+  })
+  // Deterministic order for the display-only tail: same UID sort the old
+  // code used, so unhealed docs at least keep stable numbers.
+  withoutStored.sort((a, b) => String(a).localeCompare(String(b)))
+
+  const storedNumbers = [...storedByUid.values()].map(Number)
+  let nextFallback = storedNumbers.length > 0 ? Math.max(...storedNumbers) + 1 : 1
   const map = new Map()
-  sortedUids.forEach((uid, index) => {
-    map.set(uid, String(index + 1))
+  // Stored IDs keep their exact numbers (sorted for determinism); docs
+  // without one continue the sequence with display-only numbers.
+  const sortedWithStored = [...withStored].sort(
+    (a, b) => Number(storedByUid.get(a)) - Number(storedByUid.get(b)),
+  )
+  sortedWithStored.forEach((uid) => {
+    map.set(uid, storedByUid.get(uid))
+  })
+  withoutStored.forEach((uid) => {
+    map.set(uid, String(nextFallback))
+    nextFallback += 1
   })
   return map
 }
@@ -154,7 +210,7 @@ const mapReportDocsWithProfiles = async (docs) => {
   })
   const reportUserIds = reportDocs.map((item) => item.userId)
   const profilesById = await fetchUserProfilesByIds(reportUserIds)
-  const uidToDisplayId = await buildUidToDisplayIdMap(reportUserIds)
+  const uidToDisplayId = await buildUidToDisplayIdMap(reportUserIds, profilesById)
 
   return reportDocs
     .map(({ docSnap, data, userId }) => {

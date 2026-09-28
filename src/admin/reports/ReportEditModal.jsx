@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AdminReportGpsMap from './AdminReportGpsMap.jsx'
 import AddressSelect from '../users/AddressSelect.jsx'
+import AddressSelectBlbn from '../users/AddressSelectBlbn.jsx'
 
 const CATEGORY_OPTIONS = ['No water', 'Dirty water', 'Water leaking']
 const ISSUE_MAX_LENGTH = 500
@@ -14,6 +15,9 @@ const STATUS_BADGE_CLASS = {
 
 function ReportEditModal({ report, form, onChangeField, onClose, onSubmit, actionFeedback, isSubmitting }) {
   const [selectedAddress, setSelectedAddress] = useState(form.address || '')
+  const [addressCity, setAddressCity] = useState(() =>
+    String(form.address || '').toLowerCase().includes('balamban') ? 'Balamban' : 'Toledo',
+  )
 
   if (!report) {
     return null
@@ -111,12 +115,37 @@ function ReportEditModal({ report, form, onChangeField, onClose, onSubmit, actio
             <label className="admin-reports-edit-label" htmlFor="edit-report-address">
               Barangay / Address
             </label>
-            <AddressSelect
-              id="edit-report-address"
-              value={selectedAddress}
-              onChange={handleAddressChange}
-              placeholder="Select barangay in Toledo City"
-            />
+            <div className="btn-group btn-group-sm mb-2" role="group" aria-label="Select city">
+              <button
+                type="button"
+                className={`btn ${addressCity === 'Toledo' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setAddressCity('Toledo')}
+              >
+                Toledo City
+              </button>
+              <button
+                type="button"
+                className={`btn ${addressCity === 'Balamban' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setAddressCity('Balamban')}
+              >
+                Balamban, Cebu
+              </button>
+            </div>
+            {addressCity === 'Balamban' ? (
+              <AddressSelectBlbn
+                id="edit-report-address"
+                value={selectedAddress}
+                onChange={handleAddressChange}
+                placeholder="Select barangay in Balamban, Cebu"
+              />
+            ) : (
+              <AddressSelect
+                id="edit-report-address"
+                value={selectedAddress}
+                onChange={handleAddressChange}
+                placeholder="Select barangay in Toledo City"
+              />
+            )}
 
             <label className="admin-reports-edit-label" htmlFor="edit-report-location">
               Landmark / Specific Location

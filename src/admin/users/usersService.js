@@ -1,17 +1,122 @@
 import { deleteApp, initializeApp } from 'firebase/app'
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth'
-import { collection, deleteDoc, doc, getDocs, getFirestore, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDocs, getFirestore, limit, onSnapshot, orderBy, query, runTransaction, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { auth, db, functionsClient } from '../../firebase.js'
 import { isSupabaseConfigured, supabase } from '../../supabase.js'
 import { resolvePresenceStatus } from './presenceStatus.js'
 
 const USERS_COLLECTION = 'regular_user'
+const COUNTERS_COLLECTION = 'counters'
+const SEQUENTIAL_ID_COUNTER_ID = 'regularUserSequentialId'
 const REPORTS_COLLECTION = 'reports'
-const CITY_SUFFIX = ', Toledo City'
+const SUPPORTED_SUFFIXES = [', Toledo City', ', Balamban, Cebu', ', Balamban']
 const DATE_FORMAT_OPTIONS = { month: 'short', day: 'numeric', year: 'numeric' }
 const DATE_TIME_FORMAT_OPTIONS = { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }
 const deleteRegularUserAccountCallable = httpsCallable(functionsClient, 'deleteRegularUserAccount')
+
+const readStoredSequentialId = (data) => {
+  const value = data?.sequentialId
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1
+    ? value
+    : null
+}
+
+// Same numbering source as the mobile app (lib/regular_user/sequentialId.ts):
+// - reserveSequentialUserId: bumps ONLY the counter (no user-doc touch).
+//   Used at creation so the profile is born with its final ID.
+// - claimSequentialUserId: self-heal for EXISTING docs only — throws when
+//   the user doc does not exist, so creation can never leave stub docs.
+const readCounterNext = (data) => {
+  const value = data?.next
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1
+    ? value
+    : null
+}
+
+const readSeededNextId = async (firestore) => {
+  const topSnap = await getDocs(
+    query(
+      collection(firestore, USERS_COLLECTION),
+      orderBy('sequentialId', 'desc'),
+      limit(1),
+    ),
+  )
+  let highest = null
+  topSnap.docs.forEach((docSnap) => {
+    const stored = readStoredSequentialId(docSnap.data())
+    if (stored !== null && (highest === null || stored > highest)) {
+      highest = stored
+    }
+  })
+  return (highest ?? 0) + 1
+}
+
+const reserveSequentialUserId = async (firestore) => {
+  const counterRef = doc(firestore, COUNTERS_COLLECTION, SEQUENTIAL_ID_COUNTER_ID)
+  const seededNext = await readSeededNextId(firestore)
+
+  return runTransaction(firestore, async (transaction) => {
+    const counterSnap = await transaction.get(counterRef)
+    const next = readCounterNext(counterSnap.data()) ?? seededNext
+    transaction.set(
+      counterRef,
+      { next: next + 1, updatedAt: serverTimestamp() },
+      { merge: true },
+    )
+    return next
+  })
+}
+
+// Shared self-heal for legacy accounts (docs created before sequential IDs
+// existed): claims a permanent ID for an EXISTING user doc. Kept exported
+// so the admin user list can heal rows it displays; the mobile profile
+// screen calls it automatically on view.
+export const claimSequentialUserId = async (firestore, uid) => {
+  const userRef = doc(firestore, USERS_COLLECTION, uid)
+  const counterRef = doc(firestore, COUNTERS_COLLECTION, SEQUENTIAL_ID_COUNTER_ID)
+  const seededNext = await readSeededNextId(firestore)
+
+  return runTransaction(firestore, async (transaction) => {
+    // All reads happen before any writes (Firestore transaction rule).
+    const userSnap = await transaction.get(userRef)
+    if (!userSnap.exists()) {
+      throw new Error('Cannot claim a sequential ID for a missing user document.')
+    }
+    const stored = readStoredSequentialId(userSnap.data())
+    const counterSnap = await transaction.get(counterRef)
+    const counterNext = readCounterNext(counterSnap.data())
+
+    // A doc that already owns an ID always keeps it — the counter is only
+    // fast-forwarded when it lags behind, and never moves backwards.
+    // This keeps IDs 1, 2, 3... permanent even if the counter doc was
+    // deleted or restored from a stale backup.
+    if (stored !== null) {
+      if (counterNext === null || counterNext <= stored) {
+        transaction.set(
+          counterRef,
+          { next: stored + 1, updatedAt: serverTimestamp() },
+          { merge: true },
+        )
+      }
+      return stored
+    }
+
+    const next = counterNext !== null ? counterNext : seededNext
+    transaction.set(
+      counterRef,
+      { next: next + 1, updatedAt: serverTimestamp() },
+      { merge: true },
+    )
+    transaction.set(
+      userRef,
+      { sequentialId: next, updatedAt: serverTimestamp() },
+      { merge: true },
+    )
+
+    return next
+  })
+}
 
 const toDateValue = (value) => {
   if (!value) {
@@ -91,16 +196,20 @@ const normalizeAddress = (value) => {
     return ''
   }
 
-  if (trimmed.toLowerCase().endsWith(CITY_SUFFIX.toLowerCase())) {
-    return trimmed
+  const lower = trimmed.toLowerCase()
+  for (const suffix of SUPPORTED_SUFFIXES) {
+    if (lower.endsWith(suffix.toLowerCase())) {
+      return trimmed
+    }
   }
 
-  return `${trimmed}${CITY_SUFFIX}`
+  return trimmed
 }
 
 const mapUserDoc = (docSnap) => {
   const data = docSnap.data()
   const uid = data.uid || docSnap.id
+  const storedSequentialId = readStoredSequentialId(data)
   const displayRole = formatRole(data.role)
   const presenceUpdatedAtDate = toDateValue(data.presenceUpdatedAt)
   const lastSeenAtDate = toDateValue(data.lastSeenAt)
@@ -117,6 +226,10 @@ const mapUserDoc = (docSnap) => {
     docId: docSnap.id,
     id: uid,
     uid,
+    // Permanent sequential display ID (1, 2, 3...). Null when the doc has
+    // none yet (legacy doc awaiting self-heal) — subscribeUsers backfills a
+    // contiguous number for display only, without writing to Firestore.
+    displayId: storedSequentialId !== null ? String(storedSequentialId) : null,
     name: data.fullName || 'N/A',
     email: data.email || 'N/A',
     role: displayRole,
@@ -149,13 +262,26 @@ export const subscribeUsers = ({ onUsers, onError }) => {
     collection(db, USERS_COLLECTION),
     (snapshot) => {
       const users = snapshot.docs.map((docSnap) => mapUserDoc(docSnap))
-      // Sort by UID (alphabetically) and assign sequential display IDs (1, 2, 3...).
-      const sorted = [...users].sort((a, b) => String(a.uid || '').localeCompare(String(b.uid || '')))
-      const withDisplayId = sorted.map((user, index) => ({
-        ...user,
-        displayId: String(index + 1),
-      }))
-      onUsers(withDisplayId)
+      // Order by the permanent sequentialId (1, 2, 3...). Docs without one
+      // yet (legacy, awaiting self-heal) get a display-only continuation
+      // number after the highest stored ID — never a UID-sorted renumber,
+      // so visible numbers MATCH the mobile profile exactly.
+      const storedIds = users
+        .map((user) => (user.displayId !== null ? Number(user.displayId) : null))
+        .filter((value) => value !== null)
+      let nextFallback = storedIds.length > 0 ? Math.max(...storedIds) + 1 : 1
+      const withDisplayId = users.map((user) => {
+        if (user.displayId !== null) {
+          return user
+        }
+        const fallback = { ...user, displayId: String(nextFallback) }
+        nextFallback += 1
+        return fallback
+      })
+      const sorted = [...withDisplayId].sort(
+        (a, b) => Number(a.displayId) - Number(b.displayId),
+      )
+      onUsers(sorted)
     },
     onError,
   )
@@ -580,8 +706,14 @@ export const createUserAccountInFirestore = async (payload) => {
     createdUser = credential.user
     await createdUser.getIdToken()
 
+    // Reserve this user's sequential display ID (1, 2, 3...) BEFORE creating
+    // the profile, so the doc is born with its final ID — the same numbering
+    // source the mobile app uses at self signup.
+    const sequentialId = await reserveSequentialUserId(temporaryDb)
+
     await setDoc(doc(temporaryDb, USERS_COLLECTION, createdUser.uid), {
       uid: createdUser.uid,
+      sequentialId,
       fullName,
       address,
       email,
